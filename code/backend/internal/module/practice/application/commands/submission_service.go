@@ -17,7 +17,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/platform/randomstring"
 	crypto "ctf-platform/internal/shared/flagcrypto"
 )
@@ -101,25 +100,12 @@ func (s *serviceCore) SubmitFlag(ctx context.Context, userID, challengeID int64,
 	}
 
 	if !submissionPersisted {
-		if err := s.repo.CreateSubmission(ctx, submission); err != nil {
+		if err := s.persistPracticeSubmissionWithOutbox(ctx, submission, challengeItem, alreadySolved); err != nil {
 			if submission.IsCorrect && s.repo.IsUniqueViolation(err) {
 				return nil, challengecontracts.ErrAlreadySolved
 			}
 			return nil, apperror.ErrInternal.WithCause(err)
 		}
-	}
-
-	if submission.IsCorrect && !alreadySolved {
-		s.publishWeakEvent(ctx, platformevents.Event{
-			Name: practicecontracts.EventFlagAccepted,
-			Payload: practicecontracts.FlagAcceptedEvent{
-				UserID:      userID,
-				ChallengeID: challengeID,
-				Dimension:   challengeItem.Category,
-				Points:      challengeItem.Points,
-				OccurredAt:  submission.SubmittedAt,
-			},
-		})
 	}
 
 	var instanceShutdownAt *time.Time
@@ -141,6 +127,32 @@ func (s *serviceCore) SubmitFlag(ctx context.Context, userID, challengeID int64,
 	}
 
 	return resp, nil
+}
+
+func (s *serviceCore) persistPracticeSubmissionWithOutbox(
+	ctx context.Context,
+	submission *practiceports.SubmissionRecord,
+	challengeItem *practiceentity.Challenge,
+	alreadySolved bool,
+) error {
+	if s == nil || s.repo == nil {
+		return errors.New("practice submission repository is nil")
+	}
+	return s.repo.WithinSubmissionOutboxTx(ctx, func(txRepo practiceports.PracticeSubmissionOutboxTxRepository) error {
+		if err := txRepo.CreateSubmission(ctx, submission); err != nil {
+			return err
+		}
+		if !submission.IsCorrect || alreadySolved {
+			return nil
+		}
+		return enqueuePracticeFlagAcceptedOutboxEvent(ctx, txRepo, practicecontracts.FlagAcceptedEvent{
+			UserID:      submission.UserID,
+			ChallengeID: submission.ChallengeID,
+			Dimension:   challengeItem.Category,
+			Points:      challengeItem.Points,
+			OccurredAt:  submission.SubmittedAt,
+		})
+	})
 }
 
 func (s *serviceCore) applySolveGracePeriod(ctx context.Context, userID int64, challengeItem *practiceentity.Challenge, solvedAt time.Time) *time.Time {

@@ -3,7 +3,10 @@ package composition
 import (
 	"context"
 	"errors"
+	"os"
+	"strings"
 	"sync"
+	"time"
 
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -15,7 +18,10 @@ import (
 )
 
 type Root struct {
-	Events events.Bus
+	Events                          events.Bus
+	outboxHandlers                  *events.OutboxHandlerRegistry
+	eventStream                     *events.StreamFanout
+	practiceOutboxHandlerRegistrars []func(*events.OutboxHandlerRegistry)
 
 	jobsMu sync.Mutex
 	jobs   []BackgroundJob
@@ -98,20 +104,27 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 }
 
 func BuildRoot(cfg *config.Config, log *zap.Logger, db *gorm.DB, cache *redislib.Client) (*Root, error) {
+	if log == nil {
+		log = zap.NewNop()
+	}
 	appCtx, appCancel := context.WithCancel(context.Background())
 	if err := registerContainerFlagSecret(appCtx, cfg, db); err != nil {
 		appCancel()
 		return nil, err
 	}
-	return &Root{
-		Events:    events.NewBus(),
-		appCtx:    appCtx,
-		appCancel: appCancel,
-		cfg:       cfg,
-		log:       log,
-		db:        db,
-		cache:     cache,
-	}, nil
+	root := &Root{
+		Events:         events.NewBus(),
+		outboxHandlers: events.NewOutboxHandlerRegistry(),
+		eventStream:    events.NewStreamFanout(cache, events.StreamFanoutOptions{}, log.Named("platform_event_stream")),
+		appCtx:         appCtx,
+		appCancel:      appCancel,
+		cfg:            cfg,
+		log:            log,
+		db:             db,
+		cache:          cache,
+	}
+	root.registerPlatformEventJobs()
+	return root, nil
 }
 
 func registerContainerFlagSecret(ctx context.Context, cfg *config.Config, db *gorm.DB) error {
@@ -172,6 +185,38 @@ func (r *Root) Cache() *redislib.Client {
 	return r.cache
 }
 
+func (r *Root) OutboxHandlerRegistry() *events.OutboxHandlerRegistry {
+	if r == nil {
+		return nil
+	}
+	return r.outboxHandlers
+}
+
+func (r *Root) RegisterOutboxHandler(name string, handler events.OutboxHandler) {
+	if r == nil || r.outboxHandlers == nil {
+		return
+	}
+	r.outboxHandlers.Register(name, handler)
+}
+
+func (r *Root) addPracticeOutboxHandlerRegistrar(registrar func(*events.OutboxHandlerRegistry)) {
+	if r == nil || registrar == nil {
+		return
+	}
+	r.practiceOutboxHandlerRegistrars = append(r.practiceOutboxHandlerRegistrars, registrar)
+}
+
+func (r *Root) registerPracticeOutboxHandlerRegistrars() {
+	if r == nil || r.outboxHandlers == nil {
+		return
+	}
+	for _, registrar := range r.practiceOutboxHandlerRegistrars {
+		if registrar != nil {
+			registrar(r.outboxHandlers)
+		}
+	}
+}
+
 func (r *Root) RegisterBackgroundJob(job BackgroundJob) {
 	if r == nil || job.name == "" {
 		return
@@ -208,4 +253,60 @@ func (j BackgroundJob) Stop(ctx context.Context) error {
 		return nil
 	}
 	return j.stop(ctx)
+}
+
+func (r *Root) registerPlatformEventJobs() {
+	if r == nil || r.db == nil || r.cache == nil {
+		return
+	}
+	dispatcher := events.NewOutboxDispatcher(
+		events.NewOutboxRepository(r.db),
+		r.eventStream,
+		r.outboxHandlers,
+		r.log.Named("platform_event_outbox_dispatcher"),
+	)
+	r.RegisterBackgroundJob(NewLoopBackgroundJob("platform_event_outbox_dispatcher", func(ctx context.Context) {
+		dispatcher.Run(ctx, platformEventWorkerID("dispatcher"))
+	}))
+	r.RegisterBackgroundJob(NewLoopBackgroundJob("platform_event_stream_consumer", func(ctx context.Context) {
+		runPlatformEventStreamConsumer(ctx, r.eventStream, r.outboxHandlers, platformEventWorkerID("consumer"), r.log.Named("platform_event_stream_consumer"))
+	}))
+}
+
+func runPlatformEventStreamConsumer(ctx context.Context, stream *events.StreamFanout, handlers *events.OutboxHandlerRegistry, consumerID string, logger *zap.Logger) {
+	if stream == nil || handlers == nil {
+		return
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		if err := stream.ConsumeOnce(ctx, consumerID, handlers.Handle); err != nil {
+			if logger != nil {
+				logger.Warn("consume platform event stream failed", zap.Error(err))
+			}
+			timer := time.NewTimer(250 * time.Millisecond)
+			select {
+			case <-ctx.Done():
+				timer.Stop()
+				return
+			case <-timer.C:
+			}
+		}
+	}
+}
+
+func platformEventWorkerID(kind string) string {
+	hostname, err := os.Hostname()
+	if err != nil {
+		return "platform-event-" + kind
+	}
+	name := strings.TrimSpace(hostname)
+	if name == "" {
+		return "platform-event-" + kind
+	}
+	return "platform-event-" + kind + "-" + name
 }

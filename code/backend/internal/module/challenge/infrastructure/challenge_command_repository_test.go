@@ -10,6 +10,7 @@ import (
 
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type challengeCommandRepositorySourceStub struct {
@@ -27,7 +28,15 @@ func (s challengeCommandRepositorySourceStub) FindByID(ctx context.Context, id i
 	return s.findByIDFn(ctx, id)
 }
 
+func (s challengeCommandRepositorySourceStub) LockChallengeByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
+	return s.FindByID(ctx, id)
+}
+
 func (s challengeCommandRepositorySourceStub) Update(context.Context, *challengeentity.Challenge) error {
+	return nil
+}
+
+func (s challengeCommandRepositorySourceStub) MarkChallengePublished(context.Context, int64, time.Time) error {
 	return nil
 }
 
@@ -68,6 +77,14 @@ func (s challengeCommandRepositorySourceStub) TryStartPublishCheckJob(context.Co
 }
 
 func (s challengeCommandRepositorySourceStub) UpdatePublishCheckJob(context.Context, *challengeentity.ChallengePublishCheckJob) error {
+	return nil
+}
+
+func (s challengeCommandRepositorySourceStub) WithinPublishCheckOutboxTx(ctx context.Context, fn func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error) error {
+	return fn(NewChallengeCommandRepository(s))
+}
+
+func (s challengeCommandRepositorySourceStub) EnqueueOutboxEvent(context.Context, platformevents.OutboxEvent) error {
 	return nil
 }
 

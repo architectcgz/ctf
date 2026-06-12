@@ -38,9 +38,18 @@
   - 负责：处理题包 preview / commit / self-check、附件持久化、镜像构建源准备和题目自检的运行时探测
   - 不负责：在导入 preview 阶段启动正式学员实例，或把导入工作目录作为长期运行态的一部分
 
+- `code/backend/internal/module/challenge/application/challengepublishcheck/service.go`、`code/backend/internal/module/challenge/infrastructure/challenge_command_repository.go`
+  - 负责：处理题目发布自检 job 调度、最终状态写入和发布成功时的题目状态推进；发布通过时，题目 `published` 状态、publish-check job final 状态与 `challenge.publish_check_finished` outbox 在同一个事务内提交，事务成功后再发送本进程弱 catalog event
+  - 不负责：在 outbox 写入失败时保留“题目已发布但 job / 通知未完成”的半成功状态
+
+- `code/backend/internal/platform/events/outbox*.go`、`stream_fanout.go`、`code/backend/internal/app/composition/root.go`
+  - 负责：把 `practice.flag_accepted`、`challenge.publish_check_finished`、`notification.created`、`notification.read` 等跨副本关键 side effect 收口到 `platform_event_outbox`、dispatcher 和 Redis Stream fanout；notification command 写路径只写通知行与 outbox，WebSocket 推送由 stream consumer 在本副本本地执行
+  - 不负责：提供客户端离线消息 replay，或让 `internal/platform/events.Bus` 承担跨副本可靠投递
+
 ## 接口或数据影响
 
 - 关键状态字段包括 `instances.status`、`instances.share_scope`、`contests.status`、`contest_status_transitions.side_effect_status`、`awd_rounds.status`、`awd_team_services.service_status`、`image_build_jobs.status`。
+- 关键事件事实包括 `platform_event_outbox` 表，以及 Redis Stream 上的 platform event fanout；event payload 使用 typed JSON + `payload_version`，时间字段按 UTC；`platform_event_outbox.dedupe_key` 与 `notifications.source_event_key` 都使用非空 partial unique index 做入队 / handler side effect 幂等。
 - 关键运行态降噪数据还包括 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，用于记录自动补齐失败次数、下一次重试时间和 suppress 窗口；自动补齐成功或 scope 已经 active 时会清空。
 - 关键流程入口包括实例启动 / 续期 / 访问、contest 更新与冻结、AWD service preview / readiness / rounds / attack logs，以及 challenge import / commit / self-check；契约以 `docs/contracts/openapi-v1.yaml` 为准。
 - 主要副作用落在 PostgreSQL、Redis 锁与缓存、Docker runtime、附件目录和 registry / build source 目录；这些副作用的 owner 分别受 `practice`、`contest`、`runtime`、`challenge` 模块控制。
@@ -55,6 +64,8 @@
 - AWD service 配置冻结：`code/backend/internal/module/contest/application/commands/contest_awd_service_service_test.go`
 - AWD 轮次与 checker：`code/backend/internal/module/contest/application/jobs/awd_round_updater_test.go`、`code/backend/internal/module/contest/application/commands/awd_service_test.go`
 - 题包导入 / 附件 / 自检：`code/backend/internal/app/challenge_import_integration_test.go`、`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`（测试兼容层覆盖 `application/challengeselfcheck` service）
+- 发布自检事务 outbox：`code/backend/internal/module/challenge/application/commands/challenge_service_test.go`、`code/backend/internal/module/challenge/infrastructure/challenge_command_repository_test.go`
+- Platform outbox / fanout：`code/backend/internal/platform/events/*_test.go`、`code/backend/internal/module/ops/application/commands/notification_service_test.go`、`code/backend/internal/module/ops/infrastructure/notification_repository_test.go`、`code/backend/internal/module/practice/application/queries/progress_timeline_context_test.go`
 
 ## 历史迁移
 
@@ -211,7 +222,7 @@ sequenceDiagram
     participant SS as SubmitService
     participant Redis
     participant PG as PostgreSQL
-    participant EB as EventBus
+    participant OB as PlatformOutbox
 
     用户->>API: 提交 Flag
     API->>SS: 鉴权+限流
@@ -245,6 +256,7 @@ sequenceDiagram
         Note over SS: DUPLICATE: 幂等返回"已完成"
         SS->>PG: 计算得分(base × weight - hints)
         SS->>PG: UPDATE user_score SET score=score+?, solved_count=solved_count+1
+        SS->>OB: INSERT platform_event_outbox(practice.flag_accepted)
         SS->>PG: COMMIT
         PG-->>SS: OK
     end
@@ -256,7 +268,7 @@ sequenceDiagram
         SS->>Redis: ZINCRBY leaderboard:public:{cid} score uid
     end
 
-    SS->>EB: 发布得分事件 ScoreEvent{uid, cid, score, timestamp}（仅用于 WebSocket 推送等非关键通知）
+    Note over OB: dispatcher 后续触发 progress cache 删除、通知创建与 notification stream fanout
     SS-->>API: 返回结果
     API-->>用户: 解题成功
 ```
@@ -270,7 +282,7 @@ sequenceDiagram
 | 幂等保证 | 数据库部分唯一索引：竞赛 `UNIQUE(user_id, challenge_id, contest_id) WHERE result='correct' AND contest_id IS NOT NULL`；练习 `UNIQUE(user_id, challenge_id) WHERE result='correct' AND contest_id IS NULL` | 数据库层面兜底，即使并发请求同时通过应用层检查也不会重复计分 |
 | 计分公式 | `score = base_score × difficulty_weight - hint_penalty` | 简单直观，hint_penalty 从已使用的提示累加 |
 | 得分更新 | 原子累加 `UPDATE ... SET score=score+?, solved_count=solved_count+1` | 无需乐观锁版本校验，PostgreSQL 行锁保证原子性；同一用户不会高频得分，行锁持有时间极短 |
-| 事件发布 | 事务提交后同步更新 Redis 排行榜，再异步发布 `ScoreEvent` 用于 WebSocket 推送 | 排行榜更新是关键路径，必须同步完成；WebSocket 推送等非关键通知走异步事件总线 |
+| 事件发布 | 正确提交在同一事务写 `platform_event_outbox(practice.flag_accepted)`；事务提交后同步更新 Redis 排行榜 | 排行榜更新是关键路径，必须同步完成；通知创建、progress cache invalidation 与 notification WebSocket fanout 由 outbox dispatcher / stream consumer 处理 |
 
 ### 2.4 异常处理
 
@@ -282,13 +294,13 @@ sequenceDiagram
 | Flag 格式非法（不符合 `flag{...}` 格式） | 返回 400，前端校验 + 后端兜底，不消耗频率限制次数 |
 | Flag 错误 | 返回 200（result='incorrect'），记录错误提交到 submissions 表 |
 | Redis 排行榜更新失败 | 记录错误日志，主流程仍返回成功（数据库已持久化）；后台补偿任务定期从数据库重建排行榜 |
-| 事件发布失败 | 记录错误日志，不影响主流程返回（事件仅用于 WebSocket 推送等非关键通知） |
+| outbox enqueue 失败 | 当前提交事务整体回滚，返回内部错误，避免“正确提交成功但通知 / progress cache invalidation 永久丢失” |
 
 ### 2.5 并发与一致性考虑
 
 - **同一用户并发提交同一题**：数据库部分唯一索引保证只有一条正确记录（竞赛/练习分别约束）。第二个并发请求会触发唯一约束冲突，应用层捕获后返回"已完成"。INSERT 和 UPDATE 在同一事务内，唯一约束冲突时整个事务回滚，不会出现"INSERT 成功但 UPDATE 未执行"的中间状态。
 - **不同用户同时提交**：各自独立事务，互不影响。`score=score+?` 原子累加由 PostgreSQL 行锁保证，不同用户操作不同行，无冲突。
-- **计分与排行榜的强一致性**：排行榜 Redis 更新在事务提交后同步执行（同一请求内），不依赖异步事件总线。如果 Redis 更新失败，数据库得分已持久化，后台补偿任务每 5 分钟从数据库全量重建排行榜。事件总线仅用于 WebSocket 推送等非关键异步通知。
+- **计分、outbox 与排行榜的一致性**：正确提交事实与 `practice.flag_accepted` outbox 在同一数据库事务内提交；排行榜 Redis 更新在事务提交后同步执行（同一请求内）。如果 Redis 更新失败，数据库得分已持久化，后台补偿任务每 5 分钟从数据库全量重建排行榜。`events.Bus` 不承担跨副本关键通知，通知与 progress cache invalidation 由 platform outbox / Redis Stream fanout 处理。
 - **frozen 状态下的提交**：竞赛进入 frozen 状态后，Flag 提交仍然正常处理并记录得分，同步更新 `leaderboard:real` 但不更新 `leaderboard:public`（排行榜冻结逻辑见流程 4）。
 
 ---

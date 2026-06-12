@@ -24,6 +24,9 @@ type stubNotificationRepository struct {
 	created                   []*opsentity.Notification
 	createdBatch              *opsentity.NotificationBatch
 	createdBatchNotifications []*opsentity.Notification
+	enqueued                  []platformevents.OutboxEvent
+	sourceEventKeys           map[string]struct{}
+	nextNotificationID        int64
 	findByIDFn                func(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error)
 	listAllUserIDsFn          func(ctx context.Context) ([]int64, error)
 	listUserIDsByRolesFn      func(ctx context.Context, roles []string) ([]int64, error)
@@ -33,9 +36,29 @@ type stubNotificationRepository struct {
 }
 
 func (r *stubNotificationRepository) Create(_ context.Context, notification *opsentity.Notification) error {
+	if notification.ID == 0 {
+		if r.nextNotificationID == 0 {
+			r.nextNotificationID = 101
+		}
+		notification.ID = r.nextNotificationID
+		r.nextNotificationID++
+	}
 	copied := *notification
 	r.created = append(r.created, &copied)
 	return nil
+}
+
+func (r *stubNotificationRepository) CreateIfSourceEventAbsent(ctx context.Context, notification *opsentity.Notification) (bool, error) {
+	if notification != nil && notification.SourceEventKey != "" {
+		if r.sourceEventKeys == nil {
+			r.sourceEventKeys = make(map[string]struct{})
+		}
+		if _, exists := r.sourceEventKeys[notification.SourceEventKey]; exists {
+			return false, nil
+		}
+		r.sourceEventKeys[notification.SourceEventKey] = struct{}{}
+	}
+	return true, r.Create(ctx, notification)
 }
 
 func (r *stubNotificationRepository) List(_ context.Context, _ opsports.NotificationListFilter) ([]opsentity.Notification, int64, error) {
@@ -63,10 +86,26 @@ func (r *stubNotificationRepository) CreateBatch(_ context.Context, batch *opsen
 	r.createdBatch = &copiedBatch
 	r.createdBatchNotifications = make([]*opsentity.Notification, 0, len(notifications))
 	for _, item := range notifications {
+		if item.ID == 0 {
+			if r.nextNotificationID == 0 {
+				r.nextNotificationID = 201
+			}
+			item.ID = r.nextNotificationID
+			r.nextNotificationID++
+		}
 		item.BatchID = &copiedBatch.ID
 		copied := *item
 		r.createdBatchNotifications = append(r.createdBatchNotifications, &copied)
 	}
+	return nil
+}
+
+func (r *stubNotificationRepository) WithinNotificationOutboxTx(ctx context.Context, fn func(txRepo opsports.NotificationOutboxTxRepository) error) error {
+	return fn(r)
+}
+
+func (r *stubNotificationRepository) EnqueueOutboxEvent(_ context.Context, event platformevents.OutboxEvent) error {
+	r.enqueued = append(r.enqueued, event)
 	return nil
 }
 
@@ -134,33 +173,31 @@ func (b *recordingBus) Publish(ctx context.Context, evt platformevents.Event) er
 	return nil
 }
 
-func TestNotificationServiceRegisterPracticeEventConsumers(t *testing.T) {
+type notificationFanoutTestPayload struct {
+	UserID       int64            `json:"user_id"`
+	Notification NotificationInfo `json:"notification"`
+	OccurredAt   time.Time        `json:"occurred_at"`
+}
+
+func TestNotificationServiceHandlePracticeFlagAcceptedOutboxEventCreatesNotification(t *testing.T) {
 	repo := &stubNotificationRepository{}
 	service := NewNotificationService(repo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, nil, zap.NewNop())
-	bus := &recordingBus{}
-
-	service.RegisterPracticeEventConsumers(bus)
-
-	if got := len(bus.subscribers[practicecontracts.EventFlagAccepted]); got != 1 {
-		t.Fatalf("flag_accepted subscribers = %d, want 1", got)
-	}
-	if got := len(bus.subscribers); got != 1 {
-		t.Fatalf("practice subscriber count = %d, want 1", got)
-	}
-
-	err := bus.Publish(context.Background(), platformevents.Event{
-		Name: practicecontracts.EventFlagAccepted,
-		Payload: practicecontracts.FlagAcceptedEvent{
-			UserID:      7,
-			ChallengeID: 12,
-			Points:      30,
-		},
-	})
+	codec := platformevents.NewOutboxCodec()
+	event, err := codec.Encode(practicecontracts.EventFlagAccepted, practicecontracts.EventFlagAcceptedPayloadVersion, practicecontracts.FlagAcceptedEvent{
+		UserID:      7,
+		ChallengeID: 12,
+		Points:      30,
+		OccurredAt:  time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC),
+	}, time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC))
 	if err != nil {
-		t.Fatalf("Publish(flag_accepted) error = %v", err)
+		t.Fatalf("encode flag accepted event: %v", err)
+	}
+
+	if err := service.HandlePracticeFlagAcceptedOutboxEvent(context.Background(), event); err != nil {
+		t.Fatalf("HandlePracticeFlagAcceptedOutboxEvent() error = %v", err)
 	}
 
 	if len(repo.created) != 1 {
@@ -172,37 +209,67 @@ func TestNotificationServiceRegisterPracticeEventConsumers(t *testing.T) {
 	if repo.created[0].Link == nil || *repo.created[0].Link != "/challenges/12" {
 		t.Fatalf("unexpected created notification link = %+v", repo.created[0].Link)
 	}
+	if len(repo.enqueued) != 1 || repo.enqueued[0].Name != "notification.created" {
+		t.Fatalf("unexpected notification fanout outbox events: %+v", repo.enqueued)
+	}
 }
 
-func TestNotificationServiceRegisterChallengeEventConsumers(t *testing.T) {
+func TestNotificationServiceHandlePracticeFlagAcceptedOutboxEventIsIdempotent(t *testing.T) {
 	repo := &stubNotificationRepository{}
 	service := NewNotificationService(repo, config.PaginationConfig{
 		DefaultPageSize: 20,
 		MaxPageSize:     100,
 	}, nil, zap.NewNop())
-	bus := &recordingBus{}
-
-	service.RegisterChallengeEventConsumers(bus)
-
-	if got := len(bus.subscribers[challengecontracts.EventPublishCheckFinished]); got != 1 {
-		t.Fatalf("publish_check_finished subscribers = %d, want 1", got)
-	}
-	if got := len(bus.subscribers); got != 1 {
-		t.Fatalf("challenge subscriber count = %d, want 1", got)
-	}
-
-	err := bus.Publish(context.Background(), platformevents.Event{
-		Name: challengecontracts.EventPublishCheckFinished,
-		Payload: challengecontracts.PublishCheckFinishedEvent{
-			UserID:         9,
-			ChallengeID:    21,
-			ChallengeTitle: "Web 101",
-			Passed:         false,
-			FailureSummary: "镜像缺失",
-		},
-	})
+	codec := platformevents.NewOutboxCodec()
+	event, err := codec.Encode(practicecontracts.EventFlagAccepted, practicecontracts.EventFlagAcceptedPayloadVersion, practicecontracts.FlagAcceptedEvent{
+		UserID:      7,
+		ChallengeID: 12,
+		Points:      30,
+		OccurredAt:  time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC),
+	}, time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC))
 	if err != nil {
-		t.Fatalf("Publish(publish_check_finished) error = %v", err)
+		t.Fatalf("encode flag accepted event: %v", err)
+	}
+	event.DedupeKey = "practice:flag_accepted:7:12"
+
+	if err := service.HandlePracticeFlagAcceptedOutboxEvent(context.Background(), event); err != nil {
+		t.Fatalf("HandlePracticeFlagAcceptedOutboxEvent(first) error = %v", err)
+	}
+	if err := service.HandlePracticeFlagAcceptedOutboxEvent(context.Background(), event); err != nil {
+		t.Fatalf("HandlePracticeFlagAcceptedOutboxEvent(second) error = %v", err)
+	}
+	if len(repo.created) != 1 {
+		t.Fatalf("created notifications len = %d, want 1", len(repo.created))
+	}
+	if len(repo.enqueued) != 1 {
+		t.Fatalf("enqueued fanout events len = %d, want 1", len(repo.enqueued))
+	}
+	if repo.created[0].SourceEventKey == "" {
+		t.Fatal("expected notification created from outbox handler to carry source event key")
+	}
+}
+
+func TestNotificationServiceHandleChallengePublishCheckFinishedOutboxEventCreatesNotification(t *testing.T) {
+	repo := &stubNotificationRepository{}
+	service := NewNotificationService(repo, config.PaginationConfig{
+		DefaultPageSize: 20,
+		MaxPageSize:     100,
+	}, nil, zap.NewNop())
+	codec := platformevents.NewOutboxCodec()
+	event, err := codec.Encode(challengecontracts.EventPublishCheckFinished, challengecontracts.EventPublishCheckFinishedPayloadVersion, challengecontracts.PublishCheckFinishedEvent{
+		UserID:         9,
+		ChallengeID:    21,
+		ChallengeTitle: "Web 101",
+		Passed:         false,
+		FailureSummary: "镜像缺失",
+		OccurredAt:     time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC),
+	}, time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("encode publish check event: %v", err)
+	}
+
+	if err := service.HandleChallengePublishCheckFinishedOutboxEvent(context.Background(), event); err != nil {
+		t.Fatalf("HandleChallengePublishCheckFinishedOutboxEvent() error = %v", err)
 	}
 
 	if len(repo.created) != 1 {
@@ -216,6 +283,9 @@ func TestNotificationServiceRegisterChallengeEventConsumers(t *testing.T) {
 	}
 	if repo.created[0].Link == nil || *repo.created[0].Link != "/admin/challenges/21" {
 		t.Fatalf("unexpected created notification link = %+v", repo.created[0].Link)
+	}
+	if len(repo.enqueued) != 1 || repo.enqueued[0].Name != "notification.created" {
+		t.Fatalf("unexpected notification fanout outbox events: %+v", repo.enqueued)
 	}
 }
 
@@ -268,7 +338,53 @@ func TestNotificationServiceMarkAsReadIsIdempotentForReadNotification(t *testing
 	}
 }
 
-func TestNotificationServiceSendNotificationPublishesWebsocketEvent(t *testing.T) {
+func TestNotificationServiceMarkAsReadEnqueuesReadOutboxEventWithoutDirectWebsocket(t *testing.T) {
+	readAt := time.Now().UTC().Add(-time.Minute)
+	repo := &stubNotificationRepository{
+		findByIDFn: func(_ context.Context, notificationID, userID int64) (*opsentity.Notification, error) {
+			return &opsentity.Notification{
+				ID:        notificationID,
+				UserID:    userID,
+				Title:     "unread",
+				Type:      opsentity.NotificationTypeSystem,
+				Content:   "content",
+				IsRead:    false,
+				CreatedAt: readAt,
+			}, nil
+		},
+	}
+	broadcaster := &stubNotificationBroadcaster{}
+	service := NewNotificationService(repo, config.PaginationConfig{
+		DefaultPageSize: 20,
+		MaxPageSize:     100,
+	}, broadcaster, zap.NewNop())
+
+	err := service.MarkAsRead(context.Background(), 7, 11)
+	if err != nil {
+		t.Fatalf("MarkAsRead() error = %v", err)
+	}
+	if repo.markAsReadCalls != 1 {
+		t.Fatalf("MarkAsRead() repo calls = %d, want 1", repo.markAsReadCalls)
+	}
+	if len(broadcaster.envelopes) != 0 {
+		t.Fatalf("MarkAsRead should not publish websocket event directly, got %+v", broadcaster.envelopes)
+	}
+	if len(repo.enqueued) != 1 {
+		t.Fatalf("enqueued outbox events len = %d, want 1", len(repo.enqueued))
+	}
+	event := repo.enqueued[0]
+	if event.Name != "notification.read" {
+		t.Fatalf("unexpected outbox event name: %q", event.Name)
+	}
+	if event.PayloadVersion != 1 || event.Route != platformevents.OutboxRouteStream {
+		t.Fatalf("unexpected outbox envelope: %+v", event)
+	}
+	if event.DedupeKey != "notification:read:11" {
+		t.Fatalf("unexpected outbox dedupe key: %s", event.DedupeKey)
+	}
+}
+
+func TestNotificationServiceSendNotificationEnqueuesCreatedOutboxEventWithoutDirectWebsocket(t *testing.T) {
 	repo := &stubNotificationRepository{}
 	broadcaster := &stubNotificationBroadcaster{}
 	service := NewNotificationService(repo, config.PaginationConfig{
@@ -286,8 +402,35 @@ func TestNotificationServiceSendNotificationPublishesWebsocketEvent(t *testing.T
 	if len(repo.created) != 1 {
 		t.Fatalf("created notifications len = %d, want 1", len(repo.created))
 	}
-	if len(broadcaster.envelopes) != 1 || broadcaster.envelopes[0].Type != "notification.created" {
-		t.Fatalf("unexpected websocket events: %+v", broadcaster.envelopes)
+	if len(broadcaster.envelopes) != 0 {
+		t.Fatalf("SendNotification should not publish websocket event directly, got %+v", broadcaster.envelopes)
+	}
+	if len(repo.enqueued) != 1 {
+		t.Fatalf("enqueued outbox events len = %d, want 1", len(repo.enqueued))
+	}
+	event := repo.enqueued[0]
+	if event.Name != "notification.created" {
+		t.Fatalf("unexpected outbox event name: %q", event.Name)
+	}
+	if event.PayloadVersion != 1 || event.Route != platformevents.OutboxRouteStream {
+		t.Fatalf("unexpected outbox envelope: %+v", event)
+	}
+	if event.DedupeKey != "notification:created:101" {
+		t.Fatalf("unexpected outbox dedupe key: %s", event.DedupeKey)
+	}
+
+	codec := platformevents.NewOutboxCodec()
+	codec.Register("notification.created", 1, func() any { return &notificationFanoutTestPayload{} })
+	decoded, err := codec.Decode(event)
+	if err != nil {
+		t.Fatalf("decode outbox payload: %v", err)
+	}
+	payload, ok := decoded.Payload.(*notificationFanoutTestPayload)
+	if !ok {
+		t.Fatalf("unexpected decoded payload type: %T", decoded.Payload)
+	}
+	if payload.UserID != 7 || payload.Notification.ID != 101 || payload.Notification.Title != "title" || !payload.Notification.Unread {
+		t.Fatalf("unexpected notification created payload: %+v", payload)
 	}
 }
 
@@ -375,14 +518,62 @@ func TestNotificationServicePublishAdminNotificationCreatesBatchAndFanOut(t *tes
 	if len(expectedUsers) != 0 {
 		t.Fatalf("missing recipients after dedupe: %+v", expectedUsers)
 	}
-	if len(broadcaster.sentUsers) != 5 {
-		t.Fatalf("websocket send count = %d, want 5", len(broadcaster.sentUsers))
+	if len(broadcaster.sentUsers) != 0 {
+		t.Fatalf("PublishAdminNotification should not publish websocket events directly, got %+v", broadcaster.sentUsers)
 	}
-	for _, envelope := range broadcaster.envelopes {
-		if envelope.Type != "notification.created" {
-			t.Fatalf("unexpected websocket envelope type: %s", envelope.Type)
+	if len(repo.enqueued) != 5 {
+		t.Fatalf("enqueued outbox events len = %d, want 5", len(repo.enqueued))
+	}
+	for _, event := range repo.enqueued {
+		if event.Name != "notification.created" || event.PayloadVersion != 1 || event.Route != platformevents.OutboxRouteStream {
+			t.Fatalf("unexpected outbox event: %+v", event)
 		}
 	}
+}
+
+func TestNotificationServiceHandleNotificationOutboxEventFansOutLocally(t *testing.T) {
+	broadcaster := &stubNotificationBroadcaster{}
+	service := NewNotificationService(&stubNotificationRepository{}, config.PaginationConfig{
+		DefaultPageSize: 20,
+		MaxPageSize:     100,
+	}, broadcaster, zap.NewNop())
+	occurredAt := time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC)
+	codec := platformevents.NewOutboxCodec()
+	event, err := codec.Encode("notification.created", 1, notificationFanoutTestPayload{
+		UserID: 7,
+		Notification: NotificationInfo{
+			ID:      101,
+			Type:    opsentity.NotificationTypeSystem,
+			Title:   "title",
+			Content: ptrString("content"),
+			Unread:  true,
+		},
+		OccurredAt: occurredAt,
+	}, occurredAt)
+	if err != nil {
+		t.Fatalf("encode outbox event: %v", err)
+	}
+
+	if err := service.HandleNotificationFanoutEvent(context.Background(), event); err != nil {
+		t.Fatalf("HandleNotificationFanoutEvent() error = %v", err)
+	}
+
+	if len(broadcaster.sentUsers) != 1 || broadcaster.sentUsers[0] != 7 {
+		t.Fatalf("unexpected websocket recipients: %+v", broadcaster.sentUsers)
+	}
+	if len(broadcaster.envelopes) != 1 {
+		t.Fatalf("websocket envelopes len = %d, want 1", len(broadcaster.envelopes))
+	}
+	if broadcaster.envelopes[0].Type != "notification.created" {
+		t.Fatalf("unexpected websocket envelope type: %s", broadcaster.envelopes[0].Type)
+	}
+	if !broadcaster.envelopes[0].Timestamp.Equal(occurredAt) {
+		t.Fatalf("unexpected websocket timestamp: %v", broadcaster.envelopes[0].Timestamp)
+	}
+}
+
+func ptrString(value string) *string {
+	return &value
 }
 
 func TestNotificationServicePublishAdminNotificationRejectsInvalidAudienceRule(t *testing.T) {

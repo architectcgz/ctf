@@ -4,12 +4,15 @@ import (
 	"context"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	platformevents "ctf-platform/internal/platform/events"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type Repository struct {
@@ -54,6 +57,16 @@ func (r *Repository) WithinTransaction(ctx context.Context, fn func(txRepo *Repo
 	})
 }
 
+func (r *Repository) WithinPublishCheckOutboxTx(ctx context.Context, fn func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(NewChallengeCommandRepository(r.WithDB(tx)))
+	})
+}
+
+func (r *Repository) EnqueueOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	return platformevents.NewOutboxRepository(r.dbWithContext(ctx)).Enqueue(ctx, event)
+}
+
 func (r *Repository) Create(ctx context.Context, challenge *challengeentity.Challenge) error {
 	return r.dbWithContext(ctx).Create(challenge).Error
 }
@@ -79,8 +92,31 @@ func (r *Repository) FindByID(ctx context.Context, id int64) (*challengeentity.C
 	return &challenge, err
 }
 
+func (r *Repository) LockChallengeByID(ctx context.Context, id int64) (*challengeentity.Challenge, error) {
+	var challenge challengeentity.Challenge
+	err := r.dbWithContext(ctx).
+		Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("id = ?", id).
+		First(&challenge).Error
+	return &challenge, err
+}
+
 func (r *Repository) Update(ctx context.Context, challenge *challengeentity.Challenge) error {
 	return r.dbWithContext(ctx).Save(challenge).Error
+}
+
+func (r *Repository) MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error {
+	when := publishedAt.UTC()
+	if when.IsZero() {
+		when = time.Now().UTC()
+	}
+	return r.dbWithContext(ctx).
+		Model(&challengeentity.Challenge{}).
+		Where("id = ?", id).
+		Updates(map[string]any{
+			"status":     challengeentity.ChallengeStatusPublished,
+			"updated_at": when,
+		}).Error
 }
 
 func (r *Repository) UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error {

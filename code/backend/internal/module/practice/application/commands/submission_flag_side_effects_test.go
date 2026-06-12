@@ -7,52 +7,27 @@ import (
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
-	practiceports "ctf-platform/internal/module/practice/ports"
 	"ctf-platform/internal/module/practice/testsupport/contestentity"
 	"ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	gormlogger "gorm.io/gorm/logger"
 	"testing"
 	"time"
 )
 
-func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
+func TestSubmitFlagEnqueuesFlagAcceptedOutboxEvent(t *testing.T) {
 	t.Parallel()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{
-		Logger: gormlogger.Default.LogMode(gormlogger.Silent),
-	})
-	if err != nil {
-		t.Fatalf("open sqlite: %v", err)
-	}
-	if err := db.AutoMigrate(&contestentity.Submission{}); err != nil {
-		t.Fatalf("migrate submissions: %v", err)
-	}
-
+	db := newPracticeCommandTestDB(t)
 	mr := miniredis.RunT(t)
 	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
 	flagSalt := "static-salt"
 
-	bus := events.NewBus()
-	repo := &stubPracticeRepository{
-		findCorrectSubmissionFn: func(ctx context.Context, userID, challengeID int64) (*practiceports.SubmissionRecord, error) {
-			return nil, gorm.ErrRecordNotFound
-		},
-		createSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
-			entity := contestSubmissionEntityFromPracticeRecord(submission)
-			if err := db.Create(entity).Error; err != nil {
-				return err
-			}
-			submission.ID = entity.ID
-			return nil
-		},
-	}
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
 	challengeRepo := &stubPracticeChallengeContract{
 		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
 			return &challengecontracts.PracticeRuntimeChallenge{
@@ -93,18 +68,6 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		challengeRepo,
 	)
 
-	service.SetEventBus(bus)
-
-	received := make(chan practicecontracts.FlagAcceptedEvent, 1)
-	bus.Subscribe(practicecontracts.EventFlagAccepted, func(_ context.Context, evt events.Event) error {
-		payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
-		if !ok {
-			t.Fatalf("unexpected payload type: %T", evt.Payload)
-		}
-		received <- payload
-		return nil
-	})
-
 	resp, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
 	if err != nil {
 		t.Fatalf("SubmitFlag() error = %v", err)
@@ -113,13 +76,117 @@ func TestPracticePublishesFlagAcceptedEvent(t *testing.T) {
 		t.Fatalf("expected correct submission response, got %+v", resp)
 	}
 
-	select {
-	case evt := <-received:
-		if evt.UserID != 7 || evt.ChallengeID != 11 || evt.Dimension != taxonomy.DimensionWeb {
-			t.Fatalf("unexpected event payload: %+v", evt)
+	var records []events.OutboxRecord
+	if err := db.Order("id ASC").Find(&records).Error; err != nil {
+		t.Fatalf("query outbox records: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("expected one outbox record, got %d", len(records))
+	}
+	record := records[0]
+	if record.EventName != practicecontracts.EventFlagAccepted {
+		t.Fatalf("unexpected outbox event name: %s", record.EventName)
+	}
+	if record.PayloadVersion != 1 {
+		t.Fatalf("unexpected outbox payload version: %d", record.PayloadVersion)
+	}
+	if record.Route != events.OutboxRouteHandler {
+		t.Fatalf("unexpected outbox route: %s", record.Route)
+	}
+	if record.DedupeKey != "practice:flag_accepted:7:11" {
+		t.Fatalf("unexpected outbox dedupe key: %s", record.DedupeKey)
+	}
+
+	codec := events.NewOutboxCodec()
+	codec.Register(practicecontracts.EventFlagAccepted, 1, func() any { return &practicecontracts.FlagAcceptedEvent{} })
+	decoded, err := codec.Decode(events.OutboxEvent{
+		Name:           record.EventName,
+		PayloadVersion: record.PayloadVersion,
+		Payload:        record.Payload,
+		Route:          record.Route,
+		DedupeKey:      record.DedupeKey,
+		OccurredAt:     record.OccurredAt,
+	})
+	if err != nil {
+		t.Fatalf("decode outbox payload: %v", err)
+	}
+	payload, ok := decoded.Payload.(*practicecontracts.FlagAcceptedEvent)
+	if !ok {
+		t.Fatalf("unexpected decoded payload type: %T", decoded.Payload)
+	}
+	if payload.UserID != 7 || payload.ChallengeID != 11 || payload.Dimension != taxonomy.DimensionWeb || payload.Points != 100 {
+		t.Fatalf("unexpected outbox payload: %+v", payload)
+	}
+	if !payload.OccurredAt.Equal(resp.SubmittedAt) {
+		t.Fatalf("expected outbox occurred_at to match submission time: payload=%v resp=%v", payload.OccurredAt, resp.SubmittedAt)
+	}
+}
+
+func TestSubmitFlagRollsBackSubmissionWhenFlagAcceptedOutboxEnqueueFails(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	mr := miniredis.RunT(t)
+	redisClient := redis.NewClient(&redis.Options{Addr: mr.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+	flagSalt := "static-salt"
+
+	repo := newPracticeRepositoryWithRuntimePortOwner(db)
+	if err := db.Callback().Create().Before("gorm:create").Register("fail_platform_event_outbox_insert", func(tx *gorm.DB) {
+		if tx.Statement != nil && tx.Statement.Table == "platform_event_outbox" {
+			tx.AddError(gorm.ErrInvalidDB)
 		}
-	case <-time.After(time.Second):
-		t.Fatal("expected practice.flag_accepted event to be published")
+	}); err != nil {
+		t.Fatalf("register outbox failure callback: %v", err)
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
+				ID:       id,
+				Category: taxonomy.DimensionWeb,
+				Points:   100,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeStatic,
+				FlagSalt: flagSalt,
+				FlagHash: flagcrypto.HashStaticFlag("flag{correct}", flagSalt),
+			}, nil
+		},
+	}
+	service := wirePracticeSubmissionAdapters(
+		newServiceCore(
+			repo,
+
+			nil,
+			nil,
+			nil,
+			nil,
+			newPracticeFlagSubmitRateLimitStoreForTest(redisClient),
+			&config.Config{
+				RateLimit: config.RateLimitConfig{
+					RedisKeyPrefix: "practice:test",
+					FlagSubmit: config.RateLimitPolicyConfig{
+						Limit:  5,
+						Window: time.Minute,
+					},
+				},
+			},
+			nil),
+
+		repo,
+		challengeRepo,
+	)
+
+	_, err := service.SubmitFlag(context.Background(), 7, 11, "flag{correct}")
+	if err == nil {
+		t.Fatal("expected SubmitFlag to fail when outbox enqueue fails")
+	}
+
+	var submissions int64
+	if err := db.Model(&contestentity.Submission{}).Count(&submissions).Error; err != nil {
+		t.Fatalf("count submissions: %v", err)
+	}
+	if submissions != 0 {
+		t.Fatalf("expected submission insert to roll back, got %d submissions", submissions)
 	}
 }
 

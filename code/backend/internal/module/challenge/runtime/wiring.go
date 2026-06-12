@@ -161,7 +161,6 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 		challengeCommandRepo,
 		challengeCommandRepo,
 		challengeSelfCheckService,
-		challengeCommandService,
 		challengepublishcheck.Config{
 			PollInterval: cfg.Challenge.PublishCheck.PollInterval,
 			BatchSize:    cfg.Challenge.PublishCheck.BatchSize,
@@ -174,12 +173,12 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 	}, deps.input.Logger.Named("challenge_service"))
 	packageDeliveryService := challengecmd.NewPackageDeliveryService(challengeImportService, nil)
 	return challengePublishCheckService, challengehttp.NewHandler(challengehttp.HandlerDeps{
-		Commands:        challengeCommandService,
-		Queries:         challengeQueryService,
-		Imports:         challengeImportService,
-		SelfChecks:      challengeSelfCheckService,
-		PublishChecks:   challengePublishCheckService,
-		PackageExports:  challengePackageExportService,
+		Commands:       challengeCommandService,
+		Queries:        challengeQueryService,
+		Imports:        challengeImportService,
+		SelfChecks:     challengeSelfCheckService,
+		PublishChecks:  challengePublishCheckService,
+		PackageExports: challengePackageExportService,
 		Attachments: challengeinfra.NewChallengeAttachmentStore(
 			platformsharedfs.NewStore(deps.input.Config.SharedStoragePath("challenge-attachments")),
 			"",

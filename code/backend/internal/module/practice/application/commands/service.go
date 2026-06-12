@@ -30,6 +30,7 @@ type practiceCommandRepository interface {
 	practiceports.PracticeInstanceStartTxManager
 	practiceports.PracticeInstanceRestartTxManager
 	practiceports.PracticeAWDServiceOperationTxManager
+	practiceports.PracticeSubmissionOutboxTxManager
 	practiceports.PracticeInstanceStartTxRepository
 	practiceports.PracticeInstanceRestartTxRepository
 	practiceports.PracticeAWDServiceOperationTxRepository

@@ -1,6 +1,6 @@
 package commands
 
-import "time"
+import opscontracts "ctf-platform/internal/module/ops/contracts"
 
 const (
 	NotificationAudienceTypeAll   = "all"
@@ -9,16 +9,7 @@ const (
 	NotificationAudienceTypeUser  = "user"
 )
 
-type NotificationInfo struct {
-	ID        int64      `json:"id"`
-	Type      string     `json:"type"`
-	Title     string     `json:"title"`
-	Content   *string    `json:"content,omitempty"`
-	Unread    bool       `json:"unread"`
-	Link      *string    `json:"link,omitempty"`
-	CreatedAt time.Time  `json:"created_at"`
-	ReadAt    *time.Time `json:"read_at,omitempty"`
-}
+type NotificationInfo = opscontracts.NotificationInfo
 
 type AdminNotificationPublishResp struct {
 	BatchID        int64 `json:"batch_id"`

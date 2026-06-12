@@ -8,6 +8,7 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	"ctf-platform/internal/platform/events"
 	"ctf-platform/internal/shared/taxonomy"
 	"github.com/alicebob/miniredis/v2"
 	"github.com/redis/go-redis/v9"
@@ -195,4 +196,115 @@ func TestReviewManualReviewSubmissionApprovesAndTriggersScoreUpdate(t *testing.T
 	requireEventually(t, time.Second, func() bool {
 		return scoreUpdateCalls.Load() == 1
 	})
+}
+
+func TestReviewManualReviewSubmissionEnqueuesFlagAcceptedOutboxEvent(t *testing.T) {
+	t.Parallel()
+
+	now := time.Now().UTC()
+	submissionID := int64(72)
+	reviewerID := int64(301)
+	studentID := int64(201)
+
+	var enqueued events.OutboxEvent
+	repo := &stubPracticeRepository{
+		getTeacherManualReviewSubmissionByIDFn: func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error) {
+			if id != submissionID {
+				t.Fatalf("unexpected submission id: %d", id)
+			}
+			return &practiceports.TeacherManualReviewSubmissionRecord{
+				Submission: practiceports.SubmissionRecord{
+					ID:           submissionID,
+					UserID:       studentID,
+					ChallengeID:  19,
+					Flag:         "answer text",
+					ReviewStatus: contestentity.SubmissionReviewStatusPending,
+					SubmittedAt:  now,
+					UpdatedAt:    now,
+				},
+				StudentUsername: "student",
+				StudentName:     "Student",
+				ClassName:       "Class 1",
+				ChallengeTitle:  "manual challenge",
+			}, nil
+		},
+		updateSubmissionFn: func(ctx context.Context, submission *practiceports.SubmissionRecord) error {
+			if !submission.IsCorrect || submission.Score != 120 {
+				t.Fatalf("unexpected updated submission: %+v", submission)
+			}
+			return nil
+		},
+		findUserByIDFn: func(ctx context.Context, userID int64) (*identitycontracts.User, error) {
+			return &identitycontracts.User{ID: userID, Username: "teacher", Role: identitycontracts.RoleTeacher, ClassName: "Class 1"}, nil
+		},
+		enqueueOutboxEventFn: func(ctx context.Context, event events.OutboxEvent) error {
+			enqueued = event
+			return nil
+		},
+	}
+	challengeRepo := &stubPracticeChallengeContract{
+		findByIDWithContextFn: func(ctx context.Context, id int64) (*challengecontracts.PracticeRuntimeChallenge, error) {
+			return &challengecontracts.PracticeRuntimeChallenge{
+				ID:       id,
+				Category: taxonomy.DimensionWeb,
+				Points:   120,
+				Status:   challengecontracts.ChallengeStatusPublished,
+				FlagType: challengecontracts.FlagTypeManualReview,
+			}, nil
+		},
+	}
+	service := wirePracticeManualReviewAdapters(
+		newServiceCore(
+			repo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			&config.Config{},
+			nil,
+		),
+		repo,
+		challengeRepo,
+	)
+
+	resp, err := service.ReviewManualReviewSubmission(
+		context.Background(),
+		submissionID,
+		reviewerID,
+		identitycontracts.RoleTeacher,
+		&practicecontracts.ReviewManualReviewSubmissionReq{
+			ReviewStatus:  contestentity.SubmissionReviewStatusApproved,
+			ReviewComment: "答案链路完整",
+		},
+	)
+	if err != nil {
+		t.Fatalf("ReviewManualReviewSubmission() error = %v", err)
+	}
+	if !resp.IsCorrect {
+		t.Fatalf("expected approved response to be correct, got %+v", resp)
+	}
+	if enqueued.Name != practicecontracts.EventFlagAccepted {
+		t.Fatalf("unexpected outbox event name: %q", enqueued.Name)
+	}
+	if enqueued.PayloadVersion != 1 || enqueued.Route != events.OutboxRouteHandler {
+		t.Fatalf("unexpected outbox envelope: %+v", enqueued)
+	}
+	if enqueued.DedupeKey != "practice:flag_accepted:201:19" {
+		t.Fatalf("unexpected outbox dedupe key: %s", enqueued.DedupeKey)
+	}
+
+	codec := events.NewOutboxCodec()
+	codec.Register(practicecontracts.EventFlagAccepted, 1, func() any { return &practicecontracts.FlagAcceptedEvent{} })
+	decoded, err := codec.Decode(enqueued)
+	if err != nil {
+		t.Fatalf("decode outbox payload: %v", err)
+	}
+	payload, ok := decoded.Payload.(*practicecontracts.FlagAcceptedEvent)
+	if !ok {
+		t.Fatalf("unexpected decoded payload type: %T", decoded.Payload)
+	}
+	if payload.UserID != studentID || payload.ChallengeID != 19 || payload.Dimension != taxonomy.DimensionWeb || payload.Points != 120 {
+		t.Fatalf("unexpected outbox payload: %+v", payload)
+	}
 }

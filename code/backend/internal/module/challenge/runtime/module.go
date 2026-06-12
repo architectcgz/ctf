@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"time"
 
 	redislib "github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -66,11 +67,14 @@ type moduleDeps struct {
 	challengeCommandRepo interface {
 		CreateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
 		FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+		LockChallengeByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 		Update(ctx context.Context, challenge *challengeentity.Challenge) error
+		MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error
 		UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 		Delete(ctx context.Context, id int64) error
 		challengeports.ChallengeInstanceUsageRepository
 		challengeports.ChallengePublishCheckRepository
+		challengeports.ChallengePublishCheckOutboxTxManager
 		challengeports.ChallengePackageRevisionRepository
 	}
 	// challengeQueryRepo      challengeports.ChallengeQueryRepository

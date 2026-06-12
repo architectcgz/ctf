@@ -144,8 +144,12 @@ func TestOpsModuleUsesTypedDeps(t *testing.T) {
 		"runtime *opsruntime.Module",
 		"opsruntime.Build(",
 		"opsruntime.Deps{",
-		"RuntimeQuery: runtime.OpsRuntimeQuery",
-		"RuntimeStats: runtime.OpsRuntimeStatsProvider",
+		"RuntimeQuery:",
+		"runtime.OpsRuntimeQuery",
+		"RuntimeStats:",
+		"runtime.OpsRuntimeStatsProvider",
+		"OutboxHandlers:",
+		"root.OutboxHandlerRegistry()",
 	}
 	for _, marker := range expected {
 		if !strings.Contains(source, marker) {

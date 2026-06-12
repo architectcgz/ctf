@@ -13,6 +13,7 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
+	platformevents "ctf-platform/internal/platform/events"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -85,6 +86,16 @@ func (r *Repository) WithinAWDServiceOperationTx(ctx context.Context, fn func(tx
 	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		return fn(r.WithDB(tx))
 	})
+}
+
+func (r *Repository) WithinSubmissionOutboxTx(ctx context.Context, fn func(txRepo practiceports.PracticeSubmissionOutboxTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
+}
+
+func (r *Repository) EnqueueOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	return platformevents.NewOutboxRepository(r.dbWithContext(ctx)).Enqueue(ctx, event)
 }
 
 func (r *Repository) FindContestByID(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error) {
@@ -604,6 +615,9 @@ func (r *Repository) FindCorrectSubmission(ctx context.Context, userID, challeng
 	var submission submissionRow
 	err := r.dbWithContext(ctx).Where("user_id = ? AND challenge_id = ? AND is_correct = ?", userID, challengeID, true).
 		First(&submission).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, practiceports.ErrPracticeSolvedSubmissionNotFound
+	}
 	return submission.toRecord(), err
 }
 

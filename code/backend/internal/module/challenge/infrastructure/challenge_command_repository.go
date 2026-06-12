@@ -9,16 +9,20 @@ import (
 
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type challengeCommandRepositorySource interface {
 	CreateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
 	FindByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
+	LockChallengeByID(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	Update(ctx context.Context, challenge *challengeentity.Challenge) error
+	MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error
 	UpdateWithHints(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	Delete(ctx context.Context, id int64) error
 	challengeports.ChallengeInstanceUsageRepository
 	challengeports.ChallengePublishCheckRepository
+	challengeports.ChallengePublishCheckOutboxTxManager
 }
 
 type ChallengeCommandRepository struct {
@@ -54,8 +58,23 @@ func (r *ChallengeCommandRepository) FindByID(ctx context.Context, id int64) (*c
 	return challengeWriteModelFromEntity(item), nil
 }
 
+func (r *ChallengeCommandRepository) LockChallengeByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteModel, error) {
+	item, err := r.source.LockChallengeByID(ctx, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, challengeports.ErrChallengeCommandChallengeNotFound
+	}
+	if err != nil || item == nil {
+		return nil, err
+	}
+	return challengeWriteModelFromEntity(item), nil
+}
+
 func (r *ChallengeCommandRepository) Update(ctx context.Context, challenge *challengeports.ChallengeWriteModel) error {
 	return r.source.Update(ctx, challengeWriteModelToEntity(challenge))
+}
+
+func (r *ChallengeCommandRepository) MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error {
+	return r.source.MarkChallengePublished(ctx, id, publishedAt)
 }
 
 func (r *ChallengeCommandRepository) UpdateWithHints(ctx context.Context, challenge *challengeports.ChallengeWriteModel, hints []*challengeentity.ChallengeHint, replaceHints bool) error {
@@ -108,6 +127,19 @@ func (r *ChallengeCommandRepository) TryStartPublishCheckJob(ctx context.Context
 
 func (r *ChallengeCommandRepository) UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	return r.source.UpdatePublishCheckJob(ctx, job)
+}
+
+func (r *ChallengeCommandRepository) WithinPublishCheckOutboxTx(ctx context.Context, fn func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error) error {
+	return r.source.WithinPublishCheckOutboxTx(ctx, func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error {
+		return fn(txRepo)
+	})
+}
+
+func (r *ChallengeCommandRepository) EnqueueOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	if enqueuer, ok := r.source.(platformevents.OutboxEventEnqueuer); ok {
+		return enqueuer.EnqueueOutboxEvent(ctx, event)
+	}
+	return errors.New("challenge outbox event enqueuer is not configured")
 }
 
 func challengeWriteModelFromEntity(source *challengeentity.Challenge) *challengeports.ChallengeWriteModel {
@@ -171,3 +203,5 @@ func challengeWriteModelToEntity(source *challengeports.ChallengeWriteModel) *ch
 var _ challengeports.ChallengeWriteRepository = (*ChallengeCommandRepository)(nil)
 var _ challengeports.ChallengeInstanceUsageRepository = (*ChallengeCommandRepository)(nil)
 var _ challengeports.ChallengePublishCheckRepository = (*ChallengeCommandRepository)(nil)
+var _ challengeports.ChallengePublishCheckOutboxTxRepository = (*ChallengeCommandRepository)(nil)
+var _ challengeports.ChallengePublishCheckOutboxTxManager = (*ChallengeCommandRepository)(nil)

@@ -12,7 +12,6 @@ import (
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
-	platformevents "ctf-platform/internal/platform/events"
 )
 
 func (s *serviceCore) ReviewManualReviewSubmission(
@@ -67,11 +66,6 @@ func (s *serviceCore) ReviewManualReviewSubmission(
 	item.ReviewedAt = &now
 	item.UpdatedAt = now
 	if req.ReviewStatus == practiceports.SubmissionReviewStatusApproved {
-		if _, err := s.manualReviewRepo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
-			return nil, challengecontracts.ErrAlreadySolved
-		} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
-			return nil, apperror.ErrInternal.WithCause(err)
-		}
 		item.IsCorrect = true
 		item.Score = challengeItem.Points
 	} else {
@@ -79,26 +73,52 @@ func (s *serviceCore) ReviewManualReviewSubmission(
 		item.Score = 0
 	}
 
-	if err := s.manualReviewRepo.UpdateSubmission(ctx, &item); err != nil {
+	if err := s.reviewManualReviewSubmissionWithOutbox(ctx, &item, challengeItem, now); err != nil {
+		if errors.Is(err, challengecontracts.ErrAlreadySolved) {
+			return nil, challengecontracts.ErrAlreadySolved
+		}
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 	if item.IsCorrect {
-		s.publishWeakEvent(ctx, platformevents.Event{
-			Name: practicecontracts.EventFlagAccepted,
-			Payload: practicecontracts.FlagAcceptedEvent{
-				UserID:      item.UserID,
-				ChallengeID: item.ChallengeID,
-				Dimension:   challengeItem.Category,
-				Points:      item.Score,
-				OccurredAt:  now,
-			},
-		})
 		if s.scoreService != nil {
 			s.triggerScoreUpdate(item.UserID)
 		}
 	}
 
 	return manualReviewDetailRespFromRecord(*record, item), nil
+}
+
+func (s *serviceCore) reviewManualReviewSubmissionWithOutbox(
+	ctx context.Context,
+	item *practiceports.SubmissionRecord,
+	challengeItem *practiceentity.Challenge,
+	occurredAt time.Time,
+) error {
+	if s == nil || s.repo == nil {
+		return errors.New("practice submission repository is nil")
+	}
+	return s.repo.WithinSubmissionOutboxTx(ctx, func(txRepo practiceports.PracticeSubmissionOutboxTxRepository) error {
+		if item.IsCorrect {
+			if _, err := txRepo.FindCorrectSubmission(ctx, item.UserID, item.ChallengeID); err == nil {
+				return challengecontracts.ErrAlreadySolved
+			} else if err != nil && !errors.Is(err, practiceports.ErrPracticeSolvedSubmissionNotFound) {
+				return err
+			}
+		}
+		if err := txRepo.UpdateSubmission(ctx, item); err != nil {
+			return err
+		}
+		if !item.IsCorrect {
+			return nil
+		}
+		return enqueuePracticeFlagAcceptedOutboxEvent(ctx, txRepo, practicecontracts.FlagAcceptedEvent{
+			UserID:      item.UserID,
+			ChallengeID: item.ChallengeID,
+			Dimension:   challengeItem.Category,
+			Points:      item.Score,
+			OccurredAt:  occurredAt,
+		})
+	})
 }
 
 func (s *serviceCore) ListTeacherManualReviewSubmissions(

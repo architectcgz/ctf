@@ -139,13 +139,16 @@ func TestHandleFlagAcceptedEventDoesNotCreateBackgroundContext(t *testing.T) {
 		},
 	}
 	service := NewProgressTimelineService(&stubPracticeProgressTimelineRepository{}, cache, 0, nil)
+	codec := platformevents.NewOutboxCodec()
+	event, err := codec.Encode(practicecontracts.EventFlagAccepted, practicecontracts.EventFlagAcceptedPayloadVersion, practicecontracts.FlagAcceptedEvent{
+		UserID:     7,
+		OccurredAt: time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC),
+	}, time.Date(2026, 6, 12, 10, 0, 0, 0, time.UTC))
+	if err != nil {
+		t.Fatalf("encode outbox event: %v", err)
+	}
 
-	if err := service.handleFlagAcceptedEvent(nil, platformevents.Event{
-		Name: practicecontracts.EventFlagAccepted,
-		Payload: practicecontracts.FlagAcceptedEvent{
-			UserID: 7,
-		},
-	}); err != nil {
-		t.Fatalf("handleFlagAcceptedEvent() error = %v", err)
+	if err := service.HandleFlagAcceptedOutboxEvent(nil, event); err != nil {
+		t.Fatalf("HandleFlagAcceptedOutboxEvent() error = %v", err)
 	}
 }

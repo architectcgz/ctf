@@ -10,6 +10,7 @@ import (
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 var (
@@ -77,6 +78,17 @@ type ChallengePublishCheckRepository interface {
 	ListPendingPublishCheckJobs(ctx context.Context, limit int) ([]*challengeentity.ChallengePublishCheckJob, error)
 	TryStartPublishCheckJob(ctx context.Context, id int64, startedAt time.Time) (bool, error)
 	UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
+}
+
+type ChallengePublishCheckOutboxTxRepository interface {
+	ChallengePublishCheckRepository
+	LockChallengeByID(ctx context.Context, id int64) (*ChallengeWriteModel, error)
+	MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error
+	platformevents.OutboxEventEnqueuer
+}
+
+type ChallengePublishCheckOutboxTxManager interface {
+	WithinPublishCheckOutboxTx(ctx context.Context, fn func(txRepo ChallengePublishCheckOutboxTxRepository) error) error
 }
 
 type ChallengeFlag struct {

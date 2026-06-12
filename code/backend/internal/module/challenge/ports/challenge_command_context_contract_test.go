@@ -6,6 +6,7 @@ import (
 
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type ctxOnlyChallengeCommandRepository struct{}
@@ -18,7 +19,15 @@ func (ctxOnlyChallengeCommandRepository) FindByID(context.Context, int64) (*chal
 	return nil, nil
 }
 
+func (ctxOnlyChallengeCommandRepository) LockChallengeByID(context.Context, int64) (*challengeports.ChallengeWriteModel, error) {
+	return nil, nil
+}
+
 func (ctxOnlyChallengeCommandRepository) Update(context.Context, *challengeports.ChallengeWriteModel) error {
+	return nil
+}
+
+func (ctxOnlyChallengeCommandRepository) MarkChallengePublished(context.Context, int64, time.Time) error {
 	return nil
 }
 
@@ -62,6 +71,16 @@ func (ctxOnlyChallengeCommandRepository) UpdatePublishCheckJob(context.Context, 
 	return nil
 }
 
+func (ctxOnlyChallengeCommandRepository) WithinPublishCheckOutboxTx(context.Context, func(challengeports.ChallengePublishCheckOutboxTxRepository) error) error {
+	return nil
+}
+
+func (ctxOnlyChallengeCommandRepository) EnqueueOutboxEvent(context.Context, platformevents.OutboxEvent) error {
+	return nil
+}
+
 var _ challengeports.ChallengeWriteRepository = (*ctxOnlyChallengeCommandRepository)(nil)
 var _ challengeports.ChallengeInstanceUsageRepository = (*ctxOnlyChallengeCommandRepository)(nil)
 var _ challengeports.ChallengePublishCheckRepository = (*ctxOnlyChallengeCommandRepository)(nil)
+var _ challengeports.ChallengePublishCheckOutboxTxRepository = (*ctxOnlyChallengeCommandRepository)(nil)
+var _ challengeports.ChallengePublishCheckOutboxTxManager = (*ctxOnlyChallengeCommandRepository)(nil)

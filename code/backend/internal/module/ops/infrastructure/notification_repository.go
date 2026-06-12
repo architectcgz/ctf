@@ -5,10 +5,12 @@ import (
 	"errors"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsports "ctf-platform/internal/module/ops/ports"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 type NotificationRepository struct {
@@ -19,12 +21,43 @@ func NewNotificationRepository(db *gorm.DB) *NotificationRepository {
 	return &NotificationRepository{db: db}
 }
 
+func (r *NotificationRepository) WithDB(db *gorm.DB) *NotificationRepository {
+	return &NotificationRepository{db: db}
+}
+
+func (r *NotificationRepository) dbWithContext(ctx context.Context) *gorm.DB {
+	if ctx == nil {
+		return r.db
+	}
+	return r.db.WithContext(ctx)
+}
+
 func (r *NotificationRepository) Create(ctx context.Context, notification *opsentity.Notification) error {
-	return r.db.WithContext(ctx).Create(notification).Error
+	return r.dbWithContext(ctx).Create(notification).Error
+}
+
+func (r *NotificationRepository) CreateIfSourceEventAbsent(ctx context.Context, notification *opsentity.Notification) (bool, error) {
+	if notification == nil {
+		return false, nil
+	}
+	if notification.SourceEventKey == "" {
+		return true, r.Create(ctx, notification)
+	}
+	result := r.dbWithContext(ctx).Clauses(clause.OnConflict{
+		Columns: []clause.Column{{Name: "source_event_key"}},
+		TargetWhere: clause.Where{Exprs: []clause.Expression{
+			clause.Expr{SQL: "source_event_key <> ''"},
+		}},
+		DoNothing: true,
+	}).Create(notification)
+	if result.Error != nil {
+		return false, result.Error
+	}
+	return result.RowsAffected > 0, nil
 }
 
 func (r *NotificationRepository) CreateBatch(ctx context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error {
-	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(batch).Error; err != nil {
 			return err
 		}
@@ -38,8 +71,18 @@ func (r *NotificationRepository) CreateBatch(ctx context.Context, batch *opsenti
 	})
 }
 
+func (r *NotificationRepository) WithinNotificationOutboxTx(ctx context.Context, fn func(txRepo opsports.NotificationOutboxTxRepository) error) error {
+	return r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return fn(r.WithDB(tx))
+	})
+}
+
+func (r *NotificationRepository) EnqueueOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	return platformevents.NewOutboxRepository(r.dbWithContext(ctx)).Enqueue(ctx, event)
+}
+
 func (r *NotificationRepository) List(ctx context.Context, filter opsports.NotificationListFilter) ([]opsentity.Notification, int64, error) {
-	query := r.db.WithContext(ctx).Model(&opsentity.Notification{}).Where("user_id = ?", filter.UserID)
+	query := r.dbWithContext(ctx).Model(&opsentity.Notification{}).Where("user_id = ?", filter.UserID)
 	if filter.Type != "" {
 		query = query.Where("type = ?", filter.Type)
 	}
@@ -58,7 +101,7 @@ func (r *NotificationRepository) List(ctx context.Context, filter opsports.Notif
 
 func (r *NotificationRepository) FindByID(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error) {
 	var notification opsentity.Notification
-	if err := r.db.WithContext(ctx).
+	if err := r.dbWithContext(ctx).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		First(&notification).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -101,14 +144,14 @@ func (r *NotificationRepository) ListExistingUserIDs(ctx context.Context, userID
 }
 
 func (r *NotificationRepository) MarkAsRead(ctx context.Context, notificationID, userID int64, readAt any) error {
-	return r.db.WithContext(ctx).
+	return r.dbWithContext(ctx).
 		Model(&opsentity.Notification{}).
 		Where("id = ? AND user_id = ?", notificationID, userID).
 		Updates(map[string]any{"is_read": true, "read_at": readAt}).Error
 }
 
 func (r *NotificationRepository) listUserIDs(ctx context.Context, apply func(query *gorm.DB) *gorm.DB) ([]int64, error) {
-	query := r.db.WithContext(ctx).Model(&identitycontracts.User{}).Where("deleted_at IS NULL")
+	query := r.dbWithContext(ctx).Model(&identitycontracts.User{}).Where("deleted_at IS NULL")
 	if apply != nil {
 		query = apply(query)
 	}

@@ -428,7 +428,6 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 		challengeCommandRepo,
 		challengeCommandRepo,
 		challengeSelfCheckService,
-		challengeCommandService,
 		challengepublishcheck.Config{
 			PollInterval: cfg.Challenge.PublishCheck.PollInterval,
 			BatchSize:    cfg.Challenge.PublishCheck.BatchSize,

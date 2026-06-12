@@ -112,6 +112,8 @@ flowchart LR
   - `db`
   - `cache`
   - `events.Bus`
+  - platform outbox handler registry
+  - platform Redis Stream fanout
   - 后台任务注册表
 - HTTP 路由装配入口是 `internal/app/buildRouterRuntime`。当前装配顺序为：
   - `container_runtime`
@@ -134,6 +136,8 @@ flowchart LR
   - 统一执行进程退出时的 shutdown
 - 约束：
   - 后台任务必须通过 `composition.Root.RegisterBackgroundJob` 注册
+  - 跨副本关键 side effect 必须先写 `platform_event_outbox`，再由 `platform_event_outbox_dispatcher` / `platform_event_stream_consumer` 处理
+  - `events.Bus` 只保留进程内弱事件语义，不承担跨副本通知、缓存失效或可恢复投递
   - 禁止在 handler、协程或子流程中自行重建模块 service
   - 需要显式关闭的组件必须纳入 `routerRuntime.closers`
 
@@ -143,6 +147,8 @@ flowchart LR
 flowchart TD
     subgraph Root["composition.Root"]
         RootNode["config · logger · db · cache · events.Bus"]
+        Outbox["platform_event_outbox dispatcher"]
+        Stream["platform Redis Stream fanout"]
     end
 
     subgraph Views["app/composition 组合视图"]
@@ -171,6 +177,9 @@ flowchart TD
     RootNode --> Contest
     RootNode --> Practice
     RootNode --> Ops
+    RootNode --> Outbox
+    Outbox --> Stream
+    Stream --> Ops
 
     CR -->|runtime query / stats| Ops
     CR -->|capability / repo| IM
@@ -192,12 +201,14 @@ flowchart TD
     Challenge -->|catalog / image store| Practice
     IM -->|instance repo / runtime svc| Practice
     Practice -.practice.flag_accepted event.-> Assessment
+    Practice -.practice.flag_accepted outbox.-> Ops
 ```
 
 补充说明：
 
 - 实线表示当前 app/composition 的装配或能力提供关系。
 - 虚线表示 capability injection，例如 `ops` 向 `auth` 注入审计记录器、`auth` 向 `ops` 注入 token service；它们不是模块内部互相 import。
+- `platform_event_outbox` 是跨副本关键 side effect 的持久化入口；`notification.created` / `notification.read` 走 Redis Stream fanout 后由每个 API 副本本地 WebSocket manager 推送，`practice.flag_accepted` / `challenge.publish_check_finished` 先走 handler route 创建通知行或删除共享 Redis progress cache。
 
 ---
 
@@ -250,7 +261,7 @@ flowchart LR
 |------|------|----------|----------|
 | `auth` | 业务 owner | 注册、登录、登出、CAS、会话票据、WebSocket ticket | `identity`（代码），`ops`（装配注入审计记录器） |
 | `identity` | 业务 owner | 用户、角色、权限、当前用户解析、管理端用户能力 | 无业务上游依赖 |
-| `challenge` | 业务 owner | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `container_runtime`（装配注入运行时探针与镜像探测），代码级无跨模块 import；发布自检结果通知通过 `challenge.publish_check_finished` 事件交给 `ops` 消费 |
+| `challenge` | 业务 owner | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `container_runtime`（装配注入运行时探针与镜像探测），代码级无跨模块 import；发布自检通过时由 publish-check 事务同时更新题目发布状态、job final 状态与 `challenge.publish_check_finished` outbox，通知通过该事件交给 `ops` 消费 |
 | `container_runtime` | 底层容器运行时模块 + app 层组合视图 | Docker 运行时、镜像探针、容器文件访问、运行时统计、runtime-agent bridge、runtime nodes、allocation 和 sandbox executor；`ContainerRuntimeModule` 向 challenge / contest / ops / instance 暴露显式 capability fields | PostgreSQL / Redis / Docker Engine；业务规则由 `challenge`、`contest`、`instance` 等 owner 承接 |
 | `instance` | 业务 owner + app 层组合视图 | `internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `container_runtime`（装配注入显式 runtime capability），`contest`（AWD runtime state adapter） |
 | `practice` | 业务 owner | 练习开题、排队与 provisioning、Flag 提交、个人训练进度与时间线查询 | `challenge`、`instance`（装配），`container_runtime`、`contest`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
@@ -275,7 +286,9 @@ flowchart LR
 |------|----------|----------|
 | 应用服务调用 | 同步、强一致性用例 | 模块间通过 `application`、`ports`、`contracts` 暴露最小能力 |
 | 查询聚合 | 教师端、复盘、统计、跨模块列表页 | 进入 `teaching_analysis`，避免写模块互相穿透 SQL |
-| 进程内事件 | 异步、非关键路径通知 | 统一复用 `internal/platform/events.Bus` |
+| 进程内事件 | 同一 API 进程内的弱解耦事件 | 复用 `internal/platform/events.Bus`；事件丢失不影响关键事实 |
+| Platform outbox handler | 需要可恢复、只执行一次的跨模块副作用 | 业务事务内写 `platform_event_outbox`，dispatcher 调用 handler registry，例如 `practice.flag_accepted` 触发 progress Redis cache 删除与通知创建；通知 handler 使用 `notifications.source_event_key` 做源事件级幂等 |
+| Redis Stream fanout | 每个 API 副本都要执行的本地副作用 | dispatcher 把 `notification.created` / `notification.read` 写入 Redis Stream；每个副本按自己的 cursor 消费并推本地 WebSocket |
 
 ### 3.4 架构守卫
 
@@ -325,6 +338,7 @@ flowchart LR
 |------|------|----------|
 | 数据库 | PostgreSQL 15+ | 主存储，JSONB 存储灵活字段（如题目 hints、容器配置） |
 | 缓存 | Redis 7+ | 会话管理、排行榜、限流计数器、分布式锁 |
+| 事件 fanout | PostgreSQL outbox + Redis Stream | `platform_event_outbox` 持久化跨副本关键事件，Redis Stream 承担副本级本地 WebSocket fanout |
 | 容器运行时 | Docker Engine 24+ | 靶机容器编排，通过 Unix Socket 通信 |
 | 反向代理 | Nginx | 静态资源、API 转发、WebSocket 代理、SSL 终止 |
 | 进程管理 | systemd | Go 二进制直接部署，systemd 管理进程生命周期 |
@@ -335,6 +349,7 @@ flowchart LR
 - 配置层和 infra builder 已为未来 Redis Cluster 接线保留字段与内部映射，但 `redis.mode=cluster` 目前仍会被启动校验拒绝；这只是安全预留，不代表当前代码已经具备 cluster slot 兼容性。
 - 现阶段明确不支持 Redis Cluster。当前 Lua、pipeline、多 key 锁和排行榜写法按单 master / Sentinel failover 设计，不承诺 cluster slot 兼容。
 - PostgreSQL 连接串由 `internal/config.PostgresConfig.DSN()` 统一生成，并显式追加 `TimeZone=UTC`；HA 切换由 PostgreSQL driver、代理、VIP 或 DNS owner 承担，不在 handler / service / health 层实现第二套状态机。
+- `platform_event_outbox` 与 `notifications.source_event_key` 的 schema owner 是 `code/backend/migrations/000018_create_platform_event_outbox.up.sql`；runtime 启动路径不做 `AutoMigrate`。
 - `/ready` 继续以每次请求 live Ping PostgreSQL / Redis 的结果表达当前依赖可用性；依赖恢复后不需要额外重建 readiness 缓存状态。
 
 ---
@@ -357,7 +372,7 @@ ctf/code/backend/
 │   ├── config/                      # 配置加载与结构定义
 │   ├── middleware/                  # RequestID、CORS、Auth、RateLimit 等中间件
 │   ├── model/                       # 跨模块共享的持久化模型
-│   ├── platform/events/             # 进程内事件总线
+│   ├── platform/events/             # 进程内事件总线、platform outbox、Redis Stream fanout
 │   ├── shared/                      # 映射与轻量共享工具；Guardrail 见 internal/shared/architecture_test.go
 │   ├── infrastructure/              # PostgreSQL / Redis 等进程级基础设施
 │   ├── handler/health/              # 健康检查
@@ -913,15 +928,22 @@ contest:
   - 宿主机直接部署便于调试、日志查看、性能分析
 - 权衡：牺牲了部署一致性（不同机器环境可能有差异），通过 setup.sh 脚本和文档缓解
 
-### ADR-003：进程内事件总线 vs 消息队列
+### ADR-003：进程内事件总线、平台 Outbox 与消息队列
 
-- 决策：使用 Go channel 实现进程内事件总线，不引入 RabbitMQ / Kafka 等外部 MQ
+- 决策：保留 `internal/platform/events.Bus` 作为进程内弱事件总线；对跨副本关键 side effect 使用 `platform_event_outbox` + dispatcher + Redis Stream fanout，不引入 RabbitMQ / Kafka 等独立 MQ
 - 理由：
-  - 单体架构下进程内通信足够，无需跨进程消息传递
-  - 减少运维组件，降低部署复杂度
-  - 事件消费失败可通过重试 + 日志告警处理，不需要 MQ 的持久化和死信队列
-- 风险：进程重启时未消费的事件会丢失，对于审计日志等关键事件，采用同步写库兜底
-- 演进：如未来需要跨进程通信（如多机部署），可替换为 Redis Pub/Sub 或 NATS
+  - 同进程非关键解耦仍可使用 `events.Bus`，不把所有模块协作都升级为持久队列
+  - 练习解题、发布自检、站内通知和 progress cache invalidation 已经需要多副本可恢复投递，必须有数据库 outbox 作为事务边界
+  - Redis 已是平台依赖，复用 Redis Stream 可以完成副本级 fanout，不额外增加 RabbitMQ / Kafka / NATS 的部署和运维成本
+- 风险：
+  - `events.Bus` 仍然不是可靠消息通道，禁止把跨副本关键副作用继续挂在它上面
+  - Redis Stream fanout 只保证 API 副本级本地消费，不提供客户端离线 replay；客户端仍以 HTTP 查询为最终一致兜底
+  - handler route 的副作用必须自身幂等；例如 progress cache 删除天然可重复，通知创建使用 `notifications.source_event_key` partial unique index 约束同一 outbox 源事件和 handler 只生成一条通知
+- 已落地路径：
+  - `code/backend/internal/platform/events/outbox*.go`、`stream_fanout.go`
+  - `code/backend/migrations/000018_create_platform_event_outbox.up.sql`
+  - `code/backend/internal/app/composition/root.go`
+- 演进：如未来吞吐、死信、跨服务边界或审计需求超出 Redis Stream 能力，可在保持 `platform_event_outbox` 事件契约不变的前提下替换 dispatcher 下游。
 
 ### ADR-004：动态 Flag 生成策略
 
