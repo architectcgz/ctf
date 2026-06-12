@@ -7,8 +7,10 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/spf13/viper"
 
@@ -85,12 +87,24 @@ type PostgresConfig struct {
 }
 
 type RedisConfig struct {
-	Addr         string        `mapstructure:"addr"`
-	Password     string        `mapstructure:"password"`
-	DB           int           `mapstructure:"db"`
-	DialTimeout  time.Duration `mapstructure:"dial_timeout"`
-	ReadTimeout  time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout time.Duration `mapstructure:"write_timeout"`
+	Mode             string             `mapstructure:"mode"`
+	Addr             string             `mapstructure:"addr"`
+	Password         string             `mapstructure:"password"`
+	DB               int                `mapstructure:"db"`
+	Cluster          RedisClusterConfig `mapstructure:"cluster"`
+	MasterName       string             `mapstructure:"master_name"`
+	SentinelAddrs    []string           `mapstructure:"sentinel_addrs"`
+	SentinelUsername string             `mapstructure:"sentinel_username"`
+	SentinelPassword string             `mapstructure:"sentinel_password"`
+	DialTimeout      time.Duration      `mapstructure:"dial_timeout"`
+	ReadTimeout      time.Duration      `mapstructure:"read_timeout"`
+	WriteTimeout     time.Duration      `mapstructure:"write_timeout"`
+}
+
+type RedisClusterConfig struct {
+	Addrs          []string `mapstructure:"addrs"`
+	RouteByLatency bool     `mapstructure:"route_by_latency"`
+	RouteRandomly  bool     `mapstructure:"route_randomly"`
 }
 
 type CORSConfig struct {
@@ -648,6 +662,22 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("redis.password must be provided from a non-placeholder secret in prod")
 		}
 	}
+	redisMode := normalizedRedisMode(c.Redis.Mode)
+	switch redisMode {
+	case "single":
+		if strings.TrimSpace(c.Redis.Addr) == "" {
+			return fmt.Errorf("redis.addr must not be empty when redis.mode is single")
+		}
+	case "sentinel":
+		if strings.TrimSpace(c.Redis.MasterName) == "" {
+			return fmt.Errorf("redis.master_name must not be empty when redis.mode is sentinel")
+		}
+		if len(nonEmptyStrings(c.Redis.SentinelAddrs)) == 0 {
+			return fmt.Errorf("redis.sentinel_addrs must not be empty when redis.mode is sentinel")
+		}
+	default:
+		return fmt.Errorf("redis.mode must be one of single or sentinel, got %q", strings.TrimSpace(c.Redis.Mode))
+	}
 	if c.Contest.StatusUpdateInterval <= 0 {
 		return fmt.Errorf("contest.status_update_interval must be greater than 0")
 	}
@@ -816,16 +846,70 @@ func cidrOverlaps(a, b *net.IPNet) bool {
 	return a.Contains(b.IP) || b.Contains(a.IP)
 }
 
+func normalizedRedisMode(mode string) string {
+	normalized := strings.ToLower(strings.TrimSpace(mode))
+	if normalized == "" {
+		return "single"
+	}
+	return normalized
+}
+
+func (c RedisConfig) RedisClusterAddrs() []string {
+	return nonEmptyStrings(c.Cluster.Addrs)
+}
+
+func nonEmptyStrings(values []string) []string {
+	filtered := make([]string, 0, len(values))
+	for _, value := range values {
+		trimmed := strings.TrimSpace(value)
+		if trimmed == "" {
+			continue
+		}
+		filtered = append(filtered, trimmed)
+	}
+	return filtered
+}
+
+func postgresConnStringValue(value string) string {
+	if value == "" {
+		return "''"
+	}
+	if !postgresValueNeedsQuoting(value) {
+		return value
+	}
+	escaped := strings.ReplaceAll(value, `\`, `\\`)
+	escaped = strings.ReplaceAll(escaped, `'`, `\'`)
+	return "'" + escaped + "'"
+}
+
+func postgresValueNeedsQuoting(value string) bool {
+	for _, r := range value {
+		if unicode.IsSpace(r) || r == '\'' || r == '\\' {
+			return true
+		}
+	}
+	return false
+}
+
 func (c PostgresConfig) DSN() string {
-	return fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		c.Host,
-		c.Port,
-		c.Username,
-		c.Password,
-		c.Database,
-		c.SSLMode,
-	)
+	params := []struct {
+		key   string
+		value string
+	}{
+		{key: "host", value: c.Host},
+		{key: "port", value: strconv.Itoa(c.Port)},
+		{key: "user", value: c.Username},
+		{key: "password", value: c.Password},
+		{key: "dbname", value: c.Database},
+		{key: "sslmode", value: c.SSLMode},
+		{key: "TimeZone", value: "UTC"},
+	}
+
+	parts := make([]string, 0, len(params))
+	for _, param := range params {
+		parts = append(parts, param.key+"="+postgresConnStringValue(param.value))
+	}
+	return strings.Join(parts, " ")
 }
 
 func (c AuthConfig) CookieSameSite() http.SameSite {
@@ -848,6 +932,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("log.output_paths", []string{"stdout"})
 	v.SetDefault("log.error_output_paths", []string{"stderr"})
 	v.SetDefault("postgres.conn_max_lifetime", 30*time.Minute)
+	v.SetDefault("redis.mode", "single")
 	v.SetDefault("redis.dial_timeout", 5*time.Second)
 	v.SetDefault("redis.read_timeout", 3*time.Second)
 	v.SetDefault("redis.write_timeout", 3*time.Second)

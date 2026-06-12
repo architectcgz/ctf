@@ -15,8 +15,21 @@ postgres:
   conn_max_lifetime: 30m
 
 redis:
+  mode: single
   password: change_me
   db: 0
+  cluster:
+    addrs: [] # 仅为未来 cluster 接线预留；当前 redis.mode=cluster 仍会被启动校验拒绝
+    route_by_latency: false
+    route_randomly: false
+  # Sentinel 模式示例：
+  # mode: sentinel
+  # master_name: mymaster
+  # sentinel_addrs:
+  #   - 10.0.1.10:26379
+  #   - 10.0.1.11:26379
+  # sentinel_username: ""
+  # sentinel_password: change_me
 
 cors:
   # 生产环境必须显式配置前端 Origin；空数组会在启动校验阶段被拒绝。
