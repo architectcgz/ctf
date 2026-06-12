@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
+
 	startuprecovery "ctf-platform/internal/module/instance/startuprecovery"
 )
 
@@ -380,6 +382,110 @@ func TestLoadRejectsMismatchedPersistedContainerFlagSecret(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsUnsupportedRedisMode(t *testing.T) {
+	t.Parallel()
+
+	cfg := validConfigForValidationTests()
+	cfg.Redis.Mode = "cluster"
+	cfg.Redis.Addr = "127.0.0.1:6379"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject unsupported redis mode, got nil")
+	}
+	if !strings.Contains(err.Error(), "redis.mode") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsSingleRedisModeWithoutAddr(t *testing.T) {
+	t.Parallel()
+
+	cfg := validConfigForValidationTests()
+	cfg.Redis.Mode = "single"
+	cfg.Redis.Addr = ""
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject single redis mode without addr, got nil")
+	}
+	if !strings.Contains(err.Error(), "redis.addr") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsSentinelRedisModeWithoutMasterName(t *testing.T) {
+	t.Parallel()
+
+	cfg := validConfigForValidationTests()
+	cfg.Redis.Mode = "sentinel"
+	cfg.Redis.MasterName = ""
+	cfg.Redis.SentinelAddrs = []string{"127.0.0.1:26379"}
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject sentinel redis mode without master name, got nil")
+	}
+	if !strings.Contains(err.Error(), "redis.master_name") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsSentinelRedisModeWithoutSentinelAddrs(t *testing.T) {
+	t.Parallel()
+
+	cfg := validConfigForValidationTests()
+	cfg.Redis.Mode = "sentinel"
+	cfg.Redis.MasterName = "mymaster"
+	cfg.Redis.SentinelAddrs = nil
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject sentinel redis mode without sentinel addrs, got nil")
+	}
+	if !strings.Contains(err.Error(), "redis.sentinel_addrs") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestPostgresDSNIncludesUTCAndEscapesKeywordValues(t *testing.T) {
+	t.Parallel()
+
+	cfg := PostgresConfig{
+		Host:     "db.internal",
+		Port:     5432,
+		Database: "ctf db",
+		Username: "ctf user",
+		Password: "p'ass\\word value",
+		SSLMode:  "require",
+	}
+
+	dsn := cfg.DSN()
+	if !strings.Contains(dsn, "TimeZone=UTC") {
+		t.Fatalf("DSN() = %q, want TimeZone=UTC", dsn)
+	}
+
+	parsed, err := pgconn.ParseConfig(dsn)
+	if err != nil {
+		t.Fatalf("ParseConfig(DSN()) error = %v, dsn = %q", err, dsn)
+	}
+	if parsed.Host != cfg.Host {
+		t.Fatalf("parsed host = %q, want %q", parsed.Host, cfg.Host)
+	}
+	if parsed.Database != cfg.Database {
+		t.Fatalf("parsed database = %q, want %q", parsed.Database, cfg.Database)
+	}
+	if parsed.User != cfg.Username {
+		t.Fatalf("parsed user = %q, want %q", parsed.User, cfg.Username)
+	}
+	if parsed.Password != cfg.Password {
+		t.Fatalf("parsed password = %q, want %q", parsed.Password, cfg.Password)
+	}
+	if got := runtimeParamValue(parsed.RuntimeParams, "TimeZone"); got != "UTC" {
+		t.Fatalf("runtime TimeZone = %q, want UTC", got)
+	}
+}
+
 func TestValidateRejectsProductionPlaceholderSecrets(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.App.Env = "prod"
@@ -632,6 +738,9 @@ func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
 
 func validConfigForValidationTests() *Config {
 	return &Config{
+		Redis: RedisConfig{
+			Addr: "127.0.0.1:6379",
+		},
 		CORS: CORSConfig{
 			AllowOrigins:     []string{"https://academy.example.com"},
 			AllowCredentials: true,
@@ -720,4 +829,13 @@ func validConfigForValidationTests() *Config {
 			},
 		},
 	}
+}
+
+func runtimeParamValue(params map[string]string, key string) string {
+	for candidate, value := range params {
+		if strings.EqualFold(candidate, key) {
+			return value
+		}
+	}
+	return ""
 }

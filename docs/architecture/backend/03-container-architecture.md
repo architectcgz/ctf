@@ -38,6 +38,10 @@
   - 不负责：提供管理员手动暂停状态机，或把同一套暂停语义扩散到 Jeopardy 比赛
 
 - `code/backend/internal/config/config.go`、`code/backend/Dockerfile`、`docker/docker-compose.dev.yml`
+  - 负责：Redis 接入配置统一由 `redis.mode` owner，支持 `single` 与 `sentinel` 两种模式；sentinel 模式通过 `master_name`、`sentinel_addrs`、`sentinel_username`、`sentinel_password` 描述 control plane 使用的哨兵拓扑
+  - 负责：`internal/infrastructure/redis` 根据配置创建 single client 或 Sentinel failover client，但对上层继续暴露 `*redis.Client`；不把哨兵分支扩散到业务模块
+  - 负责：PostgreSQL 连接串统一显式带 `TimeZone=UTC`，driver / 代理层负责多地址或 failover 语义；`/ready` 继续按 live Ping 反映 PostgreSQL / Redis 当前依赖状态
+  - 不负责：引入 Redis Cluster，或在 health / service 层维护额外的 Redis / PostgreSQL failover 状态机
   - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
   - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
   - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动

@@ -111,6 +111,13 @@ runtime_agent:
 - API 主机不再依赖“切 `DOCKER_HOST` 就完成多机”的假设；完整执行 authority 来自 agent 协议和 `node_id`
 - API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
 
+## PostgreSQL / Redis 连接基线
+
+- PostgreSQL 连接串由后端统一生成 keyword/value DSN，并显式带 `TimeZone=UTC`；如果生产侧通过代理、VIP 或 DNS 提供单主写 HA，业务层不需要额外改配置或改 `/ready` 逻辑。
+- Redis 默认仍可用 `redis.mode: single` 直连单地址；需要哨兵时改为 `redis.mode: sentinel`，并配置 `master_name`、`sentinel_addrs`，可按部署情况补 `sentinel_username`、`sentinel_password`。
+- 当前控制面只支持 Redis Sentinel 单 master failover，不把 Redis Cluster 视为本阶段部署目标。现有 Lua、pipeline、多 key 锁和排行榜逻辑都按这一前提运行。
+- `/ready` 继续按 live Ping PostgreSQL / Redis 表达当前依赖可用性；依赖恢复后服务会自然重新 ready，不需要手工清理额外状态。
+
 ## node 绑定说明
 
 - 默认节点由启动时的 `runtime_agent.enabled` 决定：
