@@ -5,7 +5,7 @@
 
 **Goal:** 让 AWD defense SSH ingress 从单 gateway 进程可用推进到多 gateway 副本 behind TCP LB：共享 ticket 校验、稳定 host key、可观测 readiness，并支持停止接新连接的 draining 语义。
 
-**Architecture:** Gateway 自身不持有唯一业务状态；ticket claims 继续由 Redis / PostgreSQL 提供共享事实，host key 共源由 T2 提供前置 contract。T3 在 gateway 生命周期内新增 readiness/draining 状态：readiness 用于 LB 摘流，drain 用于停止接新 SSH 连接但不立即杀掉已有 session；`Stop` 保留 hard-stop 语义用于最终关闭。
+**Architecture:** Gateway 自身不持有唯一业务状态；ticket claims 继续由 Redis / PostgreSQL 提供共享事实，host key 共源由 T2 提供前置 contract。T3 在 gateway 生命周期内新增 readiness/draining 状态：对外 readiness 直接体现在 TCP listener 是否还接收新连接，LB 通过 `container.defense_ssh_port` 的 TCP health check 摘流；`Drain` 用于停止接新 SSH 连接但不立即杀掉已有 session；`Stop` 保留 hard-stop 语义用于最终关闭。
 
 **Tech Stack:** Go, x/crypto/ssh, Redis-backed proxy tickets, PostgreSQL AWD scope repository, TCP listener lifecycle, code-workflow
 
@@ -121,66 +121,67 @@
   - `DefenseSSHHost` 不参与 `net.Listen`，当前实际是对外地址配置。
 - Plan adjustments after challenge:
   - 不把 draining 伪装成会话迁移；只做到停止接新连接与有界等待。
+  - 不额外引入 HTTP `/ready`；gateway 的可观测摘流 owner 直接是 TCP listener / LB health check。
   - 不在 gateway 层复制 ticket 数据；继续以 Redis/PostgreSQL 为共享事实。
 
 ## Ordered Task Slices
 
 ### Slice 1: cross-replica ticket and host-key contract tests
 
-- [ ] **Step 1: 写 proxy ticket store round-trip 测试**
+- [x] **Step 1: 写 proxy ticket store round-trip 测试**
   - Create: `code/backend/internal/module/instance/infrastructure/proxy_ticket_store_test.go`
   - 覆盖 Save/Find、TTL 过期、missing 返回 nil、claims JSON 字段完整。
 
-- [ ] **Step 2: 写跨副本 ticket 校验测试**
+- [x] **Step 2: 写跨副本 ticket 校验测试**
   - Modify: `code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
   - 构造两个 gateway / auth service，共用同一 Redis store 和 scope reader；副本 A 签发 ticket，副本 B authenticate 成功。
 
-- [ ] **Step 3: 写 shared host key fingerprint 测试**
+- [x] **Step 3: 写 shared host key fingerprint 测试**
   - Modify: `code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
   - 两个 gateway 使用同一 T2 shared host key source/path，fingerprint 一致；非法 key fail fast。
 
-- [ ] **Step 4: 运行 ticket/host-key focused tests**
+- [x] **Step 4: 运行 ticket/host-key focused tests**
   - Run: `cd code/backend && go test ./internal/module/instance/infrastructure ./internal/app/composition -run 'ProxyTicket|AWDDefenseSSH.*(Ticket|HostKey|Authenticate)' -count=1`
 
 ### Slice 2: readiness and draining lifecycle
 
-- [ ] **Step 5: 定义 gateway readiness/draining 状态接口**
+- [x] **Step 5: 定义 gateway readiness/draining 状态接口**
   - Modify/Create: `code/backend/internal/app/composition/awd_defense_ssh_gateway.go` 或 `awd_defense_ssh_gateway_readiness.go`
   - 状态建议：not_started、ready、draining、stopped。
   - `Ready()` 在 listener active 且非 draining 时 true。
 
-- [ ] **Step 6: 写 readiness 状态测试**
+- [x] **Step 6: 写 readiness 状态测试**
   - Modify: `code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
   - 覆盖 Start 前 not ready、Start 后 ready、Drain 后 not ready、Stop 后 stopped。
 
-- [ ] **Step 7: 实现 Drain(ctx) 语义**
+- [x] **Step 7: 实现 Drain(ctx) 语义**
   - Modify: `code/backend/internal/app/composition/awd_defense_ssh_gateway.go`
   - Drain 后停止接新连接（关闭 listener 或让 accept loop 拒绝），但不主动关闭已有 active conns；deadline 到期后由 Stop hard close。
 
-- [ ] **Step 8: 调整 bootstrap shutdown 顺序**
+- [x] **Step 8: 调整 bootstrap shutdown 顺序**
   - Modify: `code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
   - SIGTERM 后先标记 draining / 摘流等待，再 hard Stop；避免一进入 shutdown 就取消 active executor context。
 
-- [ ] **Step 9: 运行 lifecycle tests**
+- [x] **Step 9: 运行 lifecycle tests**
   - Run: `cd code/backend && go test ./internal/app/composition ./internal/bootstrap -run 'AWDDefenseSSH.*(Ready|Drain|Stop|Shutdown)' -count=1`
 
 ### Slice 3: LB-facing config and docs
 
-- [ ] **Step 10: 明确 config 命名/注释**
+- [x] **Step 10: 明确 config 命名/注释**
   - Modify: `code/backend/internal/config/config.go`
   - 注释或校验中说明 `container.defense_ssh_host` 是客户端访问/LB host；监听继续是 `:port` 或显式新增 bind host 字段（如需）。
 
-- [ ] **Step 11: 检查 HTTP access response**
+- [x] **Step 11: 检查 HTTP access response**
   - Review/Modify: `code/backend/internal/app/composition/runtime_http_service_adapter.go`
   - 确认返回给客户端的是 LB host/port，不是 pod bind address。
 
-- [ ] **Step 12: 更新运维文档**
+- [x] **Step 12: 更新运维文档**
   - Modify: `docs/architecture/backend/03-container-architecture.md`
   - Modify: `docs/operations/runtime-agent-deployment.md`
   - Modify: `docs/operations/awd-host-reboot-recovery-drill.md`
   - 写清：TCP LB health/readiness、drain before terminate、host key mount、ticket Redis/Postgres 依赖、session 可中断边界。
 
-- [ ] **Step 13: 运行最小验证**
+- [x] **Step 13: 运行最小验证**
   - Run: `cd code/backend && go test ./internal/app/composition ./internal/bootstrap ./internal/module/instance/... -run 'AWDDefenseSSH|ProxyTicket|DefenseSSH' -count=1`
 
 - [ ] **Step 14: Commit**

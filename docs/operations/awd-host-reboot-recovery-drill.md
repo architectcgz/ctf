@@ -19,6 +19,8 @@
 - 检测到 outage 后，会先给活跃 AWD 比赛补 `paused_seconds`，刷新活跃实例 `expires_at`，再执行 active runtime recovery 和 desired runtime reconciliation。
 - desired reconcile 对长期坏配置会在 scope 级做 backoff / suppress，不再每个 `desired_reconcile_interval` 固定重试。
 - `container.flag_global_secret_file` 会在启动时恢复 AWD dynamic flag 全局密钥。生产环境不会在文件缺失时自动生成；多 API 实例必须使用同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或同一份预置 secret 文件。
+- AWD defense SSH gateway 启动时只会加载预置的 `container.defense_ssh_host_key_path`。如果计划把 gateway 放在 TCP LB 后面，多副本必须挂载同一份 host key 文件，否则客户端会看到 host key fingerprint 漂移。
+- gateway 的摘流可观测性直接依赖 `container.defense_ssh_port` 对应的 TCP listener。`Drain(ctx)` 后该端口会停止接受新连接，LB 应按 TCP health check 把副本摘掉，而不是期待额外的 HTTP `/ready`。
 
 当前还没有随仓库提交一份“已实际执行过这次真实宿主重启”的证据记录；这份文档是 runbook，不是完成证明。
 
@@ -28,6 +30,8 @@
 
 - 使用的部署确实把 PostgreSQL、Redis 数据目录和 `/app/storage` 放在持久化卷上。
 - `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 已由部署层统一注入，或 `CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE` / `container.flag_global_secret_file` 指向所有 API 实例一致可见的持久化路径。compose dev 默认是 `/app/storage/runtime/flag-global-secret`。
+- 如果同时部署独立 `awd-defense-ssh-gateway`，`container.defense_ssh_host_key_path` 也需要指向所有 gateway 副本一致可见的持久化文件。
+- compose dev 场景下，这份文件默认由一次性的 `ctf-awd-defense-ssh-host-key` service 预置到共享 `/app/storage/runtime`；如果删掉宿主 `docker/runtime/app-storage`，下次启动会重新生成开发用 key。
 - 演练目标中至少有一场 `running` 或 `frozen` 的 AWD 比赛，并且至少存在一组可见 service。
 - 最好提前准备一条“正常 scope”和一条“坏配置 scope”，方便同时观察恢复与 suppress 行为。
 - 选定本次观测的 `<contest_id>`，并记住至少一组 `<team_id> + <service_id>`。
@@ -65,6 +69,7 @@ ORDER BY team_id, service_id, id;
 
 ```bash
 docker exec ctf-api sh -lc 'ls -l /app/storage/runtime/flag-global-secret && sha256sum /app/storage/runtime/flag-global-secret'
+docker exec ctf-api sh -lc 'ls -l /app/storage/runtime/awd-defense-ssh-host-key.pem && sha256sum /app/storage/runtime/awd-defense-ssh-host-key.pem'
 ```
 
 4. 如果要观察 suppress 行为，再记录目标 scope 的 Redis 状态和最近 operation。
@@ -117,6 +122,7 @@ docker logs --since 10m ctf-api | rg 'runtime_outage_detected_for_startup_recove
 - 重启前仍应活跃的 AWD scope，最终要么已经回到 `running`，要么先进入 `pending / creating` 后被调度器拉起。
 - `awd_service_operations` 不应出现同一坏配置 scope 每 15 秒稳定新增一条自动 start/recreate 噪声；如果触发了 suppress，Redis `suppressed_until` 应晚于当前时间。
 - `/app/storage/runtime/flag-global-secret` 在重启后仍存在且 fingerprint 不变；如果 fingerprint 变化，说明持久化卷或 secret 注入策略不成立。
+- `/app/storage/runtime/awd-defense-ssh-host-key.pem` 在重启后仍存在且 fingerprint 不变；如果计划走多 gateway + TCP LB，这个文件还必须在所有副本上保持一致。
 
 ## 失败判读
 
@@ -124,6 +130,7 @@ docker logs --since 10m ctf-api | rg 'runtime_outage_detected_for_startup_recove
 - 实例长期停在 `pending`：先查 `ctf-api` 日志里的 provisioning 错误，再查 Docker daemon 是否可用。
 - 同一坏配置 scope 仍然每轮都新增 operation：优先检查 Redis 是否可写，以及 `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>` 是否根本没生成。
 - global secret 文件丢失或变化：说明 `/app/storage` 没有持久化，或者部署层在每次启动时都覆盖了 `CTF_CONTAINER_FLAG_GLOBAL_SECRET`。如果 `/ready` 中 `container_flag_secret=down`，优先检查 `runtime_cluster_secrets` 里的 active key id / fingerprint 是否与当前实例配置一致。
+- SSH host key 文件丢失或变化：说明 gateway 的持久化卷或 shared mount contract 不成立。当前 gateway 在 host key 缺失时会直接启动失败，不会再自动生成新 key 掩盖问题。
 
 ## 证据保留
 

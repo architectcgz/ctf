@@ -1,6 +1,23 @@
 name: ctf
 
 services:
+  ctf-awd-defense-ssh-host-key:
+    container_name: ctf-awd-defense-ssh-host-key
+    image: alpine:3.22
+    command:
+      - /bin/sh
+      - -lc
+      - >-
+        set -eu;
+        mkdir -p /app/storage/runtime;
+        if [ ! -s /app/storage/runtime/awd-defense-ssh-host-key.pem ]; then
+          apk add --no-cache openssh-keygen >/dev/null;
+          ssh-keygen -q -t rsa -b 3072 -N '' -f /app/storage/runtime/awd-defense-ssh-host-key.pem;
+          chmod 600 /app/storage/runtime/awd-defense-ssh-host-key.pem;
+        fi
+    volumes:
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/app-storage:/app/storage
+
   ctf-frontend:
     container_name: ctf-frontend
     image: ctf-frontend:local
@@ -112,6 +129,8 @@ services:
     ports:
       - "127.0.0.1:2222:2222"
     depends_on:
+      ctf-awd-defense-ssh-host-key:
+        condition: service_completed_successfully
       ctf-postgres:
         condition: service_healthy
       ctf-redis:

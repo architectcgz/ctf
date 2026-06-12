@@ -148,8 +148,9 @@ container:
   proxy_ticket_ttl: 15m
   proxy_body_preview_size: 1024
   defense_ssh_enabled: false
-  defense_ssh_host: 127.0.0.1
+  defense_ssh_host: 127.0.0.1 # 返回给学生客户端的对外地址；不是 gateway 进程 bind host
   defense_ssh_port: 2222
+  defense_ssh_host_key_path: storage/runtime/awd-defense-ssh-host-key.pem # 多 gateway 副本时应挂载同一份预置 key 文件
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
   network:

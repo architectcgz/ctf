@@ -64,6 +64,14 @@ APP_ENV=prod go run ./cmd/awd-defense-ssh-gateway
 - gateway 节点需要访问与 API 相同的 PostgreSQL / Redis
 - 本地单机模式下，gateway 节点本机需要直接访问 Docker Engine
 - `runtime_agent.enabled: true` 时，gateway 与 API 一样通过 runtime node / agent 路由进入目标工作区容器
+- `container.defense_ssh_host` 需要配置成学生客户端实际访问的地址，通常是 TCP LB / ingress 地址；gateway 进程本身仍监听 `:container.defense_ssh_port`
+- `container.defense_ssh_host_key_path` 必须在所有 gateway 副本上指向同一份预置 host key 文件；gateway 启动时不会再为缺失路径自动生成新 key
+- 需要摘流时，先对目标 gateway 进程发送 `SIGTERM`，让它先进入 draining 停止接新连接，再在 shutdown timeout 内完成 hard stop；LB 健康探测应直接看 `container.defense_ssh_port` 的 TCP 连通性，而不是额外依赖 HTTP `/ready`
+
+开发态补充：
+
+- `docker/docker-compose.dev.yml` 通过一次性的 `ctf-awd-defense-ssh-host-key` service 在共享 `/app/storage/runtime` 下预置 `awd-defense-ssh-host-key.pem`，随后 `ctf-awd-defense-ssh-gateway` 再按 load-only 契约启动
+- 这只是本地联调的预置 owner。生产或共享环境仍应由部署层显式分发同一份 host key 文件，而不是把生成逻辑放回 gateway 运行时
 
 ## 最小配置
 
@@ -110,6 +118,7 @@ runtime_agent:
 - `server_name` 要与目标 node 的 `tls_identity` 一致
 - API 主机不再依赖“切 `DOCKER_HOST` 就完成多机”的假设；完整执行 authority 来自 agent 协议和 `node_id`
 - API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
+- 如果部署了多个 `awd-defense-ssh-gateway` 副本，LB 只需要把新连接导向健康副本；已有 SSH 会话在某个 gateway 或 runtime node 故障时允许中断，客户端后续重连会重新走 ticket + scope 校验
 
 ## PostgreSQL / Redis 连接基线
 

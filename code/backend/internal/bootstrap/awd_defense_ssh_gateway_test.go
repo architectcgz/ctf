@@ -15,15 +15,26 @@ import (
 
 type stubAWDDefenseSSHGatewayRunner struct {
 	startCalls int
+	drainCalls int
 	stopCalls  int
 	startErr   error
+	drainErr   error
 	stopErr    error
+	onDrain    func()
 	onStop     func()
 }
 
 func (s *stubAWDDefenseSSHGatewayRunner) Start(context.Context) error {
 	s.startCalls++
 	return s.startErr
+}
+
+func (s *stubAWDDefenseSSHGatewayRunner) Drain(context.Context) error {
+	s.drainCalls++
+	if s.onDrain != nil {
+		s.onDrain()
+	}
+	return s.drainErr
 }
 
 func (s *stubAWDDefenseSSHGatewayRunner) Stop(context.Context) error {
@@ -91,6 +102,9 @@ func TestRunAWDDefenseSSHGatewayProcessShutdownStopsGatewayAndClosesResources(t 
 	if runner.stopCalls != 1 {
 		t.Fatalf("expected gateway stop to be called once, got %d", runner.stopCalls)
 	}
+	if runner.drainCalls != 1 {
+		t.Fatalf("expected gateway drain to be called once, got %d", runner.drainCalls)
+	}
 	if closer.closeCalls != 1 {
 		t.Fatalf("expected runtime closer to be called once, got %d", closer.closeCalls)
 	}
@@ -111,8 +125,18 @@ func TestRunAWDDefenseSSHGatewayProcessShutdownCancelsBeforeStoppingGateway(t *t
 	t.Parallel()
 
 	cancelled := false
+	drained := false
 	runner := &stubAWDDefenseSSHGatewayRunner{
+		onDrain: func() {
+			if cancelled {
+				t.Fatal("expected gateway Drain() before root context cancellation")
+			}
+			drained = true
+		},
 		onStop: func() {
+			if !drained {
+				t.Fatal("expected gateway Drain() before Stop()")
+			}
 			if !cancelled {
 				t.Fatal("expected root context to be cancelled before gateway Stop()")
 			}
@@ -126,6 +150,34 @@ func TestRunAWDDefenseSSHGatewayProcessShutdownCancelsBeforeStoppingGateway(t *t
 
 	if err := process.Shutdown(context.Background()); err != nil {
 		t.Fatalf("Shutdown() error = %v", err)
+	}
+}
+
+func TestRunAWDDefenseSSHGatewayProcessShutdownContinuesHardStopAfterDrainError(t *testing.T) {
+	t.Parallel()
+
+	cancelled := false
+	runner := &stubAWDDefenseSSHGatewayRunner{drainErr: context.DeadlineExceeded}
+	closer := &stubAWDDefenseSSHGatewayRuntimeCloser{}
+	process := &awdDefenseSSHGatewayProcess{
+		cancel:        func() { cancelled = true },
+		gateway:       runner,
+		runtimeCloser: closer,
+		log:           zap.NewNop(),
+	}
+
+	err := process.Shutdown(context.Background())
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("Shutdown() error = %v, want %v", err, context.DeadlineExceeded)
+	}
+	if !cancelled {
+		t.Fatal("expected shutdown to continue cancelling root context after Drain() failure")
+	}
+	if runner.stopCalls != 1 {
+		t.Fatalf("expected Stop() to run after Drain() failure, got %d calls", runner.stopCalls)
+	}
+	if closer.closeCalls != 1 {
+		t.Fatalf("expected runtime closer to run after Drain() failure, got %d calls", closer.closeCalls)
 	}
 }
 
@@ -157,6 +209,9 @@ func TestRunAWDDefenseSSHGatewayProcessShutdownSkipsDownstreamClosersWhenGateway
 	}
 	if closer.closeCalls != 0 {
 		t.Fatalf("expected runtime closer to be skipped after gateway stop failure, got %d calls", closer.closeCalls)
+	}
+	if runner.drainCalls != 1 {
+		t.Fatalf("expected gateway drain to run before stop failure, got %d calls", runner.drainCalls)
 	}
 
 	sqlDB, err := db.DB()

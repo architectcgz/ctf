@@ -52,8 +52,10 @@ container:
   access_host: ""
   # 如需开启 AWD 防守 SSH 网关，请配置为可被选手访问的地址和端口。
   defense_ssh_enabled: false
-  defense_ssh_host: ctf.example.com
+  defense_ssh_host: ctf.example.com # 对外访问地址或 TCP LB 地址；不是 gateway 进程 bind host
   defense_ssh_port: 2222
+  # 多 gateway 副本 behind TCP LB 时，所有副本必须挂载同一份预置 host key 文件。
+  defense_ssh_host_key_path: storage/runtime/awd-defense-ssh-host-key.pem
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
   # 启动判定会在容器创建后探测访问地址，只有探测通过才进入 running

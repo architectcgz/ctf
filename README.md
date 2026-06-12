@@ -65,12 +65,15 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --b
 
 这条路径下，`ctf-api` 容器会在启动应用前先执行一次 `/app/migrations` 里的正式 SQL migration；如需临时关闭，可给 `ctf-api` 设置 `CTF_AUTO_MIGRATE=false`。如果容器数据库仍停留在旧的 `000002..000012` 增量链上，入口脚本会明确报错并要求你先重建本地数据库。
 
+同一条 compose 路径里，`ctf-awd-defense-ssh-host-key` 会先在共享的 `/app/storage/runtime/awd-defense-ssh-host-key.pem` 不存在时预置一份开发用 SSH host key，随后 `ctf-awd-defense-ssh-gateway` 再只按 load-only 契约启动。删除 `docker/runtime/app-storage` 或切换新的宿主目录后，第一次 `up` 会重新生成这份 key；后续重启会复用同一 fingerprint。
+
 这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
 
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”
 - 需要多人长期使用时，至少把 API 改成宿主机进程运行
 - 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，由 API 通过 `runtime-agent` + mTLS 调用执行面；`DOCKER_HOST` 只能作为底层 Docker client 连接参数，不再等同于完整多机方案
 - 当前 dev compose 里，`ctf-api` 和 `ctf-awd-defense-ssh-gateway` 都挂载了宿主 `docker.sock`；这只适合本机开发，不应当视为共享环境的安全边界
+- 当前 dev compose 里，`ctf-awd-defense-ssh-gateway` 的摘流可观测性直接依赖 TCP 端口：`Drain()` 会关闭 `2222` listener，让 TCP health check / LB 立即停止把新连接导向该副本；这里没有额外的 HTTP `/ready` 端点
 
 更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”；运行模式和最小配置见 `docs/operations/runtime-agent-deployment.md`。
 

@@ -19,6 +19,7 @@ import (
 
 type awdDefenseSSHGatewayRunner interface {
 	Start(ctx context.Context) error
+	Drain(ctx context.Context) error
 	Stop(ctx context.Context) error
 }
 
@@ -124,22 +125,37 @@ func (p *awdDefenseSSHGatewayProcess) Shutdown(ctx context.Context) error {
 	if p == nil {
 		return nil
 	}
+	if ctx == nil {
+		return errors.New("awd defense ssh gateway shutdown requires context")
+	}
+	var shutdownErrs []error
+	drainCtx := ctx
+	if p.shutdownTimout > 0 {
+		var cancel context.CancelFunc
+		drainCtx, cancel = context.WithTimeout(ctx, p.shutdownTimout/2)
+		defer cancel()
+	}
+	if p.gateway != nil {
+		if err := p.gateway.Drain(drainCtx); err != nil {
+			shutdownErrs = append(shutdownErrs, err)
+		}
+	}
 	if p.cancel != nil {
 		p.cancel()
 	}
 	if p.gateway != nil {
 		if err := p.gateway.Stop(ctx); err != nil {
-			return err
+			shutdownErrs = append(shutdownErrs, err)
+			return errors.Join(shutdownErrs...)
 		}
 	}
-	var shutdownErr error
 	if p.runtimeCloser != nil {
-		if err := p.runtimeCloser.Close(ctx); err != nil && shutdownErr == nil {
-			shutdownErr = err
+		if err := p.runtimeCloser.Close(ctx); err != nil {
+			shutdownErrs = append(shutdownErrs, err)
 		}
 	}
 	closeResources(p.log, p.db, p.cache)
-	return shutdownErr
+	return errors.Join(shutdownErrs...)
 }
 
 func (p *awdDefenseSSHGatewayProcess) shutdownTimeout() time.Duration {

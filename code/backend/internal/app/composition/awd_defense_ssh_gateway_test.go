@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -15,7 +16,9 @@ import (
 	"ctf-platform/internal/config"
 	containerruntime "ctf-platform/internal/module/container_runtime/runtime"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
+	instanceqry "ctf-platform/internal/module/instance/application/queries"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	instanceinfra "ctf-platform/internal/module/instance/infrastructure"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/ssh"
@@ -274,6 +277,224 @@ func TestLoadOrCreateAWDDefenseSSHHostKeySignerRejectsInvalidExistingFile(t *tes
 	}
 }
 
+func TestLoadAWDDefenseSSHHostKeySignerRequiresExistingSharedFile(t *testing.T) {
+	t.Parallel()
+
+	hostKeyPath := filepath.Join(t.TempDir(), "runtime", "shared-host-key.pem")
+
+	_, err := loadAWDDefenseSSHHostKeySigner(hostKeyPath)
+	if err == nil {
+		t.Fatal("expected loadAWDDefenseSSHHostKeySigner() to fail when shared host key file is missing")
+	}
+	if !os.IsNotExist(err) {
+		t.Fatalf("expected missing host key error, got %v", err)
+	}
+}
+
+func TestLoadAWDDefenseSSHHostKeySignerUsesSharedFileAcrossGateways(t *testing.T) {
+	t.Parallel()
+
+	hostKeyPath := filepath.Join(t.TempDir(), "runtime", "shared-host-key.pem")
+	created, err := loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath)
+	if err != nil {
+		t.Fatalf("loadOrCreateAWDDefenseSSHHostKeySigner() error = %v", err)
+	}
+
+	first, err := loadAWDDefenseSSHHostKeySigner(hostKeyPath)
+	if err != nil {
+		t.Fatalf("first loadAWDDefenseSSHHostKeySigner() error = %v", err)
+	}
+	second, err := loadAWDDefenseSSHHostKeySigner(hostKeyPath)
+	if err != nil {
+		t.Fatalf("second loadAWDDefenseSSHHostKeySigner() error = %v", err)
+	}
+
+	createdFingerprint := ssh.FingerprintSHA256(created.PublicKey())
+	firstFingerprint := ssh.FingerprintSHA256(first.PublicKey())
+	secondFingerprint := ssh.FingerprintSHA256(second.PublicKey())
+	if createdFingerprint != firstFingerprint || firstFingerprint != secondFingerprint {
+		t.Fatalf("expected shared host key fingerprint, got %q, %q, %q", createdFingerprint, firstFingerprint, secondFingerprint)
+	}
+}
+
+func TestAWDDefenseSSHGatewayAuthenticateAcceptsTicketIssuedByAnotherReplica(t *testing.T) {
+	t.Parallel()
+
+	_, _, cache := newRootTestDependencies(t)
+	contestID := int64(51)
+	teamID := int64(61)
+	serviceID := int64(71)
+	challengeID := int64(81)
+	workspaceRevision := int64(7)
+	scope := &instanceports.AWDDefenseSSHScope{
+		InstanceID:        9001,
+		ContestID:         contestID,
+		TeamID:            teamID,
+		ServiceID:         serviceID,
+		AWDChallengeID:    challengeID,
+		WorkspaceRevision: workspaceRevision,
+		ContainerID:       "workspace-ctr",
+		ShareScope:        instancecontracts.ShareScopePerTeam,
+	}
+	replicaA := instanceqry.NewProxyTicketService(
+		instanceinfra.NewProxyTicketStore(cache),
+		stubRuntimeHTTPProxyTicketReader{scope: scope},
+		15*time.Minute,
+	)
+	replicaB := instanceqry.NewProxyTicketService(
+		instanceinfra.NewProxyTicketStore(cache),
+		stubRuntimeHTTPProxyTicketReader{},
+		15*time.Minute,
+	)
+
+	ticket, _, err := replicaA.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "student",
+		Role:     identitycontracts.RoleStudent,
+	}, contestID, serviceID)
+	if err != nil {
+		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
+	}
+
+	gateway := NewAWDDefenseSSHGateway(
+		replicaB,
+		stubRuntimeHTTPProxyTicketReader{scope: scope},
+		nil,
+		"",
+		2222,
+		nil,
+	)
+
+	session, err := gateway.authenticate(context.Background(), "student+51+71", ticket)
+	if err != nil {
+		t.Fatalf("authenticate() error = %v", err)
+	}
+	if session == nil {
+		t.Fatal("expected session")
+	}
+	if session.ContainerID != scope.ContainerID || session.WorkspaceRevision != scope.WorkspaceRevision || session.TeamID != scope.TeamID {
+		t.Fatalf("unexpected authenticated session: %+v", session)
+	}
+}
+
+func TestAWDDefenseSSHGatewayReadyStateTracksDrainAndStop(t *testing.T) {
+	t.Parallel()
+
+	hostKeyPath := filepath.Join(t.TempDir(), "runtime", "awd-defense-ssh-host-key.pem")
+	firstSigner, err := loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath)
+	if err != nil {
+		t.Fatalf("loadOrCreateAWDDefenseSSHHostKeySigner() error = %v", err)
+	}
+	if firstSigner == nil {
+		t.Fatal("expected signer")
+	}
+
+	gateway := &AWDDefenseSSHGateway{
+		proxyTickets: stubAWDDefenseSSHGatewayProxyTickets{},
+		scopeReader:  stubRuntimeHTTPProxyTicketReader{},
+		executor:     newBlockingInteractiveExecutor(),
+		hostKeyPath:  hostKeyPath,
+		port:         2222,
+		logger:       zap.NewNop(),
+	}
+
+	if gateway.Ready() {
+		t.Fatal("expected gateway to be not ready before Start()")
+	}
+	if gateway.State() != AWDDefenseSSHGatewayStateNotStarted {
+		t.Fatalf("expected not_started state before Start(), got %q", gateway.State())
+	}
+
+	startCtx, cancelStart := context.WithCancel(context.Background())
+	defer cancelStart()
+	if err := gateway.Start(startCtx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = gateway.Stop(stopCtx)
+	})
+
+	if !gateway.Ready() {
+		t.Fatal("expected gateway to be ready after Start()")
+	}
+	if gateway.State() != AWDDefenseSSHGatewayStateReady {
+		t.Fatalf("expected ready state after Start(), got %q", gateway.State())
+	}
+
+	drainCtx, cancelDrain := context.WithTimeout(context.Background(), time.Second)
+	defer cancelDrain()
+	if err := gateway.Drain(drainCtx); err != nil {
+		t.Fatalf("Drain() error = %v", err)
+	}
+	if gateway.Ready() {
+		t.Fatal("expected gateway to become not ready after Drain()")
+	}
+	if gateway.State() != AWDDefenseSSHGatewayStateDraining {
+		t.Fatalf("expected draining state after Drain(), got %q", gateway.State())
+	}
+
+	stopCtx, cancelStop := context.WithTimeout(context.Background(), time.Second)
+	defer cancelStop()
+	if err := gateway.Stop(stopCtx); err != nil {
+		t.Fatalf("Stop() error = %v", err)
+	}
+	if gateway.Ready() {
+		t.Fatal("expected gateway to remain not ready after Stop()")
+	}
+	if gateway.State() != AWDDefenseSSHGatewayStateStopped {
+		t.Fatalf("expected stopped state after Stop(), got %q", gateway.State())
+	}
+}
+
+func TestAWDDefenseSSHGatewayDrainStopsNewTCPConnections(t *testing.T) {
+	t.Parallel()
+
+	port := reserveTCPPort(t)
+	hostKeyPath := filepath.Join(t.TempDir(), "runtime", "awd-defense-ssh-host-key.pem")
+	if _, err := loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath); err != nil {
+		t.Fatalf("loadOrCreateAWDDefenseSSHHostKeySigner() error = %v", err)
+	}
+
+	gateway := &AWDDefenseSSHGateway{
+		proxyTickets: stubAWDDefenseSSHGatewayProxyTickets{},
+		scopeReader:  stubRuntimeHTTPProxyTicketReader{},
+		executor:     newBlockingInteractiveExecutor(),
+		hostKeyPath:  hostKeyPath,
+		port:         port,
+		logger:       zap.NewNop(),
+	}
+
+	startCtx, cancelStart := context.WithCancel(context.Background())
+	defer cancelStart()
+	if err := gateway.Start(startCtx); err != nil {
+		t.Fatalf("Start() error = %v", err)
+	}
+	t.Cleanup(func() {
+		stopCtx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		_ = gateway.Stop(stopCtx)
+	})
+
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+	conn, err := net.DialTimeout("tcp", addr, time.Second)
+	if err != nil {
+		t.Fatalf("expected TCP listener before Drain(), got %v", err)
+	}
+	_ = conn.Close()
+
+	drainCtx, cancelDrain := context.WithTimeout(context.Background(), time.Second)
+	defer cancelDrain()
+	if err := gateway.Drain(drainCtx); err != nil {
+		t.Fatalf("Drain() error = %v", err)
+	}
+
+	if _, err := net.DialTimeout("tcp", addr, 200*time.Millisecond); err == nil {
+		t.Fatal("expected Drain() to stop accepting new TCP connections")
+	}
+}
+
 func TestBuildAWDDefenseSSHGatewayUsesNodeRouterInteractiveExecutorWhenAvailable(t *testing.T) {
 	t.Parallel()
 
@@ -337,6 +558,24 @@ func TestBuildAWDDefenseSSHGatewayFallsBackToRuntimeInteractiveExecutorWithoutNo
 	if gateway.executor != defaultExecutor {
 		t.Fatalf("expected gateway executor to use default interactive executor, got %T", gateway.executor)
 	}
+}
+
+func reserveTCPPort(t *testing.T) int {
+	t.Helper()
+
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("reserve TCP port: %v", err)
+	}
+	defer func() {
+		_ = listener.Close()
+	}()
+
+	addr, ok := listener.Addr().(*net.TCPAddr)
+	if !ok {
+		t.Fatalf("unexpected listener addr type %T", listener.Addr())
+	}
+	return addr.Port
 }
 
 func TestAWDDefenseSSHGatewayStopCancelsActiveInteractiveSession(t *testing.T) {

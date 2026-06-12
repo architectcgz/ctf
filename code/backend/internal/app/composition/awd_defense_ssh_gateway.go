@@ -29,6 +29,15 @@ import (
 
 const awdDefenseSSHWorkspaceDir = "/workspace"
 
+type AWDDefenseSSHGatewayState string
+
+const (
+	AWDDefenseSSHGatewayStateNotStarted AWDDefenseSSHGatewayState = "not_started"
+	AWDDefenseSSHGatewayStateReady      AWDDefenseSSHGatewayState = "ready"
+	AWDDefenseSSHGatewayStateDraining   AWDDefenseSSHGatewayState = "draining"
+	AWDDefenseSSHGatewayStateStopped    AWDDefenseSSHGatewayState = "stopped"
+)
+
 type AWDDefenseSSHGateway struct {
 	proxyTickets runtimeHTTPProxyTicketService
 	scopeReader  instanceports.ProxyTicketInstanceReader
@@ -38,6 +47,7 @@ type AWDDefenseSSHGateway struct {
 	logger       *zap.Logger
 
 	mu          sync.Mutex
+	state       AWDDefenseSSHGatewayState
 	listener    net.Listener
 	done        chan struct{}
 	runCancel   context.CancelFunc
@@ -76,6 +86,7 @@ func NewAWDDefenseSSHGateway(
 		hostKeyPath:  strings.TrimSpace(hostKeyPath),
 		port:         port,
 		logger:       logger,
+		state:        AWDDefenseSSHGatewayStateNotStarted,
 	}
 }
 
@@ -89,6 +100,7 @@ func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 
 	g.mu.Lock()
 	if g.listener != nil {
+		g.state = AWDDefenseSSHGatewayStateReady
 		g.mu.Unlock()
 		return nil
 	}
@@ -101,6 +113,7 @@ func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 	g.listener = listener
 	g.done = make(chan struct{})
 	g.runCancel = runCancel
+	g.state = AWDDefenseSSHGatewayStateNotStarted
 	if g.activeConns == nil {
 		g.activeConns = make(map[net.Conn]struct{})
 	}
@@ -115,13 +128,52 @@ func (g *AWDDefenseSSHGateway) Start(ctx context.Context) error {
 		g.listener = nil
 		g.done = nil
 		g.runCancel = nil
+		g.state = AWDDefenseSSHGatewayStateNotStarted
 		g.mu.Unlock()
 		return err
 	}
 
+	g.mu.Lock()
+	g.state = AWDDefenseSSHGatewayStateReady
+	g.mu.Unlock()
+
 	go g.serve(runCtx, listener, config, done)
 	g.logger.Info("awd_defense_ssh_gateway_started", zap.Int("port", g.port))
 	return nil
+}
+
+func (g *AWDDefenseSSHGateway) Drain(ctx context.Context) error {
+	if g == nil {
+		return nil
+	}
+	if ctx == nil {
+		return errors.New("awd defense ssh gateway drain requires context")
+	}
+
+	g.mu.Lock()
+	listener := g.listener
+	done := g.done
+	state := g.currentStateLocked()
+	if state == AWDDefenseSSHGatewayStateStopped || state == AWDDefenseSSHGatewayStateNotStarted {
+		g.mu.Unlock()
+		return nil
+	}
+	g.listener = nil
+	g.state = AWDDefenseSSHGatewayStateDraining
+	g.mu.Unlock()
+
+	if listener != nil {
+		_ = listener.Close()
+	}
+	if done == nil {
+		return nil
+	}
+	select {
+	case <-done:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 }
 
 func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
@@ -143,6 +195,7 @@ func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
 	g.listener = nil
 	g.done = nil
 	g.runCancel = nil
+	g.state = AWDDefenseSSHGatewayStateStopped
 	g.mu.Unlock()
 
 	if listener == nil && done == nil && runCancel == nil && len(activeConns) == 0 {
@@ -168,9 +221,27 @@ func (g *AWDDefenseSSHGateway) Stop(ctx context.Context) error {
 	return waitWaitGroup(ctx, &g.workerWG)
 }
 
+func (g *AWDDefenseSSHGateway) Ready() bool {
+	if g == nil {
+		return false
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.currentStateLocked() == AWDDefenseSSHGatewayStateReady && g.listener != nil
+}
+
+func (g *AWDDefenseSSHGateway) State() AWDDefenseSSHGatewayState {
+	if g == nil {
+		return AWDDefenseSSHGatewayStateNotStarted
+	}
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	return g.currentStateLocked()
+}
+
 func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerConfig, error) {
 	_ = ctx
-	signer, err := loadOrCreateAWDDefenseSSHHostKeySigner(g.hostKeyPath)
+	signer, err := loadAWDDefenseSSHHostKeySigner(g.hostKeyPath)
 	if err != nil {
 		return nil, err
 	}
@@ -197,13 +268,21 @@ func (g *AWDDefenseSSHGateway) serverConfig(ctx context.Context) (*ssh.ServerCon
 	return config, nil
 }
 
+func loadAWDDefenseSSHHostKeySigner(hostKeyPath string) (ssh.Signer, error) {
+	cleanPath := filepath.Clean(strings.TrimSpace(hostKeyPath))
+	if cleanPath == "" || cleanPath == "." {
+		return nil, fmt.Errorf("awd defense ssh host key path is empty")
+	}
+	return loadAWDDefenseSSHHostKeySignerFromFile(cleanPath)
+}
+
 func loadOrCreateAWDDefenseSSHHostKeySigner(hostKeyPath string) (ssh.Signer, error) {
 	cleanPath := filepath.Clean(strings.TrimSpace(hostKeyPath))
 	if cleanPath == "" || cleanPath == "." {
 		return nil, fmt.Errorf("awd defense ssh host key path is empty")
 	}
 
-	signer, err := loadAWDDefenseSSHHostKeySignerFromFile(cleanPath)
+	signer, err := loadAWDDefenseSSHHostKeySigner(cleanPath)
 	if err == nil {
 		return signer, nil
 	}
@@ -491,6 +570,13 @@ func (g *AWDDefenseSSHGateway) untrackConn(conn net.Conn) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	delete(g.activeConns, conn)
+}
+
+func (g *AWDDefenseSSHGateway) currentStateLocked() AWDDefenseSSHGatewayState {
+	if g == nil || g.state == "" {
+		return AWDDefenseSSHGatewayStateNotStarted
+	}
+	return g.state
 }
 
 func waitWaitGroup(ctx context.Context, wg *sync.WaitGroup) error {

@@ -98,6 +98,8 @@ func TestRuntimePublishedAccessHostAllowsNilConfig(t *testing.T) {
 }
 
 func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
+	t.Parallel()
+
 	expiresAt := time.Date(2026, 4, 28, 10, 0, 0, 0, time.UTC)
 	adapter := newRuntimeHTTPServiceAdapter(
 		nil,
@@ -128,6 +130,40 @@ func TestRuntimeHTTPServiceAdapterReturnsSSHAccessWithoutProfile(t *testing.T) {
 		resp.Command != "ssh student+5+12@ssh.ctf.local -p 2222" ||
 		resp.ExpiresAt != expiresAt.Format(time.RFC3339) {
 		t.Fatalf("unexpected ssh access response: %+v", resp)
+	}
+}
+
+func TestRuntimeHTTPServiceAdapterUsesExternalSSHHostNotBindAddress(t *testing.T) {
+	t.Parallel()
+
+	expiresAt := time.Date(2026, 6, 12, 8, 0, 0, 0, time.UTC)
+	adapter := newRuntimeHTTPServiceAdapter(
+		nil,
+		nil,
+		stubRuntimeHTTPProxyTickets{ticket: "ticket-secret", expiresAt: expiresAt},
+		0,
+		0,
+		true,
+		"lb.ctf.example",
+		30222,
+	)
+
+	resp, err := adapter.IssueAWDDefenseSSHTicket(context.Background(), authctx.CurrentUser{
+		UserID:   1001,
+		Username: "student",
+		Role:     "student",
+	}, 11, 22)
+	if err != nil {
+		t.Fatalf("IssueAWDDefenseSSHTicket() error = %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected ssh access response")
+	}
+	if resp.Host != "lb.ctf.example" || resp.Port != 30222 {
+		t.Fatalf("expected external lb host/port, got %+v", resp)
+	}
+	if resp.Command != "ssh student+11+22@lb.ctf.example -p 30222" {
+		t.Fatalf("unexpected ssh command: %q", resp.Command)
 	}
 }
 

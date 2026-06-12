@@ -59,6 +59,10 @@
 
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`、`code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
   - 负责：把 AWD defense SSH ingress 装配成独立进程，监听 `container.defense_ssh_port`，校验 ticket 后进入目标工作区容器；多 node 场景下通过 `runtimeNodeExecutionRouter` 按 `container_id -> node_id` 路由 interactive exec
+  - 负责：把 `container.defense_ssh_host` 解释成客户端访问的对外地址或 TCP LB 地址，而不是本进程 bind host；gateway 自身继续监听 `:container.defense_ssh_port`
+  - 负责：gateway 生命周期内的 `ready -> draining -> stopped` 状态切换；`Drain(ctx)` 只负责停止接收新 SSH 连接并等待 accept loop 收敛，不承诺会话透明迁移，`Stop(ctx)` 仍保留 hard-stop 语义
+  - 负责：对外摘流可观测性直接体现在 TCP listener 上。`Drain(ctx)` 会关闭 `container.defense_ssh_port` 的监听，让 TCP health check / LB 停止把新连接导向该副本，而不是额外暴露 HTTP `/ready`
+  - 负责：启动时只加载预先存在的 `container.defense_ssh_host_key_path`，缺失时直接失败；多副本 behind TCP LB 依赖部署层把同一份 host key 文件挂到所有 gateway 实例。`docker/docker-compose.dev.yml` 里的 `ctf-awd-defense-ssh-host-key` 只是开发态预置 owner，不改变运行时 load-only 契约
   - 不负责：签发 ticket、决定 contest/team/service 作用域规则，或替 `runtime-agent` 承担执行面 owner
 
 ## 接口或数据影响
