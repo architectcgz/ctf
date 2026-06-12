@@ -184,7 +184,7 @@
 - [x] **Step 13: 运行最小验证**
   - Run: `cd code/backend && go test ./internal/app/composition ./internal/bootstrap ./internal/module/instance/... -run 'AWDDefenseSSH|ProxyTicket|DefenseSSH' -count=1`
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
   - Run: `git add code/backend/internal/bootstrap/awd_defense_ssh_gateway.go code/backend/internal/bootstrap/awd_defense_ssh_gateway_test.go code/backend/internal/app/composition/awd_defense_ssh_gateway.go code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go code/backend/internal/app/composition/runtime_http_service_adapter.go code/backend/internal/module/instance/infrastructure/proxy_ticket_store_test.go code/backend/internal/config/config.go docs/architecture/backend/03-container-architecture.md docs/operations/runtime-agent-deployment.md docs/operations/awd-host-reboot-recovery-drill.md && git commit -m "feat(backend): 支持 SSH gateway 多副本摘流" -m "为 AWD defense SSH gateway 增加 readiness/draining 生命周期，并验证共享 ticket 与 host key 的跨副本契约。" -m "同步 TCP LB 接流、摘流和会话中断边界说明，避免把多副本误写成透明迁移。" -m "Task: 2026-06-12-ssh-gateway-ha-and-draining"`
 
 ## Validation
