@@ -186,6 +186,12 @@ container:
     batch_size: 4
     max_concurrent_starts: 4
     max_active_instances: 60
+  runtime_node_health:
+    enabled: true
+    poll_interval: 10s
+    probe_timeout: 2s
+    stale_after: 30s
+    failure_threshold: 3
 
 pagination:
   default_page_size: 20

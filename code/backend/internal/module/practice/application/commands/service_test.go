@@ -975,11 +975,13 @@ func (s *stubPracticeImageStore) FindByID(ctx context.Context, id int64) (*chall
 type stubPracticeInstanceStore struct {
 	findByIDWithContextFn                   func(ctx context.Context, id int64) (*instanceentity.Instance, error)
 	updateRuntimeWithContextFn              func(ctx context.Context, instance *instanceentity.Instance) error
+	bindRuntimeNodeWithContextFn            func(ctx context.Context, id int64, nodeID *int64) (bool, error)
 	persistProvisionedRuntimeWithContextFn  func(ctx context.Context, instance *instanceentity.Instance) (bool, error)
 	finishActiveAWDServiceOperationFn       func(ctx context.Context, instanceID int64, status, errorMessage string, finishedAt time.Time) error
 	refreshInstanceExpiryWithContextFn      func(ctx context.Context, instanceID int64, expiresAt time.Time) error
 	updateStatusAndReleasePortWithContextFn func(ctx context.Context, id int64, status string) error
 	failProvisioningWithContextFn           func(ctx context.Context, id int64) (bool, error)
+	requeueLostRuntimeWithContextFn         func(ctx context.Context, id int64) (bool, error)
 	findByUserAndChallengeWithContextFn     func(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error)
 }
 
@@ -995,6 +997,13 @@ func (s *stubPracticeInstanceStore) UpdateRuntime(ctx context.Context, instance 
 		return s.updateRuntimeWithContextFn(ctx, instance)
 	}
 	return nil
+}
+
+func (s *stubPracticeInstanceStore) BindRuntimeNode(ctx context.Context, id int64, nodeID *int64) (bool, error) {
+	if s.bindRuntimeNodeWithContextFn != nil {
+		return s.bindRuntimeNodeWithContextFn(ctx, id, nodeID)
+	}
+	return true, nil
 }
 
 func (s *stubPracticeInstanceStore) PersistProvisionedRuntime(ctx context.Context, instance *instanceentity.Instance) (bool, error) {
@@ -1036,6 +1045,13 @@ func (s *stubPracticeInstanceStore) FailProvisioning(ctx context.Context, id int
 		return false, err
 	}
 	return true, nil
+}
+
+func (s *stubPracticeInstanceStore) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if s.requeueLostRuntimeWithContextFn != nil {
+		return s.requeueLostRuntimeWithContextFn(ctx, id)
+	}
+	return false, nil
 }
 
 func (s *stubPracticeInstanceStore) FindByUserAndChallenge(ctx context.Context, userID, challengeID int64) (*instanceentity.Instance, error) {

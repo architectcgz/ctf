@@ -1,22 +1,23 @@
 # 容器编排架构设计
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/runtime/`、`code/backend/internal/module/instance/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/`
+> 事实源：`code/backend/internal/module/container_runtime/`、`code/backend/internal/module/instance/`、`code/backend/internal/module/practice/application/commands/`、`code/backend/internal/config/`
 > 替代：无
 
 ## 定位
 
-本文档说明当前单机 Docker runtime、实例编排、访问代理和防守 SSH 边界。
+本文档说明当前 Docker / runtime-agent 运行面、实例编排、访问代理和防守 SSH 边界。
 
 - 负责：描述当前后端如何创建、维护、回收练习 / 竞赛 / AWD 实例，以及哪些网络与访问能力已经采用。
-- 不负责：把未来多机调度、gVisor / Kata、浏览器式防守工作台或外部集群方案写成当前已落地事实。
+- 不负责：把容量智能分配、Swarm / Kubernetes、gVisor / Kata、浏览器式防守工作台或外部集群方案写成当前已落地事实。
 
 ## 当前设计
 
-- `code/backend/internal/module/runtime/runtime/module.go`、`code/backend/internal/module/runtime/runtime/adapters.go`、`code/backend/internal/module/runtime/application/{commands/provisioning_service.go,commands/runtime_cleanup_service.go,container_file_service.go,container_stats_service.go,image_runtime_service.go}`
+- `code/backend/internal/module/container_runtime/runtime/module.go`、`code/backend/internal/module/container_runtime/infrastructure/`、`code/backend/internal/module/container_runtime/application/{commands/provisioning_service.go,commands/runtime_cleanup_service.go,container_file_service.go,container_stats_service.go,image_runtime_service.go,node_health_service.go}`
   - 负责：封装当前单机 Docker Engine 适配、容器创建 / 清理 / 文件 / 镜像 / 统计能力，以及 practice / challenge / ops 仍在复用的底层 runtime adapter
   - 负责：在 `ProvisioningService.CreateTopology()` 内收口动态子网分配；当前按 `TopologyCreateRequest.SubnetPool` 在两套地址池之间分流，单容器实例使用 `10.11.0.0/16` 的 `/29` 子网，多容器 topology 使用 `10.10.0.0/16` 的 `/24` 子网，`shared=true` 或显式 `subnet` 的网络继续跳过动态分配
-  - 负责：`runtime_cleaner` 在多 API 副本下通过 Redis `ctf:container:cleanup:lock` 收口成单 owner；单轮清理期间会续租 `container.cleanup_lock_ttl`，一旦锁丢失会停止本轮 `ReconcileLostActiveRuntimes / CleanExpiredInstances / CleanupOrphans`，避免同一清理窗口内两个副本继续推进 runtime cleanup
+  - 负责：提供 runtime cleanup primitive，删除容器、网络和 ACL，并释放端口 / 子网占用；多 API 副本下的清理循环 owner 在 `instance` 模块，`runtime_cleaner` 通过 Redis `ctf:container:cleanup:lock` 串行调用 `ReconcileLostActiveRuntimes / CleanExpiredInstances / CleanupOrphans`
+  - 负责：`NodeHealthService` 通过 `runtime_node_health` 后台任务探测每个 runtime node，把成功探测写入 `runtime_nodes.health_status=ready`、`last_seen_at` 和 `capacity_snapshot`；探测失败达到 `failure_threshold` 或已超过 `stale_after` 时，把节点标记为 `offline`，后续默认选择不再把新实例调度到该 node
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
@@ -47,14 +48,16 @@
   - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动
   - 负责：启动时把 active key id、active fingerprint 和 key id -> fingerprint 映射注册到 `runtime_cluster_secrets`，后续 API 实例若 active key、fingerprint 或仍被有效实例引用的 keyring 条目不一致，会启动失败，`/ready` 也会将 `container_flag_secret` 标记为 down
   - 负责：当需要轮换 active key 时，部署配置必须同时带上旧 active key、新 active key，以及仍被 `instances.flag_key_id` 引用的历史 key；升级前空 `flag_key_id` 的实例固定按 `default` key 解释。active key 变化必须显式开启 `container.flag_global_secret_allow_rotation`，否则仍按错配处理
+  - 负责：`container.runtime_node_health.*` 控制 runtime node 探测开关、探测周期、单次超时、心跳过期阈值和失败阈值；关闭该开关时，默认 selector / router 回退到旧的 schedulable-only 查找语义，作为生产回滚开关
   - 不负责：保存 secret 明文到数据库、跨多副本分发 secret、对接外部 KMS，或替部署层选择 secret 轮换时机
 
 - `code/backend/internal/module/challenge/application/challengecore/service.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/challengeselfcheck/service.go`
   - 负责：题目自检和导入阶段的临时运行时探测、附件与构建源隔离、镜像构建 / registry 校验前置条件
   - 不负责：在 preview / commit 阶段替学生或队伍正式开题，或把导入工作目录暴露为运行态实例入口
 
-- `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go}`
+- `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go,runtime_node_failover.go}`
   - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 票据签发入口
+  - 负责：`WireRuntimeNodeFailover` 只做 app composition callback wiring：runtime node 转为 offline 后先调用 `InstanceModule.HandleRuntimeNodeOffline`，把该 node 上未过期的 `creating / running` 实例重新置为 `pending` 并清空 `container_id / network_id / runtime_details / access_url / node_id`，随后调用 practice 的 `ReconcileDesiredAWDInstances` 让 `team × visible service` 期望态继续由 practice owner 补齐
   - 不负责：持有 `2222` listener 生命周期、让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
 
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`、`code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
@@ -67,22 +70,24 @@
 
 ## 接口或数据影响
 
-- 当前运行态核心数据在 `instances`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id` 等字段约束。
+- 当前运行态核心数据在 `instances`、`runtime_nodes`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id`、`node_id` 等字段约束。
+- `runtime_nodes` 持久化 `health_status`、`capacity_snapshot` 和 `last_seen_at`。`ready / degraded` 且 `last_seen_at >= now - container.runtime_node_health.stale_after` 的 schedulable node 可用于默认新调度；`schedulable=false` 只表示不接收新调度，健康探测仍会继续更新该 node，显式 `node_id` 绑定的旧容器操作在 node 健康且心跳新鲜时仍按原 node 执行。`unknown / offline`、未见过心跳或心跳过期的 node 不会进入健康 selector，显式绑定到这类 node 的旧容器操作也会返回不可用。`capacity_snapshot` 由 managed container stats 汇总，目前不参与容量打分。异步 scheduler 在领取 `pending` 后重新选择健康 node，并在 runtime create 前把新 `node_id` 写入 `creating` 行；如果没有健康 node，实例保持或回到 `pending`。
 - 动态网络预留事实持久化在 `network_allocations`；内部 `TopologyCreateRequest.SubnetPool` 只区分 `single_container` 与 `topology` 两类动态子网池，不向 HTTP 契约直接暴露 Docker 子网选择细节。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
 - AWD dynamic flag 的 raw secret 最终来自 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或 `container.flag_global_secret_file` 指向的本地文件 / 持久化卷；`container.flag_global_secret` 只是当前进程加载后的内存值。集群一致性事实只在 `runtime_cluster_secrets` 中保存 active key id、active fingerprint 和 key id -> fingerprint 映射，不保存 secret 明文；每条动态实例行通过 `instances.flag_key_id` 记录生成该实例 Flag 时使用的 key，升级前为空的旧行固定按 `default` key 解释。
 - 运行时入口与访问相关 API 包括 `POST /api/v1/challenges/:id/instances`、`POST /api/v1/contests/:id/challenges/:cid/instances`、`POST /api/v1/contests/:id/awd/services/:sid/instances`、`POST /api/v1/instances/:id/access` 以及 AWD 相关访问 / 复盘接口；契约以 `docs/contracts/openapi-v1.yaml` 为准。
-- 配置基线由 `code/backend/internal/config/` 提供，包括 `container.scheduler.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是单机 Docker，不是 Swarm / Kubernetes。
+- 配置基线由 `code/backend/internal/config/` 提供，包括 `container.scheduler.*`、`container.runtime_node_health.*`、`container.startup_recovery_lock_ttl`、`container.proxy_ticket_ttl`、`container.registry.*`、`container.network.single_container_*`、`container.network.topology_*`、`contest.awd.scheduler_*`；两套 CIDR 会在启动时做 IPv4、网络地址、掩码范围和 overlap 校验，当前部署口径仍是 runtime-agent node，不是 Swarm / Kubernetes。
 
 ## Guardrail
 
 - 运行时装配与独立 SSH 网关：`code/backend/internal/app/composition/runtime_module_test.go`、`code/backend/internal/app/composition/awd_defense_ssh_gateway_test.go`
-- runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
+- runtime / composition 边界回归：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/container_runtime/architecture_test.go`
 - 练习实例创建、desired reconcile 与补偿：`code/backend/internal/module/practice/application/commands/runtime_container_create_test.go`、`instance_provisioning_test.go`、`instance_start_service_test.go`、`awd_desired_runtime_reconciler_test.go`
-- AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/runtime/infrastructure/repository_awd_expiry_refresh_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`
+- runtime node 心跳、健康过滤与 failover requeue：`code/backend/internal/module/container_runtime/application/node_health_service_test.go`、`code/backend/internal/module/container_runtime/infrastructure/node_repository_test.go`、`code/backend/internal/app/composition/runtime_node_execution_router_test.go`、`code/backend/internal/app/composition/runtime_node_failover_wiring_test.go`、`code/backend/internal/module/instance/infrastructure/repository_test.go`、`code/backend/internal/module/instance/application/commands/runtime_maintenance_service_test.go`
+- AWD 宿主机重启恢复与时间窗顺延：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`、`code/backend/internal/module/contest/infrastructure/contest_awd_runtime_recovery_repository_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_plan_test.go`
 - AWD global secret 恢复与持久化：`code/backend/internal/config/config_test.go`
-- 运行时清理与维护：`code/backend/internal/module/runtime/service_test.go`
+- 运行时清理与维护：`code/backend/internal/module/instance/application/commands/runtime_maintenance_service_test.go`、`code/backend/internal/module/container_runtime/application/commands/dependency_helpers_test.go`
 - 端到端访问与状态矩阵：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - 题目自检运行态边界：`code/backend/internal/module/challenge/application/commands/challenge_service_self_check_test.go`（测试兼容层覆盖 `application/challengeselfcheck` service）
 
@@ -1284,7 +1289,7 @@ func (cm *containerManager) PrePullImages(ctx context.Context, gameID uint64) er
 - 开题请求先写入 `instances(status=pending)`；
 - 后台 `practice_instance_scheduler` 周期性领取最早的 `pending` 实例；
 - 调度器受 `max_concurrent_starts` 和 `max_active_instances` 双阈值保护；
-- 真正的容器创建发生在 `pending -> creating -> running` 的后台推进阶段。
+- 真正的容器创建发生在 `pending -> creating -> running` 的后台推进阶段，且 `creating` 行会先绑定本轮选中的健康 `node_id`。
 
 在此基础上，后续如果需要排队位置、超时取消、消息确认和重投递，再演进到 Redis Stream / MQ。
 
@@ -1572,7 +1577,7 @@ CTF_TEST_PRIVATE_REGISTRY_IMAGE=127.0.0.1:15000/ctf/private-registry-smoke:v1 \
 CTF_TEST_PRIVATE_REGISTRY_SERVER=127.0.0.1:15000 \
 CTF_TEST_PRIVATE_REGISTRY_USERNAME=ctf \
 CTF_TEST_PRIVATE_REGISTRY_PASSWORD=registry-token \
-go test -count=1 ./internal/module/runtime/infrastructure \
+go test -count=1 ./internal/module/container_runtime/infrastructure \
   -run TestEnginePullsImageFromPrivateRegistryWithConfiguredAuth -v
 ```
 

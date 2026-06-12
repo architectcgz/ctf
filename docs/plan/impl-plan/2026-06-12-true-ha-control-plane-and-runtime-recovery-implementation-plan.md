@@ -351,7 +351,7 @@
 
 ## Execution Recommendation
 
-当前仓库状态已经不是“5 个 slice 全待做”，而是前 3 条基础/入口链路已落地，剩余实现集中在跨副本 side effect 与 runtime failover：
+当前仓库状态已经不是“5 个 slice 全待做”。T1/T2/T3/T4 已合入，T5 已在 task 分支完成实现、独立 re-review、`completion-full`、`workflow-governance` 和 plan 归档，当前等待合并：
 
 1. T1 `redis-sentinel-and-postgres-ha-connectivity`（已完成，状态面 HA 前置基线）
    - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/redis-sentinel-and-postgres-ha-connectivity.md`
@@ -359,9 +359,9 @@
    - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/shared-storage-owner-convergence.md`
 3. T3 `ssh-gateway-ha-and-draining`（已完成，依赖 T1 Redis HA 与 T2 host key 共源）
    - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-ssh-gateway-ha-and-draining-implementation-plan.md`
-4. T4 `distributed-event-bus-and-outbox-relay`（待实现，跨副本 side effect 与 outbox/stream owner）
+4. T4 `distributed-event-bus-and-outbox-relay`（已完成，跨副本 side effect 与 outbox/stream owner）
    - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/distributed-event-bus-and-outbox-relay.md`
-5. T5 `runtime-node-health-and-failover-rebuild`（待实现，runtime node health、调度排除与故障后重建）
-   - Plan: `docs/plan/impl-plan/2026-06-12-true-ha-group/runtime-node-health-and-failover-rebuild.md`
+5. T5 `runtime-node-health-and-failover-rebuild`（ready-to-merge，runtime node health、调度排除与故障后重建）
+   - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
 
-后续推进建议收口成两步：先完成 T4，再进入 T5。T5 仍然依赖 T4 把跨副本事件 fanout / outbox owner 收口完毕；不建议把剩余 HA 路线重新摊成一次长分支实现。
+后续推进建议改为：合并 T5 task 分支后，再按 task group 的集成验证清单做真实多副本、Sentinel / PostgreSQL 切换、SSH gateway draining 和 runtime node failover 演练。不建议把已完成的 T4/T5 重新摊成一次长分支实现。

@@ -276,6 +276,32 @@ func TestLoadDevConfigOverridesPracticeSchedulerThroughput(t *testing.T) {
 	}
 }
 
+func TestLoadAppliesRuntimeNodeHealthDefaults(t *testing.T) {
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if !cfg.Container.RuntimeNodeHealth.Enabled {
+		t.Fatal("expected runtime node health to be enabled by default")
+	}
+	if cfg.Container.RuntimeNodeHealth.PollInterval != 10*time.Second {
+		t.Fatalf("poll interval = %s, want 10s", cfg.Container.RuntimeNodeHealth.PollInterval)
+	}
+	if cfg.Container.RuntimeNodeHealth.ProbeTimeout != 2*time.Second {
+		t.Fatalf("probe timeout = %s, want 2s", cfg.Container.RuntimeNodeHealth.ProbeTimeout)
+	}
+	if cfg.Container.RuntimeNodeHealth.StaleAfter != 30*time.Second {
+		t.Fatalf("stale after = %s, want 30s", cfg.Container.RuntimeNodeHealth.StaleAfter)
+	}
+	if cfg.Container.RuntimeNodeHealth.FailureThreshold != 3 {
+		t.Fatalf("failure threshold = %d, want 3", cfg.Container.RuntimeNodeHealth.FailureThreshold)
+	}
+}
+
 func TestLoadRestoresContainerFlagSecretFromPersistedFile(t *testing.T) {
 	chdirToBackendRoot(t)
 
@@ -655,6 +681,59 @@ func TestValidateAllowsEnabledDefenseSSHWithHostKeyPath(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsInvalidRuntimeNodeHealthConfig(t *testing.T) {
+	testCases := []struct {
+		name      string
+		mutate    func(*Config)
+		wantError string
+	}{
+		{
+			name: "poll interval",
+			mutate: func(cfg *Config) {
+				cfg.Container.RuntimeNodeHealth.PollInterval = 0
+			},
+			wantError: "container.runtime_node_health.poll_interval must be greater than 0",
+		},
+		{
+			name: "probe timeout",
+			mutate: func(cfg *Config) {
+				cfg.Container.RuntimeNodeHealth.ProbeTimeout = 0
+			},
+			wantError: "container.runtime_node_health.probe_timeout must be greater than 0",
+		},
+		{
+			name: "stale after",
+			mutate: func(cfg *Config) {
+				cfg.Container.RuntimeNodeHealth.StaleAfter = time.Second
+				cfg.Container.RuntimeNodeHealth.ProbeTimeout = 2 * time.Second
+			},
+			wantError: "container.runtime_node_health.stale_after must be greater than probe_timeout",
+		},
+		{
+			name: "failure threshold",
+			mutate: func(cfg *Config) {
+				cfg.Container.RuntimeNodeHealth.FailureThreshold = 0
+			},
+			wantError: "container.runtime_node_health.failure_threshold must be greater than 0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validConfigForValidationTests()
+			tc.mutate(cfg)
+
+			err := cfg.Validate()
+			if err == nil {
+				t.Fatal("expected Validate() to reject invalid runtime node health config, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsNonPositiveContestSubmissionRateLimitTTL(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.Contest.SubmissionRateLimitTTL = 0
@@ -851,6 +930,13 @@ func validConfigForValidationTests() *Config {
 			ProxyBodyPreviewSize:   1024,
 			Scheduler: ContainerSchedulerConfig{
 				LockTTL: time.Minute,
+			},
+			RuntimeNodeHealth: ContainerRuntimeNodeHealthConfig{
+				Enabled:          true,
+				PollInterval:     10 * time.Second,
+				ProbeTimeout:     2 * time.Second,
+				StaleAfter:       30 * time.Second,
+				FailureThreshold: 3,
 			},
 			Network: ContainerNetworkConfig{
 				SingleContainerSubnetBase: "10.11.0.0/16",

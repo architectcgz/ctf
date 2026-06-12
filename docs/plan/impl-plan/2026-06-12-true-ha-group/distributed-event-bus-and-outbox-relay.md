@@ -54,7 +54,7 @@
   - 独立 dispatcher 把待发送 outbox event fanout 到 Redis Stream，每个 API 副本本地消费后执行 websocket/cache invalidation。
   - `events.Bus` 保留进程内弱事件语义；跨副本一致性 owner 收口到 outbox/stream，不再混用。
 - Why this task is needed now:
-  - 真正 HA 控制面当前只剩 T4/T5 未实现；T5 runtime failover 依赖跨副本事件传播先收口。
+  - 真正 HA 控制面在该 slice 启动时，剩余工作集中在 T4/T5；当前 T4 已合入，T5 已通过 review / governance 并等待合并。
   - 现在的 notification/progress 路径在多副本下有直接 correctness 缺口，不能继续建立在同进程广播上。
 
 ## Inputs

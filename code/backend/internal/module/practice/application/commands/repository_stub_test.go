@@ -60,6 +60,13 @@ func (r *practiceTestInstanceRepository) UpdateRuntime(ctx context.Context, inst
 	return r.instanceRepo.UpdateRuntime(ctx, instance)
 }
 
+func (r *practiceTestInstanceRepository) BindRuntimeNode(ctx context.Context, id int64, nodeID *int64) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.BindRuntimeNode(ctx, id, nodeID)
+}
+
 func (r *practiceTestInstanceRepository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
 	if r == nil || r.instanceRepo == nil {
 		return false, nil
@@ -115,6 +122,13 @@ func (r *practiceTestInstanceRepository) FailProvisioning(ctx context.Context, i
 		return allocationTx.ReleaseRuntimeAllocationsForInstance(ctx, release.InstanceID, release.HostPort)
 	})
 	return changed, err
+}
+
+func (r *practiceTestInstanceRepository) RequeueLostRuntime(ctx context.Context, id int64) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.RequeueLostRuntime(ctx, id)
 }
 
 func (r *practiceTestInstanceRepository) ListPendingInstances(ctx context.Context, limit int) ([]*instancecontracts.Instance, error) {

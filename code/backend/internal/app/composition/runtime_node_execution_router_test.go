@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -56,6 +57,109 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 	}
 	if len(runnerB.jobs) != 1 {
 		t.Fatalf("expected node-b checker runner to receive 1 job, got %d", len(runnerB.jobs))
+	}
+}
+
+func TestRuntimeNodeExecutionRouterRejectsExplicitOfflineNodeWhenHealthCheckEnabled(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+
+	if err := db.Model(nodeB).Updates(map[string]any{
+		"health_status": containerruntimeentity.RuntimeNodeHealthOffline,
+		"last_seen_at":  time.Now().UTC(),
+	}).Error; err != nil {
+		t.Fatalf("mark node-b offline: %v", err)
+	}
+
+	runnerA := &stubRuntimeNodeCheckerRunner{result: contestports.CheckerRunResult{Reason: "node-a"}}
+	runnerB := &stubRuntimeNodeCheckerRunner{result: contestports.CheckerRunResult{Reason: "node-b"}}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		nodeA.ID: &nodeRuntimeClient{checkerRunner: runnerA},
+		nodeB.ID: &nodeRuntimeClient{checkerRunner: runnerB},
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	_, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{
+		Metadata: contestports.CheckerRunMetadata{NodeID: nodeB.ID},
+	})
+	if !errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) {
+		t.Fatalf("RunChecker() error = %v, want ErrRuntimeNodeUnavailable", err)
+	}
+	if len(runnerB.jobs) != 0 {
+		t.Fatalf("expected offline node-b checker runner to stay idle, got %d jobs", len(runnerB.jobs))
+	}
+}
+
+func TestRuntimeNodeExecutionRouterRoutesExplicitUnschedulableHealthyNodeWhenHealthCheckEnabled(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+	now := time.Now().UTC()
+
+	if err := db.Model(nodeA).Updates(map[string]any{
+		"health_status": containerruntimeentity.RuntimeNodeHealthReady,
+		"last_seen_at":  now,
+		"schedulable":   true,
+	}).Error; err != nil {
+		t.Fatalf("mark node-a ready: %v", err)
+	}
+	if err := db.Model(nodeB).Updates(map[string]any{
+		"health_status": containerruntimeentity.RuntimeNodeHealthReady,
+		"last_seen_at":  now,
+		"schedulable":   false,
+	}).Error; err != nil {
+		t.Fatalf("mark node-b cordoned: %v", err)
+	}
+
+	runnerA := &stubRuntimeNodeCheckerRunner{result: contestports.CheckerRunResult{Reason: "node-a"}}
+	runnerB := &stubRuntimeNodeCheckerRunner{result: contestports.CheckerRunResult{Reason: "node-b"}}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		nodeA.ID: &nodeRuntimeClient{checkerRunner: runnerA},
+		nodeB.ID: &nodeRuntimeClient{checkerRunner: runnerB},
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	defaultResult, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{})
+	if err != nil {
+		t.Fatalf("default RunChecker() error = %v", err)
+	}
+	if defaultResult.Reason != "node-a" {
+		t.Fatalf("expected default checker to skip cordoned node-b and use node-a, got %+v", defaultResult)
+	}
+
+	explicitResult, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{
+		Metadata: contestports.CheckerRunMetadata{NodeID: nodeB.ID},
+	})
+	if err != nil {
+		t.Fatalf("explicit RunChecker() error = %v", err)
+	}
+	if explicitResult.Reason != "node-b" {
+		t.Fatalf("expected explicit checker result from cordoned node-b, got %+v", explicitResult)
+	}
+	if len(runnerA.jobs) != 1 {
+		t.Fatalf("expected node-a checker runner to receive default job only, got %d", len(runnerA.jobs))
+	}
+	if len(runnerB.jobs) != 1 {
+		t.Fatalf("expected node-b checker runner to receive explicit job only, got %d", len(runnerB.jobs))
 	}
 }
 
@@ -382,6 +486,50 @@ func TestRuntimeNodeExecutionRouterRoutesRemoveContainerByInventoryCache(t *test
 	}
 	if len(executorB.removedContainers) != 1 || executorB.removedContainers[0] != "orphan-ctr" {
 		t.Fatalf("expected node-b executor to remove orphan-ctr, got %+v", executorB.removedContainers)
+	}
+}
+
+func TestRuntimeNodeExecutionRouterListsManagedContainersFromUnschedulableNode(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+
+	if err := db.Model(nodeB).Update("schedulable", false).Error; err != nil {
+		t.Fatalf("cordon node-b: %v", err)
+	}
+
+	executorA := &stubRuntimeNodeHostExecutor{
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "node-a-ctr"}},
+	}
+	executorB := &stubRuntimeNodeHostExecutor{
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "node-b-existing-ctr"}},
+	}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		nodeA.ID: newStubNodeRuntimeClient(executorA, nil),
+		nodeB.ID: newStubNodeRuntimeClient(executorB, nil),
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	containers, err := router.ListManagedContainers(context.Background())
+	if err != nil {
+		t.Fatalf("ListManagedContainers() error = %v", err)
+	}
+	if len(containers) != 2 {
+		t.Fatalf("expected inventory from schedulable and cordoned nodes, got %+v", containers)
+	}
+	nodeID, err := router.resolveNodeIDForContainer(context.Background(), "node-b-existing-ctr")
+	if err != nil {
+		t.Fatalf("resolve node-b inventory cache: %v", err)
+	}
+	if nodeID != nodeB.ID {
+		t.Fatalf("cached node id = %d, want %d", nodeID, nodeB.ID)
 	}
 }
 
