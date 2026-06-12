@@ -78,14 +78,16 @@ func NewChallengeSelfCheckService(
 
 func NewChallengePublishCheckService(
 	challengeRepo splitTestChallengeLookupRepository,
-	jobRepo challengeports.ChallengePublishCheckRepository,
+	jobRepo interface {
+		challengeports.ChallengePublishCheckRepository
+		challengeports.ChallengePublishCheckOutboxTxManager
+	},
 	selfChecker challengepublishcheck.ChallengeSelfChecker,
-	publisher challengepublishcheck.ChallengePublisher,
 	cfg SelfCheckConfig,
 	eventBus platformevents.Bus,
 	logger *zap.Logger,
 ) *ChallengePublishCheckService {
-	return challengepublishcheck.NewChallengePublishCheckService(challengeRepo, jobRepo, selfChecker, publisher, challengepublishcheck.Config{
+	return challengepublishcheck.NewChallengePublishCheckService(challengeRepo, jobRepo, selfChecker, challengepublishcheck.Config{
 		PollInterval: cfg.PublishCheckPollInterval,
 		BatchSize:    cfg.PublishCheckBatchSize,
 	}, eventBus, logger)

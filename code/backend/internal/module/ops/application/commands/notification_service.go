@@ -2,7 +2,9 @@ package commands
 
 import (
 	"context"
+	"crypto/sha256"
 	opscontracts "ctf-platform/internal/module/ops/contracts"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,13 +27,18 @@ import (
 )
 
 type NotificationService struct {
-	repo       opsports.NotificationCommandRepository
+	repo       notificationCommandRepository
 	pagination config.PaginationConfig
 	manager    opsports.NotificationBroadcaster
 	logger     *zap.Logger
 }
 
-func NewNotificationService(repo opsports.NotificationCommandRepository, pagination config.PaginationConfig, manager opsports.NotificationBroadcaster, logger *zap.Logger) *NotificationService {
+type notificationCommandRepository interface {
+	opsports.NotificationCommandRepository
+	opsports.NotificationOutboxTxManager
+}
+
+func NewNotificationService(repo notificationCommandRepository, pagination config.PaginationConfig, manager opsports.NotificationBroadcaster, logger *zap.Logger) *NotificationService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
@@ -44,27 +51,17 @@ func NewNotificationService(repo opsports.NotificationCommandRepository, paginat
 	}
 }
 
-func (s *NotificationService) RegisterPracticeEventConsumers(bus platformevents.Bus) {
-	if s == nil || bus == nil {
-		return
+func (s *NotificationService) HandlePracticeFlagAcceptedOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	decoded, err := notificationOutboxCodec().Decode(event)
+	if err != nil {
+		return err
 	}
-	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handlePracticeFlagAccepted)
-}
-
-func (s *NotificationService) RegisterChallengeEventConsumers(bus platformevents.Bus) {
-	if s == nil || bus == nil {
-		return
-	}
-	bus.Subscribe(challengecontracts.EventPublishCheckFinished, s.handleChallengePublishCheckFinished)
-}
-
-func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
+	payload, ok := decoded.Payload.(*practicecontracts.FlagAcceptedEvent)
 	if !ok {
-		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
+		return fmt.Errorf("unexpected practice flag event payload: %T", decoded.Payload)
 	}
 	link := fmt.Sprintf("/challenges/%d", payload.ChallengeID)
-	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
+	return s.sendNotificationFromOutboxEvent(ctx, event, "practice_flag_accepted_notification", payload.UserID, SendNotificationInput{
 		Type:    "challenge",
 		Title:   "题目解出",
 		Content: fmt.Sprintf("你已成功提交题目 #%d 的 Flag，获得 %d 分。", payload.ChallengeID, payload.Points),
@@ -72,10 +69,14 @@ func (s *NotificationService) handlePracticeFlagAccepted(ctx context.Context, ev
 	})
 }
 
-func (s *NotificationService) handleChallengePublishCheckFinished(ctx context.Context, evt platformevents.Event) error {
-	payload, ok := evt.Payload.(challengecontracts.PublishCheckFinishedEvent)
+func (s *NotificationService) HandleChallengePublishCheckFinishedOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	decoded, err := notificationOutboxCodec().Decode(event)
+	if err != nil {
+		return err
+	}
+	payload, ok := decoded.Payload.(*challengecontracts.PublishCheckFinishedEvent)
 	if !ok {
-		return fmt.Errorf("unexpected challenge publish check event payload: %T", evt.Payload)
+		return fmt.Errorf("unexpected challenge publish check event payload: %T", decoded.Payload)
 	}
 
 	title := "题目发布失败"
@@ -88,12 +89,36 @@ func (s *NotificationService) handleChallengePublishCheckFinished(ctx context.Co
 	}
 
 	link := fmt.Sprintf("/admin/challenges/%d", payload.ChallengeID)
-	return s.SendNotification(ctx, payload.UserID, SendNotificationInput{
+	return s.sendNotificationFromOutboxEvent(ctx, event, "challenge_publish_check_notification", payload.UserID, SendNotificationInput{
 		Type:    opsentity.NotificationTypeChallenge,
 		Title:   title,
 		Content: content,
 		Link:    &link,
 	})
+}
+
+func (s *NotificationService) HandleNotificationFanoutEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	decoded, err := notificationOutboxCodec().Decode(event)
+	if err != nil {
+		return err
+	}
+	payload, ok := decoded.Payload.(*opscontracts.NotificationFanoutEvent)
+	if !ok {
+		return fmt.Errorf("unexpected notification fanout payload: %T", decoded.Payload)
+	}
+	if s == nil || s.manager == nil || payload.UserID <= 0 {
+		return nil
+	}
+	timestamp := payload.OccurredAt
+	if timestamp.IsZero() {
+		timestamp = decoded.Event.OccurredAt
+	}
+	s.manager.SendToUser(payload.UserID, ctfws.Envelope{
+		Type:      event.Name,
+		Payload:   payload.Notification,
+		Timestamp: timestamp.UTC(),
+	})
+	return nil
 }
 
 func (s *NotificationService) SendNotification(ctx context.Context, userID int64, req SendNotificationInput) error {
@@ -104,16 +129,34 @@ func (s *NotificationService) SendNotification(ctx context.Context, userID int64
 		Content: req.Content,
 		Link:    req.Link,
 	}
-	if err := s.repo.Create(ctx, notification); err != nil {
+	if err := s.repo.WithinNotificationOutboxTx(ctx, func(txRepo opsports.NotificationOutboxTxRepository) error {
+		if err := txRepo.Create(ctx, notification); err != nil {
+			return err
+		}
+		return enqueueNotificationFanoutOutboxEvent(ctx, txRepo, opscontracts.EventNotificationCreated, notification, time.Now().UTC())
+	}); err != nil {
 		return apperror.ErrInternal.WithCause(err)
 	}
+	return nil
+}
 
-	if s.manager != nil {
-		s.manager.SendToUser(userID, ctfws.Envelope{
-			Type:      "notification.created",
-			Payload:   toNotificationInfo(notification),
-			Timestamp: time.Now().UTC(),
-		})
+func (s *NotificationService) sendNotificationFromOutboxEvent(ctx context.Context, source platformevents.OutboxEvent, handlerName string, userID int64, req SendNotificationInput) error {
+	notification := &opsentity.Notification{
+		UserID:         userID,
+		Type:           req.Type,
+		Title:          req.Title,
+		Content:        req.Content,
+		Link:           req.Link,
+		SourceEventKey: notificationSourceEventKey(source, handlerName),
+	}
+	if err := s.repo.WithinNotificationOutboxTx(ctx, func(txRepo opsports.NotificationOutboxTxRepository) error {
+		created, err := txRepo.CreateIfSourceEventAbsent(ctx, notification)
+		if err != nil || !created {
+			return err
+		}
+		return enqueueNotificationFanoutOutboxEvent(ctx, txRepo, opscontracts.EventNotificationCreated, notification, time.Now().UTC())
+	}); err != nil {
+		return apperror.ErrInternal.WithCause(err)
 	}
 	return nil
 }
@@ -165,18 +208,19 @@ func (s *NotificationService) PublishAdminNotification(ctx context.Context, acto
 			Link:    req.Link,
 		})
 	}
-	if err := s.repo.CreateBatch(ctx, batch, notifications); err != nil {
-		return nil, apperror.ErrInternal.WithCause(err)
-	}
-
-	if s.manager != nil {
-		for _, item := range notifications {
-			s.manager.SendToUser(item.UserID, ctfws.Envelope{
-				Type:      "notification.created",
-				Payload:   toNotificationInfo(item),
-				Timestamp: time.Now().UTC(),
-			})
+	if err := s.repo.WithinNotificationOutboxTx(ctx, func(txRepo opsports.NotificationOutboxTxRepository) error {
+		if err := txRepo.CreateBatch(ctx, batch, notifications); err != nil {
+			return err
 		}
+		now := time.Now().UTC()
+		for _, item := range notifications {
+			if err := enqueueNotificationFanoutOutboxEvent(ctx, txRepo, opscontracts.EventNotificationCreated, item, now); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
 	return notificationMapper.ToAdminNotificationPublishRespPtr(adminNotificationPublishRespSource{
@@ -198,18 +242,15 @@ func (s *NotificationService) MarkAsRead(ctx context.Context, userID, notificati
 	}
 
 	readAt := time.Now().UTC()
-	if err := s.repo.MarkAsRead(ctx, notificationID, userID, readAt); err != nil {
+	if err := s.repo.WithinNotificationOutboxTx(ctx, func(txRepo opsports.NotificationOutboxTxRepository) error {
+		if err := txRepo.MarkAsRead(ctx, notificationID, userID, readAt); err != nil {
+			return err
+		}
+		notification.IsRead = true
+		notification.ReadAt = &readAt
+		return enqueueNotificationFanoutOutboxEvent(ctx, txRepo, opscontracts.EventNotificationRead, notification, readAt)
+	}); err != nil {
 		return apperror.ErrInternal.WithCause(err)
-	}
-	notification.IsRead = true
-	notification.ReadAt = &readAt
-
-	if s.manager != nil {
-		s.manager.SendToUser(userID, ctfws.Envelope{
-			Type:      "notification.read",
-			Payload:   toNotificationInfo(notification),
-			Timestamp: time.Now().UTC(),
-		})
 	}
 	return nil
 }
@@ -219,6 +260,71 @@ func toNotificationInfo(notification *opsentity.Notification) NotificationInfo {
 	resp.Content = normalizeOptionalString(notification.Content)
 	resp.Unread = !notification.IsRead
 	return *resp
+}
+
+func enqueueNotificationFanoutOutboxEvent(ctx context.Context, repo opsports.NotificationOutboxTxRepository, eventName string, notification *opsentity.Notification, occurredAt time.Time) error {
+	if repo == nil {
+		return fmt.Errorf("notification outbox repository is not configured")
+	}
+	if notification == nil {
+		return fmt.Errorf("notification is required")
+	}
+	occurredAt = occurredAt.UTC()
+	if occurredAt.IsZero() {
+		occurredAt = time.Now().UTC()
+	}
+	payload := opscontracts.NotificationFanoutEvent{
+		UserID:       notification.UserID,
+		Notification: toNotificationInfo(notification),
+		OccurredAt:   occurredAt,
+	}
+	event, err := notificationOutboxCodec().Encode(eventName, opscontracts.EventNotificationPayloadVersion, payload, occurredAt)
+	if err != nil {
+		return err
+	}
+	event.Route = platformevents.OutboxRouteStream
+	event.DedupeKey = notificationFanoutDedupeKey(eventName, notification.ID)
+	return repo.EnqueueOutboxEvent(ctx, event)
+}
+
+func notificationFanoutDedupeKey(eventName string, notificationID int64) string {
+	switch eventName {
+	case opscontracts.EventNotificationCreated:
+		return fmt.Sprintf("notification:created:%d", notificationID)
+	case opscontracts.EventNotificationRead:
+		return fmt.Sprintf("notification:read:%d", notificationID)
+	default:
+		return fmt.Sprintf("notification:%s:%d", eventName, notificationID)
+	}
+}
+
+func notificationSourceEventKey(event platformevents.OutboxEvent, handlerName string) string {
+	handlerName = strings.TrimSpace(handlerName)
+	if handlerName == "" {
+		handlerName = "notification"
+	}
+	if event.DedupeKey != "" {
+		return fmt.Sprintf("outbox:%s:%s", event.DedupeKey, handlerName)
+	}
+	sum := sha256.Sum256(event.Payload)
+	return fmt.Sprintf("outbox:%s:v%d:%s:%s", event.Name, event.PayloadVersion, hex.EncodeToString(sum[:]), handlerName)
+}
+
+func notificationOutboxCodec() *platformevents.OutboxCodec {
+	codec := platformevents.NewOutboxCodec()
+	codec.Register(practicecontracts.EventFlagAccepted, practicecontracts.EventFlagAcceptedPayloadVersion, func() any {
+		return &practicecontracts.FlagAcceptedEvent{}
+	})
+	codec.Register(challengecontracts.EventPublishCheckFinished, challengecontracts.EventPublishCheckFinishedPayloadVersion, func() any {
+		return &challengecontracts.PublishCheckFinishedEvent{}
+	})
+	codec.Register(opscontracts.EventNotificationCreated, opscontracts.EventNotificationPayloadVersion, func() any {
+		return &opscontracts.NotificationFanoutEvent{}
+	})
+	codec.Register(opscontracts.EventNotificationRead, opscontracts.EventNotificationPayloadVersion, func() any {
+		return &opscontracts.NotificationFanoutEvent{}
+	})
+	return codec
 }
 
 func (s *NotificationService) resolveAudienceRule(ctx context.Context, rule NotificationAudienceRuleInput) ([]int64, error) {

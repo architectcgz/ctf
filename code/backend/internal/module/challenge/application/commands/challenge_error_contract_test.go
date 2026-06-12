@@ -111,7 +111,6 @@ func TestChallengePublishCheckServiceRequestPublishCheckTreatsMissingActiveJobSe
 		repo,
 		repo,
 		nil,
-		nil,
 		SelfCheckConfig{},
 		nil,
 		zap.NewNop(),
@@ -140,7 +139,6 @@ func TestChallengePublishCheckServiceGetLatestPublishCheckTreatsMissingJobSentin
 	service := NewChallengePublishCheckService(
 		repo,
 		repo,
-		nil,
 		nil,
 		SelfCheckConfig{},
 		nil,

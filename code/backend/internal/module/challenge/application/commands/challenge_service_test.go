@@ -26,6 +26,49 @@ import (
 	"gorm.io/gorm"
 )
 
+func requireSinglePublishCheckFinishedOutboxEvent(t *testing.T, db *gorm.DB) challengecontracts.PublishCheckFinishedEvent {
+	t.Helper()
+
+	var records []platformevents.OutboxRecord
+	if err := db.Order("id ASC").Find(&records).Error; err != nil {
+		t.Fatalf("query outbox records: %v", err)
+	}
+	if len(records) != 1 {
+		t.Fatalf("expected one publish check outbox record, got %d: %+v", len(records), records)
+	}
+	record := records[0]
+	if record.EventName != challengecontracts.EventPublishCheckFinished {
+		t.Fatalf("unexpected outbox event name: %s", record.EventName)
+	}
+	if record.PayloadVersion != challengecontracts.EventPublishCheckFinishedPayloadVersion {
+		t.Fatalf("unexpected outbox payload version: %d", record.PayloadVersion)
+	}
+	if record.Route != platformevents.OutboxRouteHandler {
+		t.Fatalf("unexpected outbox route: %s", record.Route)
+	}
+
+	codec := platformevents.NewOutboxCodec()
+	codec.Register(challengecontracts.EventPublishCheckFinished, challengecontracts.EventPublishCheckFinishedPayloadVersion, func() any {
+		return &challengecontracts.PublishCheckFinishedEvent{}
+	})
+	decoded, err := codec.Decode(platformevents.OutboxEvent{
+		Name:           record.EventName,
+		PayloadVersion: record.PayloadVersion,
+		Payload:        record.Payload,
+		Route:          record.Route,
+		DedupeKey:      record.DedupeKey,
+		OccurredAt:     record.OccurredAt,
+	})
+	if err != nil {
+		t.Fatalf("decode outbox payload: %v", err)
+	}
+	payload, ok := decoded.Payload.(*challengecontracts.PublishCheckFinishedEvent)
+	if !ok {
+		t.Fatalf("unexpected decoded payload type: %T", decoded.Payload)
+	}
+	return *payload
+}
+
 func newTestService(repo *challengeinfra.Repository, imageRepo challengeports.ImageQueryRepository) *ChallengeService {
 	return NewChallengeService(
 		challengeinfra.NewChallengeCommandRepository(repo),
@@ -98,12 +141,6 @@ func newDBBackedChallengePublishCheckService(
 	cfg SelfCheckConfig,
 ) *ChallengePublishCheckService {
 	commandRepo := challengeinfra.NewChallengeCommandRepository(repo)
-	coreService := NewChallengeService(
-		commandRepo,
-		challengeinfra.NewImageQueryRepository(imageRepo),
-		challengeinfra.NewTopologyServiceRepository(repo),
-		zap.NewNop(),
-	)
 	selfCheckService := NewChallengeSelfCheckService(
 		commandRepo,
 		challengeinfra.NewImageQueryRepository(imageRepo),
@@ -112,7 +149,7 @@ func newDBBackedChallengePublishCheckService(
 		cfg,
 		zap.NewNop(),
 	)
-	return NewChallengePublishCheckService(commandRepo, commandRepo, selfCheckService, coreService, cfg, nil, zap.NewNop())
+	return NewChallengePublishCheckService(commandRepo, commandRepo, selfCheckService, cfg, nil, zap.NewNop())
 }
 
 func newDBBackedChallengePackageExportService(
@@ -528,8 +565,8 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		t.Fatalf("expected published_at to be set, got %+v", latest)
 	}
 
-	if len(publishedEvents) != 2 {
-		t.Fatalf("expected 2 challenge events, got %+v", publishedEvents)
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 weak challenge event, got %+v", publishedEvents)
 	}
 	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
 		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
@@ -543,15 +580,107 @@ func TestServiceDispatchPublishCheckJobsPublishesChallengeAndNotifiesRequester(t
 		catalogPayload.CurrentStatus != challengecontracts.ChallengeStatusPublished {
 		t.Fatalf("unexpected catalog event payload: %+v", catalogPayload)
 	}
-	if publishedEvents[1].Name != challengecontracts.EventPublishCheckFinished {
-		t.Fatalf("unexpected event name: %+v", publishedEvents[1])
-	}
-	payload, ok := publishedEvents[1].Payload.(challengecontracts.PublishCheckFinishedEvent)
-	if !ok {
-		t.Fatalf("unexpected event payload type: %T", publishedEvents[1].Payload)
-	}
+	payload := requireSinglePublishCheckFinishedOutboxEvent(t, db)
 	if !payload.Passed || payload.ChallengeID != challenge.ID || payload.UserID != teacher.ID {
-		t.Fatalf("unexpected publish check event payload: %+v", payload)
+		t.Fatalf("unexpected publish check outbox payload: %+v", payload)
+	}
+}
+
+func TestServiceDispatchPublishCheckJobsDoesNotOverwriteChallengeEditedDuringSelfCheck(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+	image := &challengeentity.Image{Name: "ctf/web-edit-race", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
+	if err := db.Create(image).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	salt, err := randomstring.Generate()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	challenge := &challengeentity.Challenge{
+		Title:       "publish-before-edit",
+		Description: "old description",
+		Category:    taxonomy.DimensionWeb,
+		Difficulty:  challengeentity.ChallengeDifficultyEasy,
+		Points:      100,
+		ImageID:     int64Ptr(image.ID),
+		Status:      challengeentity.ChallengeStatusDraft,
+		CreatedBy:   &teacher.ID,
+		FlagType:    challengeentity.FlagTypeStatic,
+		FlagSalt:    salt,
+		FlagHash:    flagcrypto.HashStaticFlag("flag{ok}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{
+		beforeCreateContainer: func() {
+			if err := db.Model(&challengeentity.Challenge{}).
+				Where("id = ?", challenge.ID).
+				Updates(map[string]any{
+					"title":       "publish-after-edit",
+					"description": "new description",
+					"points":      250,
+				}).Error; err != nil {
+				t.Fatalf("update challenge during self-check: %v", err)
+			}
+		},
+		containerResultAccessURL: "http://127.0.0.1:30001",
+		containerResultDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
+			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
+		},
+	}
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, probe, SelfCheckConfig{
+		PublishCheckBatchSize: 1,
+	})
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
+
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+
+	service.DispatchPublishCheckJobs(context.Background())
+
+	publishedChallenge, err := repo.FindByID(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if publishedChallenge.Status != challengeentity.ChallengeStatusPublished {
+		t.Fatalf("expected published challenge status, got %s", publishedChallenge.Status)
+	}
+	if publishedChallenge.Title != "publish-after-edit" ||
+		publishedChallenge.Description != "new description" ||
+		publishedChallenge.Points != 250 {
+		t.Fatalf("publish check finalization overwrote concurrent challenge edit: %+v", publishedChallenge)
+	}
+
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 weak challenge event, got %+v", publishedEvents)
+	}
+	catalogPayload, ok := publishedEvents[0].Payload.(challengecontracts.PublishedCatalogChangedEvent)
+	if !ok {
+		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
+	}
+	if catalogPayload.CurrentPoints != 250 {
+		t.Fatalf("expected catalog event to use current challenge points, got %+v", catalogPayload)
+	}
+	payload := requireSinglePublishCheckFinishedOutboxEvent(t, db)
+	if !payload.Passed || payload.ChallengeTitle != "publish-after-edit" {
+		t.Fatalf("expected outbox payload to use current challenge title, got %+v", payload)
 	}
 }
 
@@ -619,18 +748,106 @@ func TestServiceDispatchPublishCheckJobsKeepsDraftOnFailureAndNotifiesRequester(
 		t.Fatalf("expected failure summary, got %+v", latest)
 	}
 
-	if len(publishedEvents) != 1 {
-		t.Fatalf("expected 1 challenge event, got %+v", publishedEvents)
+	if len(publishedEvents) != 0 {
+		t.Fatalf("expected no weak challenge events, got %+v", publishedEvents)
 	}
-	payload, ok := publishedEvents[0].Payload.(challengecontracts.PublishCheckFinishedEvent)
-	if !ok {
-		t.Fatalf("unexpected event payload type: %T", publishedEvents[0].Payload)
-	}
+	payload := requireSinglePublishCheckFinishedOutboxEvent(t, db)
 	if payload.Passed {
-		t.Fatalf("expected failure event, got %+v", payload)
+		t.Fatalf("expected failure outbox event, got %+v", payload)
 	}
 	if payload.FailureSummary == "" {
-		t.Fatalf("expected failure summary in event, got %+v", payload)
+		t.Fatalf("expected failure summary in outbox event, got %+v", payload)
+	}
+}
+
+func TestServiceDispatchPublishCheckJobDoesNotFinalizeWhenOutboxEnqueueFails(t *testing.T) {
+	db := testsupport.SetupTestDB(t)
+
+	teacher := &identitycontracts.User{Username: "teacher", PasswordHash: "x", Role: identitycontracts.RoleTeacher, Status: identitycontracts.UserStatusActive}
+	if err := db.Create(teacher).Error; err != nil {
+		t.Fatalf("create teacher: %v", err)
+	}
+	salt, err := randomstring.Generate()
+	if err != nil {
+		t.Fatalf("generate salt: %v", err)
+	}
+	image := &challengeentity.Image{Name: "ctf/outbox-failure", Tag: "latest", Status: challengeentity.ImageStatusAvailable}
+	if err := db.Create(image).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	challenge := &challengeentity.Challenge{
+		Title:      "outbox-failure",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: challengeentity.ChallengeDifficultyEasy,
+		Points:     100,
+		ImageID:    int64Ptr(image.ID),
+		Status:     challengeentity.ChallengeStatusDraft,
+		CreatedBy:  &teacher.ID,
+		FlagType:   challengeentity.FlagTypeStatic,
+		FlagSalt:   salt,
+		FlagHash:   flagcrypto.HashStaticFlag("flag{ok}", salt),
+	}
+	if err := db.Create(challenge).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Callback().Create().Before("gorm:create").Register("fail_publish_check_outbox_insert", func(tx *gorm.DB) {
+		if tx.Statement != nil && tx.Statement.Table == "platform_event_outbox" {
+			tx.AddError(gorm.ErrInvalidDB)
+		}
+	}); err != nil {
+		t.Fatalf("register outbox failure callback: %v", err)
+	}
+
+	repo := challengeinfra.NewRepository(db)
+	imageRepo := challengeinfra.NewImageRepository(db)
+	probe := &fakeChallengeRuntimeProbe{
+		containerResultAccessURL: "http://127.0.0.1:30001",
+		containerResultDetails: runtimecontracts.InstanceRuntimeDetails{
+			Containers: []runtimecontracts.InstanceRuntimeContainer{{ContainerID: "ctr-1"}},
+			Networks:   []runtimecontracts.InstanceRuntimeNetwork{{NetworkID: "net-1"}},
+		},
+	}
+	service := newDBBackedChallengePublishCheckService(repo, imageRepo, probe, SelfCheckConfig{
+		PublishCheckBatchSize: 1,
+	})
+	var publishedEvents []platformevents.Event
+	service.SetEventBus(&challengeCommandEventBusStub{
+		publishFn: func(ctx context.Context, evt platformevents.Event) error {
+			publishedEvents = append(publishedEvents, evt)
+			return nil
+		},
+	})
+
+	if _, err := service.RequestPublishCheck(context.Background(), teacher.ID, challenge.ID); err != nil {
+		t.Fatalf("RequestPublishCheck() error = %v", err)
+	}
+
+	service.DispatchPublishCheckJobs(context.Background())
+
+	latest, err := repo.FindLatestPublishCheckJobByChallengeID(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("FindLatestPublishCheckJobByChallengeID() error = %v", err)
+	}
+	if latest.Status != challengeentity.ChallengePublishCheckStatusRunning {
+		t.Fatalf("expected job to remain running when outbox enqueue fails, got %+v", latest)
+	}
+	stored, err := repo.FindByID(context.Background(), challenge.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if stored.Status != challengeentity.ChallengeStatusDraft {
+		t.Fatalf("expected challenge to remain draft when outbox enqueue fails, got %s", stored.Status)
+	}
+	if len(publishedEvents) != 0 {
+		t.Fatalf("expected no weak challenge event when outbox enqueue fails, got %+v", publishedEvents)
+	}
+
+	var outboxCount int64
+	if err := db.Model(&platformevents.OutboxRecord{}).Count(&outboxCount).Error; err != nil {
+		t.Fatalf("count outbox rows: %v", err)
+	}
+	if outboxCount != 0 {
+		t.Fatalf("expected no committed outbox row, got %d", outboxCount)
 	}
 }
 
@@ -702,8 +919,8 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 	if latest.Result == nil || !latest.Result.Precheck.Passed || !latest.Result.Runtime.Passed {
 		t.Fatalf("expected successful self-check result, got %+v", latest.Result)
 	}
-	if len(publishedEvents) != 2 {
-		t.Fatalf("expected 2 challenge events, got %+v", publishedEvents)
+	if len(publishedEvents) != 1 {
+		t.Fatalf("expected 1 weak challenge event, got %+v", publishedEvents)
 	}
 	if publishedEvents[0].Name != challengecontracts.EventPublishedCatalogChanged {
 		t.Fatalf("unexpected event name: %+v", publishedEvents[0])
@@ -716,8 +933,9 @@ func TestServiceDispatchPublishCheckJobsPublishesAttachmentOnlyChallenge(t *test
 		catalogPayload.ChallengeID != challenge.ID {
 		t.Fatalf("unexpected catalog event payload: %+v", catalogPayload)
 	}
-	if publishedEvents[1].Name != challengecontracts.EventPublishCheckFinished {
-		t.Fatalf("unexpected event name: %+v", publishedEvents[1])
+	payload := requireSinglePublishCheckFinishedOutboxEvent(t, db)
+	if !payload.Passed || payload.ChallengeID != challenge.ID || payload.UserID != teacher.ID {
+		t.Fatalf("unexpected publish check outbox payload: %+v", payload)
 	}
 }
 

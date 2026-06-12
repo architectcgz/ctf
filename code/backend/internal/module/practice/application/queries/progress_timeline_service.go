@@ -48,21 +48,22 @@ func NewProgressTimelineService(
 	}
 }
 
-func (s *ProgressTimelineService) RegisterPracticeEventConsumers(bus platformevents.Bus) {
-	if s == nil || bus == nil {
-		return
-	}
-	bus.Subscribe(practicecontracts.EventFlagAccepted, s.handleFlagAcceptedEvent)
-}
-
-func (s *ProgressTimelineService) handleFlagAcceptedEvent(ctx context.Context, evt platformevents.Event) error {
+func (s *ProgressTimelineService) HandleFlagAcceptedOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
 	if s == nil || s.cache == nil {
 		return nil
 	}
 
-	payload, ok := evt.Payload.(practicecontracts.FlagAcceptedEvent)
+	codec := platformevents.NewOutboxCodec()
+	codec.Register(practicecontracts.EventFlagAccepted, practicecontracts.EventFlagAcceptedPayloadVersion, func() any {
+		return &practicecontracts.FlagAcceptedEvent{}
+	})
+	decoded, err := codec.Decode(event)
+	if err != nil {
+		return err
+	}
+	payload, ok := decoded.Payload.(*practicecontracts.FlagAcceptedEvent)
 	if !ok {
-		return fmt.Errorf("unexpected practice flag event payload: %T", evt.Payload)
+		return fmt.Errorf("unexpected practice flag event payload: %T", decoded.Payload)
 	}
 	if payload.UserID <= 0 {
 		return nil

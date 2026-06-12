@@ -23,10 +23,12 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		RuntimePortOwnerFor: runtimePortOwnerFor,
 		ChallengeRepo:       challenge.Catalog,
 		ImageStore:          challenge.ImageStore,
+		OutboxHandlers:      root.OutboxHandlerRegistry(),
 	})
 	if instance != nil && module != nil && module.AWDDesiredRuntimeReconciler != nil {
 		instance.SetAWDDesiredRuntimeReconciler(module.AWDDesiredRuntimeReconciler)
 	}
+	root.registerPracticeOutboxHandlerRegistrars()
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))
 	}

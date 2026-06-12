@@ -19,6 +19,7 @@ import (
 	practiceentity "ctf-platform/internal/module/practice/entity"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	contestentity "ctf-platform/internal/module/practice/testsupport/contestentity"
+	"ctf-platform/internal/platform/events"
 	"gorm.io/gorm"
 )
 
@@ -155,6 +156,7 @@ type stubPracticeRepository struct {
 	withinInstanceStartTxFn                func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceStartTxRepository) error) error
 	withinInstanceRestartTxFn              func(ctx context.Context, fn func(txRepo practiceports.PracticeInstanceRestartTxRepository) error) error
 	withinAWDServiceOperationTxFn          func(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error
+	withinSubmissionOutboxTxFn             func(ctx context.Context, fn func(txRepo practiceports.PracticeSubmissionOutboxTxRepository) error) error
 	findContestByIDFn                      func(ctx context.Context, contestID int64) (*practiceports.ContestRecord, error)
 	listDesiredRuntimeAWDContestsFn        func(ctx context.Context) ([]*practiceports.ContestRecord, error)
 	findContestChallengeFn                 func(ctx context.Context, contestID, challengeID int64) (*practiceports.ContestChallengeRecord, error)
@@ -193,6 +195,7 @@ type stubPracticeRepository struct {
 	listTeacherManualReviewSubmissionsFn   func(ctx context.Context, query *practicecontracts.TeacherManualReviewSubmissionQuery) ([]practiceports.TeacherManualReviewSubmissionRecord, int64, error)
 	getTeacherManualReviewSubmissionByIDFn func(ctx context.Context, id int64) (*practiceports.TeacherManualReviewSubmissionRecord, error)
 	isUniqueViolationFn                    func(err error) bool
+	enqueueOutboxEventFn                   func(ctx context.Context, event events.OutboxEvent) error
 }
 
 func practiceContestRecordFromEntity(contest *contestentity.Contest) *practiceports.ContestRecord {
@@ -342,6 +345,13 @@ func (s *stubPracticeRepository) WithinInstanceRestartTx(ctx context.Context, fn
 func (s *stubPracticeRepository) WithinAWDServiceOperationTx(ctx context.Context, fn func(txRepo practiceports.PracticeAWDServiceOperationTxRepository) error) error {
 	if s.withinAWDServiceOperationTxFn != nil {
 		return s.withinAWDServiceOperationTxFn(ctx, fn)
+	}
+	return fn(s)
+}
+
+func (s *stubPracticeRepository) WithinSubmissionOutboxTx(ctx context.Context, fn func(txRepo practiceports.PracticeSubmissionOutboxTxRepository) error) error {
+	if s.withinSubmissionOutboxTxFn != nil {
+		return s.withinSubmissionOutboxTxFn(ctx, fn)
 	}
 	return fn(s)
 }
@@ -808,7 +818,7 @@ func (s *stubPracticeRepository) FindCorrectSubmission(ctx context.Context, user
 	if s.findCorrectSubmissionFn != nil {
 		return s.findCorrectSubmissionFn(ctx, userID, challengeID)
 	}
-	return nil, gorm.ErrRecordNotFound
+	return nil, practiceports.ErrPracticeSolvedSubmissionNotFound
 }
 
 func (s *stubPracticeRepository) ListChallengeSubmissions(ctx context.Context, userID, challengeID int64, limit int) ([]practiceports.SubmissionRecord, error) {
@@ -851,4 +861,11 @@ func (s *stubPracticeRepository) IsUniqueViolation(err error) bool {
 		return s.isUniqueViolationFn(err)
 	}
 	return false
+}
+
+func (s *stubPracticeRepository) EnqueueOutboxEvent(ctx context.Context, event events.OutboxEvent) error {
+	if s.enqueueOutboxEventFn != nil {
+		return s.enqueueOutboxEventFn(ctx, event)
+	}
+	return nil
 }

@@ -20,6 +20,8 @@ type fakeChallengeRuntimeProbe struct {
 	cleanupCalled         bool
 	lastImageName         string
 
+	beforeCreateContainer func()
+
 	containerResultAccessURL string
 	containerResultDetails   runtimecontracts.InstanceRuntimeDetails
 	containerResultErr       error
@@ -41,6 +43,9 @@ func (f *fakeChallengeRuntimeProbe) CreateTopology(_ context.Context, _ *challen
 func (f *fakeChallengeRuntimeProbe) CreateContainer(_ context.Context, imageName string, _ map[string]string) (string, runtimecontracts.InstanceRuntimeDetails, error) {
 	f.createContainerCalled = true
 	f.lastImageName = imageName
+	if f.beforeCreateContainer != nil {
+		f.beforeCreateContainer()
+	}
 	if f.containerResultErr != nil {
 		return "", runtimecontracts.InstanceRuntimeDetails{}, f.containerResultErr
 	}

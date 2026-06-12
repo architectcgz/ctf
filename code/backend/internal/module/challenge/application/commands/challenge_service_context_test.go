@@ -20,6 +20,7 @@ type challengeCommandContextRepoStub struct {
 	createWithHintsFn               func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint) error
 	findByIDWithContextFn           func(ctx context.Context, id int64) (*challengeentity.Challenge, error)
 	updateFn                        func(ctx context.Context, challenge *challengeentity.Challenge) error
+	markChallengePublishedFn        func(ctx context.Context, id int64, publishedAt time.Time) error
 	updateWithHintsFn               func(ctx context.Context, challenge *challengeentity.Challenge, hints []*challengeentity.ChallengeHint, replaceHints bool) error
 	deleteFn                        func(ctx context.Context, id int64) error
 	hasRunningInstancesFn           func(ctx context.Context, challengeID int64) (bool, error)
@@ -28,6 +29,7 @@ type challengeCommandContextRepoStub struct {
 	findLatestPublishCheckJobByIDFn func(ctx context.Context, challengeID int64) (*challengeentity.ChallengePublishCheckJob, error)
 	findPublishCheckJobByIDFn       func(ctx context.Context, id int64) (*challengeentity.ChallengePublishCheckJob, error)
 	updatePublishCheckJobFn         func(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error
+	enqueueOutboxEventFn            func(ctx context.Context, event platformevents.OutboxEvent) error
 }
 
 func challengeWriteModelFromModel(source *challengeentity.Challenge) *challengeports.ChallengeWriteModel {
@@ -106,9 +108,23 @@ func (s *challengeCommandContextRepoStub) FindByID(ctx context.Context, id int64
 	return nil, nil
 }
 
+func (s *challengeCommandContextRepoStub) LockChallengeByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteModel, error) {
+	return s.FindByID(ctx, id)
+}
+
 func (s *challengeCommandContextRepoStub) Update(ctx context.Context, challenge *challengeports.ChallengeWriteModel) error {
 	if s.updateFn != nil {
 		return s.updateFn(ctx, challengeWriteModelToModel(challenge))
+	}
+	return nil
+}
+
+func (s *challengeCommandContextRepoStub) MarkChallengePublished(ctx context.Context, id int64, publishedAt time.Time) error {
+	if s.markChallengePublishedFn != nil {
+		return s.markChallengePublishedFn(ctx, id, publishedAt)
+	}
+	if s.updateFn != nil {
+		return s.updateFn(ctx, &challengeentity.Challenge{ID: id, Status: challengeentity.ChallengeStatusPublished, UpdatedAt: publishedAt})
 	}
 	return nil
 }
@@ -173,6 +189,17 @@ func (s *challengeCommandContextRepoStub) TryStartPublishCheckJob(ctx context.Co
 func (s *challengeCommandContextRepoStub) UpdatePublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob) error {
 	if s.updatePublishCheckJobFn != nil {
 		return s.updatePublishCheckJobFn(ctx, job)
+	}
+	return nil
+}
+
+func (s *challengeCommandContextRepoStub) WithinPublishCheckOutboxTx(ctx context.Context, fn func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error) error {
+	return fn(s)
+}
+
+func (s *challengeCommandContextRepoStub) EnqueueOutboxEvent(ctx context.Context, event platformevents.OutboxEvent) error {
+	if s.enqueueOutboxEventFn != nil {
+		return s.enqueueOutboxEventFn(ctx, event)
 	}
 	return nil
 }
@@ -462,7 +489,7 @@ func TestChallengePublishCheckServiceRequestPublishCheckPropagatesContextToRepos
 			return nil
 		},
 	}
-	service := NewChallengePublishCheckService(repo, repo, nil, nil, SelfCheckConfig{}, nil, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, nil, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.RequestPublishCheck(ctx, 1001, 9)
@@ -502,7 +529,7 @@ func TestChallengePublishCheckServiceGetLatestPublishCheckPropagatesContextToRep
 			return &challengeentity.ChallengePublishCheckJob{ID: 21, ChallengeID: challengeID, Status: challengeentity.ChallengePublishCheckStatusPassed, UpdatedAt: now}, nil
 		},
 	}
-	service := NewChallengePublishCheckService(repo, repo, nil, nil, SelfCheckConfig{}, nil, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, nil, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	resp, err := service.GetLatestPublishCheck(ctx, 9)
@@ -649,13 +676,16 @@ func TestChallengePublishCheckServiceProcessPublishCheckJobPropagatesContextToRe
 			}
 			return &challengeentity.Challenge{ID: id, Title: "Attachment Only", AttachmentURL: "/tmp/source.zip", Status: challengeentity.ChallengeStatusDraft, FlagType: challengeentity.FlagTypeStatic, FlagHash: "flag{ok}", FlagSalt: "salt"}, nil
 		},
-		updateFn: func(ctx context.Context, challenge *challengeentity.Challenge) error {
+		markChallengePublishedFn: func(ctx context.Context, id int64, publishedAt time.Time) error {
 			publishUpdateCalled = true
 			if got := ctx.Value(ctxKey); got != expectedCtxValue {
 				t.Fatalf("expected publish update ctx value %v, got %v", expectedCtxValue, got)
 			}
-			if challenge.Status != challengeentity.ChallengeStatusPublished {
-				t.Fatalf("unexpected published challenge payload: %+v", challenge)
+			if id != 21 {
+				t.Fatalf("unexpected published challenge id: %d", id)
+			}
+			if publishedAt.IsZero() {
+				t.Fatal("expected published timestamp")
 			}
 			return nil
 		},
@@ -675,9 +705,8 @@ func TestChallengePublishCheckServiceProcessPublishCheckJobPropagatesContextToRe
 			return nil, challengeports.ErrChallengeTopologyNotFound
 		},
 	}
-	coreService := NewChallengeService(repo, &challengeCommandImageRepoStub{}, topologyRepo, zap.NewNop())
 	selfCheckService := NewChallengeSelfCheckService(repo, &challengeCommandImageRepoStub{}, topologyRepo, &challengeCommandRuntimeProbeStub{}, SelfCheckConfig{}, zap.NewNop())
-	service := NewChallengePublishCheckService(repo, repo, selfCheckService, coreService, SelfCheckConfig{}, nil, zap.NewNop())
+	service := NewChallengePublishCheckService(repo, repo, selfCheckService, SelfCheckConfig{}, nil, zap.NewNop())
 
 	ctx := context.WithValue(context.Background(), ctxKey, expectedCtxValue)
 	service.ProcessPublishCheckJob(ctx, 51)

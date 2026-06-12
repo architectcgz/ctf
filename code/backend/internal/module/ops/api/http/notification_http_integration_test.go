@@ -34,8 +34,10 @@ import (
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
 	opscmd "ctf-platform/internal/module/ops/application/commands"
 	opsqry "ctf-platform/internal/module/ops/application/queries"
+	opscontracts "ctf-platform/internal/module/ops/contracts"
 	opsentity "ctf-platform/internal/module/ops/entity"
 	opsinfra "ctf-platform/internal/module/ops/infrastructure"
+	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/validation"
 )
 
@@ -130,6 +132,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	}); err != nil {
 		t.Fatalf("send notification: %v", err)
 	}
+	dispatchNotificationFanout(t, env)
 
 	pushMsg := receiveWSMessageByType(t, conn, "notification.created")
 	pushData := decodeNotificationJSON[NotificationInfo](t, pushMsg.Payload)
@@ -173,6 +176,7 @@ func TestHTTP_NotificationsSupportTicketListReadAndWebSocketPush(t *testing.T) {
 	if markResp.Code != http.StatusOK {
 		t.Fatalf("unexpected mark-as-read status: %d body=%s", markResp.Code, markResp.Body.String())
 	}
+	dispatchNotificationFanout(t, env)
 
 	readMsg := receiveWSMessageByType(t, conn, "notification.read")
 	readData := decodeNotificationJSON[NotificationInfo](t, readMsg.Payload)
@@ -317,7 +321,7 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 	if err != nil {
 		t.Fatalf("open sqlite: %v", err)
 	}
-	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}, &opsentity.NotificationBatch{}, &opsentity.Notification{}); err != nil {
+	if err := db.AutoMigrate(&identitycontracts.Role{}, &identitycontracts.User{}, &identitycontracts.UserRole{}, &opsentity.NotificationBatch{}, &opsentity.Notification{}, &platformevents.OutboxRecord{}); err != nil {
 		t.Fatalf("auto migrate schema: %v", err)
 	}
 	seedNotificationRoles(t, db)
@@ -374,6 +378,32 @@ func newNotificationIntegrationEnv(t *testing.T) *notificationIntegrationEnv {
 		cache:               cache,
 		tokenService:        tokenService,
 		notificationService: notificationCommandService,
+	}
+}
+
+func dispatchNotificationFanout(t *testing.T, env *notificationIntegrationEnv) {
+	t.Helper()
+
+	const consumerID = "notification-http-test-consumer"
+	ctx := context.Background()
+	registry := platformevents.NewOutboxHandlerRegistry()
+	registry.Register(opscontracts.EventNotificationCreated, env.notificationService.HandleNotificationFanoutEvent)
+	registry.Register(opscontracts.EventNotificationRead, env.notificationService.HandleNotificationFanoutEvent)
+	opts := platformevents.StreamFanoutOptions{
+		StreamKey:        "test:notification:events",
+		CursorKeyPrefix:  "test:notification:cursor:",
+		PublishKeyPrefix: "test:notification:publish:",
+	}
+	if err := env.cache.SetNX(ctx, opts.CursorKeyPrefix+consumerID, "0-0", 0).Err(); err != nil {
+		t.Fatalf("seed notification fanout cursor: %v", err)
+	}
+	stream := platformevents.NewStreamFanout(env.cache, opts, zap.NewNop())
+	dispatcher := platformevents.NewOutboxDispatcher(platformevents.NewOutboxRepository(env.db), stream, registry, zap.NewNop())
+	if err := dispatcher.DispatchOnce(ctx, "notification-http-test-dispatcher"); err != nil {
+		t.Fatalf("dispatch notification outbox: %v", err)
+	}
+	if err := stream.ConsumeOnce(ctx, consumerID, registry.Handle); err != nil {
+		t.Fatalf("consume notification stream: %v", err)
 	}
 }
 

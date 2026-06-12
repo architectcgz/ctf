@@ -7,6 +7,7 @@ import (
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
+	platformevents "ctf-platform/internal/platform/events"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -35,6 +36,7 @@ func SetupTestDB(t *testing.T) *gorm.DB {
 		&challengeentity.EnvironmentTemplate{},
 		&contestcontracts.Contest{},
 		&contestcontracts.ContestAWDService{},
+		&platformevents.OutboxRecord{},
 	); err != nil {
 		t.Fatalf("failed to migrate tables: %v", err)
 	}

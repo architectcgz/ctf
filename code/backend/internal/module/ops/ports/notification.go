@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	opsentity "ctf-platform/internal/module/ops/entity"
+	platformevents "ctf-platform/internal/platform/events"
 	ctfws "ctf-platform/internal/websocket"
 )
 
@@ -19,6 +20,7 @@ type NotificationListFilter struct {
 
 type NotificationCommandRepository interface {
 	Create(ctx context.Context, notification *opsentity.Notification) error
+	CreateIfSourceEventAbsent(ctx context.Context, notification *opsentity.Notification) (bool, error)
 	CreateBatch(ctx context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error
 	FindByID(ctx context.Context, notificationID, userID int64) (*opsentity.Notification, error)
 	MarkAsRead(ctx context.Context, notificationID, userID int64, readAt any) error
@@ -26,6 +28,18 @@ type NotificationCommandRepository interface {
 	ListUserIDsByRoles(ctx context.Context, roles []string) ([]int64, error)
 	ListUserIDsByClasses(ctx context.Context, classNames []string) ([]int64, error)
 	ListExistingUserIDs(ctx context.Context, userIDs []int64) ([]int64, error)
+}
+
+type NotificationOutboxTxRepository interface {
+	Create(ctx context.Context, notification *opsentity.Notification) error
+	CreateIfSourceEventAbsent(ctx context.Context, notification *opsentity.Notification) (bool, error)
+	CreateBatch(ctx context.Context, batch *opsentity.NotificationBatch, notifications []*opsentity.Notification) error
+	MarkAsRead(ctx context.Context, notificationID, userID int64, readAt any) error
+	platformevents.OutboxEventEnqueuer
+}
+
+type NotificationOutboxTxManager interface {
+	WithinNotificationOutboxTx(ctx context.Context, fn func(txRepo NotificationOutboxTxRepository) error) error
 }
 
 type NotificationQueryRepository interface {

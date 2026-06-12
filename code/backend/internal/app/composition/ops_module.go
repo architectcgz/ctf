@@ -32,10 +32,12 @@ func BuildOpsModule(root *Root, runtime *ContainerRuntimeModule) *OpsModule {
 		RuntimeQuery:          runtime.OpsRuntimeQuery,
 		RuntimeStats:          runtime.OpsRuntimeStatsProvider,
 		ContestRealtimeOutbox: contestinfra.NewRealtimeOutboxRepository(root.DB()),
+		OutboxHandlers:        root.OutboxHandlerRegistry(),
 	})
 	for _, job := range module.BackgroundJobs {
 		root.RegisterBackgroundJob(NewLoopBackgroundJob(job.Name, job.Run))
 	}
+	root.addPracticeOutboxHandlerRegistrar(module.RegisterPracticeOutboxHandlers)
 	return &OpsModule{
 		AuditService:     module.AuditService,
 		AuditHandler:     module.AuditHandler,

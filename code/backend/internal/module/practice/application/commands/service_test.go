@@ -815,6 +815,7 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&containerruntimeentity.NetworkAllocation{},
 		&containerruntimeentity.RuntimeNode{},
 		&contestentity.Submission{},
+		&events.OutboxRecord{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)
 	}

@@ -13,6 +13,7 @@ import (
 	practicehttp "ctf-platform/internal/module/practice/api/http"
 	practicecmd "ctf-platform/internal/module/practice/application/commands"
 	practiceqry "ctf-platform/internal/module/practice/application/queries"
+	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceinfra "ctf-platform/internal/module/practice/infrastructure"
 	practiceports "ctf-platform/internal/module/practice/ports"
 	platformevents "ctf-platform/internal/platform/events"
@@ -57,6 +58,7 @@ type Deps struct {
 	RuntimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
 	ChallengeRepo       challengecontracts.PracticeChallengeContract
 	ImageStore          challengecontracts.ImageStore
+	OutboxHandlers      *platformevents.OutboxHandlerRegistry
 }
 
 type moduleDeps struct {
@@ -66,6 +68,7 @@ type moduleDeps struct {
 		practiceports.PracticeInstanceStartTxManager
 		practiceports.PracticeInstanceRestartTxManager
 		practiceports.PracticeAWDServiceOperationTxManager
+		practiceports.PracticeSubmissionOutboxTxManager
 		practiceports.PracticeInstanceStartTxRepository
 		practiceports.PracticeInstanceRestartTxRepository
 		practiceports.PracticeAWDServiceOperationTxRepository
@@ -128,7 +131,7 @@ func Build(deps Deps) *Module {
 	commandServices, rankingService, progressTimelineService := buildHandler(internalDeps)
 	commandServices.Runtime.StartBackgroundTasks(deps.AppContext)
 	commandServices.SetEventBus(deps.Events)
-	progressTimelineService.RegisterPracticeEventConsumers(deps.Events)
+	registerProgressOutboxHandlers(deps.OutboxHandlers, progressTimelineService)
 
 	return &Module{
 		BackgroundJobs: []BackgroundJob{
@@ -200,4 +203,11 @@ func buildHandler(deps moduleDeps) (*practicecmd.CommandServices, *practiceqry.S
 	rankingService := practiceqry.NewScoreService(practiceinfra.NewScoreQueryRepository(deps.rankingRepo), scoreStateStore, log.Named("practice_score_query_service"), &cfg.Score)
 
 	return services, rankingService, progressTimelineService
+}
+
+func registerProgressOutboxHandlers(registry *platformevents.OutboxHandlerRegistry, service *practiceqry.ProgressTimelineService) {
+	if registry == nil || service == nil {
+		return
+	}
+	registry.Register(practicecontracts.EventFlagAccepted, service.HandleFlagAcceptedOutboxEvent)
 }

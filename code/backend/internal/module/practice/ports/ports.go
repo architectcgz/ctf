@@ -11,6 +11,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practicecontracts "ctf-platform/internal/module/practice/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
+	platformevents "ctf-platform/internal/platform/events"
 )
 
 var ErrPracticeContestNotFound = errors.New("practice contest not found")
@@ -244,6 +245,16 @@ type PracticeInstanceRestartTxManager interface {
 
 type PracticeAWDServiceOperationTxManager interface {
 	WithinAWDServiceOperationTx(ctx context.Context, fn func(txRepo PracticeAWDServiceOperationTxRepository) error) error
+}
+
+type PracticeSubmissionOutboxTxRepository interface {
+	PracticeSubmissionWriteRepository
+	PracticeSolvedSubmissionRepository
+	platformevents.OutboxEventEnqueuer
+}
+
+type PracticeSubmissionOutboxTxManager interface {
+	WithinSubmissionOutboxTx(ctx context.Context, fn func(txRepo PracticeSubmissionOutboxTxRepository) error) error
 }
 
 type PracticeContestLookupRepository interface {

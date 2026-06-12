@@ -12,7 +12,6 @@ import (
 
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/module/challenge/application/challengecatalog"
-	"ctf-platform/internal/module/challenge/application/challengecore"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
 	challengeports "ctf-platform/internal/module/challenge/ports"
@@ -23,12 +22,13 @@ type ChallengeSelfChecker interface {
 	SelfCheckChallenge(ctx context.Context, id int64) (*challengecontracts.ChallengeSelfCheckResp, error)
 }
 
-type ChallengePublisher interface {
-	PublishChallenge(ctx context.Context, id int64) error
-}
-
 type challengeWriteLookupRepository interface {
 	FindByID(ctx context.Context, id int64) (*challengeports.ChallengeWriteModel, error)
+}
+
+type publishCheckJobRepository interface {
+	challengeports.ChallengePublishCheckRepository
+	challengeports.ChallengePublishCheckOutboxTxManager
 }
 
 type Config struct {
@@ -38,9 +38,8 @@ type Config struct {
 
 type ChallengePublishCheckService struct {
 	challengeRepo challengeWriteLookupRepository
-	jobRepo       challengeports.ChallengePublishCheckRepository
+	jobRepo       publishCheckJobRepository
 	selfChecker   ChallengeSelfChecker
-	publisher     ChallengePublisher
 	eventBus      platformevents.Bus
 	config        Config
 	logger        *zap.Logger
@@ -48,9 +47,8 @@ type ChallengePublishCheckService struct {
 
 func NewChallengePublishCheckService(
 	challengeRepo challengeWriteLookupRepository,
-	jobRepo challengeports.ChallengePublishCheckRepository,
+	jobRepo publishCheckJobRepository,
 	selfChecker ChallengeSelfChecker,
-	publisher ChallengePublisher,
 	cfg Config,
 	eventBus platformevents.Bus,
 	logger *zap.Logger,
@@ -68,7 +66,6 @@ func NewChallengePublishCheckService(
 		challengeRepo: challengeRepo,
 		jobRepo:       jobRepo,
 		selfChecker:   selfChecker,
-		publisher:     publisher,
 		eventBus:      eventBus,
 		config:        cfg,
 		logger:        logger,
@@ -80,11 +77,6 @@ func (s *ChallengePublishCheckService) SetEventBus(bus platformevents.Bus) *Chal
 		return nil
 	}
 	s.eventBus = bus
-	if publisher, ok := s.publisher.(interface {
-		SetEventBus(platformevents.Bus) *challengecore.ChallengeService
-	}); ok {
-		publisher.SetEventBus(bus)
-	}
 	return s
 }
 
@@ -220,20 +212,8 @@ func (s *ChallengePublishCheckService) processPublishCheckJob(ctx context.Contex
 		failureSummary = buildPublishCheckFailureSummary(resp)
 	}
 
-	var publishedAt *time.Time
-	if passed {
-		if err := s.publisher.PublishChallenge(ctx, challenge.ID); err != nil {
-			passed = false
-			failureSummary = fmt.Sprintf("自动发布失败: %v", err)
-		} else {
-			now := time.Now().UTC()
-			publishedAt = &now
-		}
-	}
-	s.finishPublishCheckJob(ctx, job, resp, passed, failureSummary, challenge)
-	if passed && publishedAt != nil {
-		job.PublishedAt = publishedAt
-		_ = s.jobRepo.UpdatePublishCheckJob(ctx, job)
+	if err := s.finishPublishCheckJob(ctx, job, resp, passed, failureSummary, challenge); err != nil {
+		s.logger.Warn("finish publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
 	}
 }
 
@@ -241,9 +221,9 @@ func (s *ChallengePublishCheckService) loadPublishCheckJob(ctx context.Context, 
 	return s.jobRepo.FindPublishCheckJobByID(ctx, id)
 }
 
-func (s *ChallengePublishCheckService) finishPublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *challengeports.ChallengeWriteModel) {
+func (s *ChallengePublishCheckService) finishPublishCheckJob(ctx context.Context, job *challengeentity.ChallengePublishCheckJob, result *challengecontracts.ChallengeSelfCheckResp, passed bool, failureSummary string, challenge *challengeports.ChallengeWriteModel) error {
 	if job == nil {
-		return
+		return nil
 	}
 	now := time.Now().UTC()
 	job.FinishedAt = &now
@@ -260,21 +240,71 @@ func (s *ChallengePublishCheckService) finishPublishCheckJob(ctx context.Context
 			job.ResultJSON = string(content)
 		}
 	}
-	if err := s.jobRepo.UpdatePublishCheckJob(ctx, job); err != nil {
-		s.logger.Warn("update publish check job failed", zap.Int64("job_id", job.ID), zap.Error(err))
-	}
-	if challenge != nil {
-		challengecatalog.PublishWeakEvent(ctx, s.logger, s.eventBus, platformevents.Event{
-			Name: challengecontracts.EventPublishCheckFinished,
-			Payload: challengecontracts.PublishCheckFinishedEvent{
+	var (
+		publishBefore challengecatalog.PublishedState
+		publishAfter  challengecatalog.PublishedState
+		published     bool
+	)
+	err := s.jobRepo.WithinPublishCheckOutboxTx(ctx, func(txRepo challengeports.ChallengePublishCheckOutboxTxRepository) error {
+		eventChallenge := challenge
+		if passed && challenge != nil {
+			current, err := txRepo.LockChallengeByID(ctx, challenge.ID)
+			if err != nil {
+				return err
+			}
+			eventChallenge = current
+		}
+		if passed && eventChallenge != nil {
+			publishBefore = challengecatalog.PublishedStateFromWriteModel(eventChallenge)
+			if err := txRepo.MarkChallengePublished(ctx, eventChallenge.ID, now); err != nil {
+				return err
+			}
+			eventChallenge.Status = challengecontracts.ChallengeStatusPublished
+			eventChallenge.UpdatedAt = now
+			publishAfter = challengecatalog.PublishedStateFromWriteModel(eventChallenge)
+			published = true
+		}
+		if err := txRepo.UpdatePublishCheckJob(ctx, job); err != nil {
+			return err
+		}
+		if eventChallenge == nil {
+			return nil
+		}
+		codec := platformevents.NewOutboxCodec()
+		event, err := codec.Encode(
+			challengecontracts.EventPublishCheckFinished,
+			challengecontracts.EventPublishCheckFinishedPayloadVersion,
+			challengecontracts.PublishCheckFinishedEvent{
 				UserID:         job.RequestedBy,
-				ChallengeID:    challenge.ID,
-				ChallengeTitle: challenge.Title,
+				ChallengeID:    eventChallenge.ID,
+				ChallengeTitle: eventChallenge.Title,
 				Passed:         passed,
 				FailureSummary: job.FailureSummary,
+				OccurredAt:     now,
 			},
-		})
+			now,
+		)
+		if err != nil {
+			return err
+		}
+		event.Route = platformevents.OutboxRouteHandler
+		event.DedupeKey = fmt.Sprintf("challenge:publish_check_finished:%d", job.ID)
+		return txRepo.EnqueueOutboxEvent(ctx, event)
+	})
+	if err != nil {
+		return err
 	}
+	if published {
+		challengecatalog.PublishPublishedCatalogChangedEvent(
+			ctx,
+			s.logger,
+			s.eventBus,
+			challengecontracts.ChallengeCatalogChangeTypePublished,
+			publishBefore,
+			publishAfter,
+		)
+	}
+	return nil
 }
 
 func buildPublishCheckFailureSummary(resp *challengecontracts.ChallengeSelfCheckResp) string {
