@@ -97,6 +97,51 @@ func TestBuildFailoverOptionsMapsRedisConfig(t *testing.T) {
 	}
 }
 
+func TestBuildClusterOptionsMapsRedisConfigReserveFields(t *testing.T) {
+	t.Parallel()
+
+	cfg := config.RedisConfig{
+		Mode:         "cluster",
+		Password:     "redis-secret",
+		DialTimeout:  5 * time.Second,
+		ReadTimeout:  4 * time.Second,
+		WriteTimeout: 3 * time.Second,
+		Cluster: config.RedisClusterConfig{
+			Addrs:          []string{"10.0.1.10:6379", "10.0.1.11:6379"},
+			RouteByLatency: true,
+			RouteRandomly:  true,
+		},
+	}
+
+	options := buildClusterOptions(cfg)
+	if len(options.Addrs) != len(cfg.RedisClusterAddrs()) {
+		t.Fatalf("Addrs len = %d, want %d", len(options.Addrs), len(cfg.RedisClusterAddrs()))
+	}
+	for i, want := range cfg.RedisClusterAddrs() {
+		if options.Addrs[i] != want {
+			t.Fatalf("Addrs[%d] = %q, want %q", i, options.Addrs[i], want)
+		}
+	}
+	if options.Password != cfg.Password {
+		t.Fatalf("Password = %q, want %q", options.Password, cfg.Password)
+	}
+	if options.RouteByLatency != cfg.Cluster.RouteByLatency {
+		t.Fatalf("RouteByLatency = %v, want %v", options.RouteByLatency, cfg.Cluster.RouteByLatency)
+	}
+	if options.RouteRandomly != cfg.Cluster.RouteRandomly {
+		t.Fatalf("RouteRandomly = %v, want %v", options.RouteRandomly, cfg.Cluster.RouteRandomly)
+	}
+	if options.DialTimeout != cfg.DialTimeout {
+		t.Fatalf("DialTimeout = %s, want %s", options.DialTimeout, cfg.DialTimeout)
+	}
+	if options.ReadTimeout != cfg.ReadTimeout {
+		t.Fatalf("ReadTimeout = %s, want %s", options.ReadTimeout, cfg.ReadTimeout)
+	}
+	if options.WriteTimeout != cfg.WriteTimeout {
+		t.Fatalf("WriteTimeout = %s, want %s", options.WriteTimeout, cfg.WriteTimeout)
+	}
+}
+
 func TestNewClientRequiresContext(t *testing.T) {
 	t.Parallel()
 
@@ -143,4 +188,5 @@ func TestNewClientSingleModeCanPingMiniredis(t *testing.T) {
 var (
 	_ *redislib.Options
 	_ *redislib.FailoverOptions
+	_ *redislib.ClusterOptions
 )

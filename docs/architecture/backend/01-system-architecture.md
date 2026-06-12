@@ -329,6 +329,7 @@ flowchart LR
 补充约定：
 
 - API 进程当前通过 `internal/infrastructure/redis` 统一创建 Redis client，支持 `single` 与 `sentinel` 两种接入模式；上层继续注入 `*redis.Client`，不把哨兵切换逻辑扩散到业务模块。
+- 配置层和 infra builder 已为未来 Redis Cluster 接线保留字段与内部映射，但 `redis.mode=cluster` 目前仍会被启动校验拒绝；这只是安全预留，不代表当前代码已经具备 cluster slot 兼容性。
 - 现阶段明确不支持 Redis Cluster。当前 Lua、pipeline、多 key 锁和排行榜写法按单 master / Sentinel failover 设计，不承诺 cluster slot 兼容。
 - PostgreSQL 连接串由 `internal/config.PostgresConfig.DSN()` 统一生成，并显式追加 `TimeZone=UTC`；HA 切换由 PostgreSQL driver、代理、VIP 或 DNS owner 承担，不在 handler / service / health 层实现第二套状态机。
 - `/ready` 继续以每次请求 live Ping PostgreSQL / Redis 的结果表达当前依赖可用性；依赖恢复后不需要额外重建 readiness 缓存状态。

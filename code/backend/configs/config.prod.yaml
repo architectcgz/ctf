@@ -18,6 +18,10 @@ redis:
   mode: single
   password: change_me
   db: 0
+  cluster:
+    addrs: [] # 仅为未来 cluster 接线预留；当前 redis.mode=cluster 仍会被启动校验拒绝
+    route_by_latency: false
+    route_randomly: false
   # Sentinel 模式示例：
   # mode: sentinel
   # master_name: mymaster

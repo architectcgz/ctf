@@ -448,6 +448,24 @@ func TestValidateRejectsSentinelRedisModeWithoutSentinelAddrs(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsRedisClusterModeEvenWhenReserveFieldsArePresent(t *testing.T) {
+	t.Parallel()
+
+	cfg := validConfigForValidationTests()
+	cfg.Redis.Mode = "cluster"
+	cfg.Redis.Cluster.Addrs = []string{"10.0.1.10:6379", "10.0.1.11:6379"}
+	cfg.Redis.Cluster.RouteByLatency = true
+	cfg.Redis.Cluster.RouteRandomly = true
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to keep rejecting redis cluster mode, got nil")
+	}
+	if !strings.Contains(err.Error(), "redis.mode") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestPostgresDSNIncludesUTCAndEscapesKeywordValues(t *testing.T) {
 	t.Parallel()
 
@@ -740,6 +758,11 @@ func validConfigForValidationTests() *Config {
 	return &Config{
 		Redis: RedisConfig{
 			Addr: "127.0.0.1:6379",
+			Cluster: RedisClusterConfig{
+				Addrs:          []string{"10.0.1.10:6379", "10.0.1.11:6379"},
+				RouteByLatency: true,
+				RouteRandomly:  true,
+			},
 		},
 		CORS: CORSConfig{
 			AllowOrigins:     []string{"https://academy.example.com"},

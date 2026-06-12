@@ -34,6 +34,10 @@ redis:
   addr: 127.0.0.1:6379
   password: "" # 通过 CTF_REDIS_PASSWORD 注入
   db: 2
+  cluster:
+    addrs: [] # 仅为未来 cluster 接线预留；当前 redis.mode=cluster 仍会被启动校验拒绝
+    route_by_latency: false
+    route_randomly: false
   master_name: "" # 仅在 sentinel 模式下配置
   sentinel_addrs: [] # 例如 ["10.0.1.10:26379", "10.0.1.11:26379"]
   sentinel_username: "" # 可选；仅在 sentinel 模式且哨兵启用 ACL 时配置

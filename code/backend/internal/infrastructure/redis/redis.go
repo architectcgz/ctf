@@ -74,3 +74,16 @@ func buildFailoverOptions(cfg config.RedisConfig) *redislib.FailoverOptions {
 		WriteTimeout:     cfg.WriteTimeout,
 	}
 }
+
+func buildClusterOptions(cfg config.RedisConfig) *redislib.ClusterOptions {
+	addrs := append([]string(nil), cfg.RedisClusterAddrs()...)
+	return &redislib.ClusterOptions{
+		Addrs:          addrs,
+		Password:       cfg.Password,
+		RouteByLatency: cfg.Cluster.RouteByLatency,
+		RouteRandomly:  cfg.Cluster.RouteRandomly,
+		DialTimeout:    cfg.DialTimeout,
+		ReadTimeout:    cfg.ReadTimeout,
+		WriteTimeout:   cfg.WriteTimeout,
+	}
+}

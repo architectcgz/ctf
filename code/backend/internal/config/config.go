@@ -87,17 +87,24 @@ type PostgresConfig struct {
 }
 
 type RedisConfig struct {
-	Mode             string        `mapstructure:"mode"`
-	Addr             string        `mapstructure:"addr"`
-	Password         string        `mapstructure:"password"`
-	DB               int           `mapstructure:"db"`
-	MasterName       string        `mapstructure:"master_name"`
-	SentinelAddrs    []string      `mapstructure:"sentinel_addrs"`
-	SentinelUsername string        `mapstructure:"sentinel_username"`
-	SentinelPassword string        `mapstructure:"sentinel_password"`
-	DialTimeout      time.Duration `mapstructure:"dial_timeout"`
-	ReadTimeout      time.Duration `mapstructure:"read_timeout"`
-	WriteTimeout     time.Duration `mapstructure:"write_timeout"`
+	Mode             string             `mapstructure:"mode"`
+	Addr             string             `mapstructure:"addr"`
+	Password         string             `mapstructure:"password"`
+	DB               int                `mapstructure:"db"`
+	Cluster          RedisClusterConfig `mapstructure:"cluster"`
+	MasterName       string             `mapstructure:"master_name"`
+	SentinelAddrs    []string           `mapstructure:"sentinel_addrs"`
+	SentinelUsername string             `mapstructure:"sentinel_username"`
+	SentinelPassword string             `mapstructure:"sentinel_password"`
+	DialTimeout      time.Duration      `mapstructure:"dial_timeout"`
+	ReadTimeout      time.Duration      `mapstructure:"read_timeout"`
+	WriteTimeout     time.Duration      `mapstructure:"write_timeout"`
+}
+
+type RedisClusterConfig struct {
+	Addrs          []string `mapstructure:"addrs"`
+	RouteByLatency bool     `mapstructure:"route_by_latency"`
+	RouteRandomly  bool     `mapstructure:"route_randomly"`
 }
 
 type CORSConfig struct {
@@ -845,6 +852,10 @@ func normalizedRedisMode(mode string) string {
 		return "single"
 	}
 	return normalized
+}
+
+func (c RedisConfig) RedisClusterAddrs() []string {
+	return nonEmptyStrings(c.Cluster.Addrs)
 }
 
 func nonEmptyStrings(values []string) []string {
