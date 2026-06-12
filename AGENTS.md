@@ -72,7 +72,7 @@
 - 具体提交策略放在 `harness/policies/commit-message.json`，由 `scripts/check-commit-message.sh` 调全局 `~/.agents/harness/commit-message/check_commit_message.py` 执行。
 - 普通提交不能只有单行标题；正文至少提供两行有效内容，并说明改动点、原因、影响或验证中的关键信息。若当前 worktree 有激活中的 task gate，还必须显式写一行 `Task: <task-slug>`；这类元数据不计入正文说明行数和信息量统计。提交时优先使用多个 `-m` 组织标题和正文。
 - `琐碎任务` 默认允许直接在当前工作区修改；`非琐碎任务` 和命中 startup gate 的受保护实现面，默认必须先绑定 task slug、implementation plan 和本地 startup gate。若 `main` 干净且没有并行隔离需求，当前 worktree 可以直接作为这组绑定的执行上下文。
-- 非琐碎实现任务沿用共享 `code-workflow`：一项任务至少绑定一个隔离执行上下文、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录；隔离执行上下文通常是独立 worktree，但在 `main` 干净且无需并行时也可以是当前 worktree。归档 plan 后先进入 `ready_to_merge`，最终合并完成后用 `harness/workflow-plugins/code-workflow/cleanup_task_worktree.sh` 做标准收尾并把 gate 关闭为 `archived`。
+- 非琐碎实现任务沿用共享 `code-workflow`：一项任务至少绑定一个隔离执行上下文、一个 task slug、一份 implementation plan 和一条本地 startup gate 记录；隔离执行上下文通常是独立 worktree，但在 `main` 干净且无需并行时也可以是当前 worktree。归档 plan 后先进入 `ready_to_merge`，最终合并完成后用 `harness/workflow-plugins/code-workflow/cleanup_task_worktree.sh` 做标准收尾并把 gate 关闭为 `archived`；dedicated task worktree 清理时默认同步删除已合并的 `task/<slug>` 分支，只有显式要求时才保留该分支引用。
 - 纯文档编辑默认直接在当前分支修改，不创建新分支、不创建新 worktree；但如果文档本身属于某个非琐碎任务的交付物，仍应跟随该任务 worktree。
 - 更新前端 UI、页面样式、视觉优化时，局部可逆的小改可以直接在当前工作区处理；一旦触达页面 owner、共享组件 contract、跨页面样式模式或其他受保护 surface，就按非琐碎任务进入统一入口。
 - 若当前仓库实际不在 `main`，先说明当前所在分支，再按用户意图继续执行。
