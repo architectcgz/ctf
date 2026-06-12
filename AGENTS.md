@@ -116,7 +116,7 @@
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。
 - `docs/plan/impl-plan/`：当前仍在执行或尚未归档的结构性实现方案、阶段计划、执行清单和验证步骤。
 - `docs/plan/archive/impl-plan/`：历史实施计划目录入口；当前只保留目录说明，旧计划正文默认通过 Git 历史追溯，不作为当前事实源或默认读取入口。
-- `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings。
+- `docs/reviews/`：代码、架构、UI、流程的 review 记录和 findings；多轮正式 review 的 commit 绑定、`round-<n>` 命名和保留规则以 `docs/文档规范.md` 为准。
 - `docs/requirements/`：需求基线、范围说明、差距分析和立项约束。
 - `docs/tasks/`：任务拆解清单和阶段性工作列表；不替代架构或 implementation plan。
 - `docs/todos/`：明确尚未收口的 backlog、延期项和后续跟踪。

@@ -29,7 +29,7 @@
 - 实施计划先从 `docs/plan/README.md` 判断是正式实施计划还是探索性计划，不直接把旧 plan 当事实源。
 - 正式实施计划在 `docs/plan/impl-plan/`，绑定 task gate；探索性计划在 `docs/plan/exploratory/`，不绑定 task gate。
 - 非琐碎实现任务先从 `scripts/start-implementation.sh` 创建的 active plan 进入，复用与 owner 决策默认写在 plan 的 `## Files` 和 `## 复用与 Owner 决策` 中。
-- `docs/reviews/` 是历史评审快照，不是当前设计事实源。
+- `docs/reviews/` 是历史评审快照，不是当前设计事实源；正式 review 必须按 `docs/文档规范.md` 绑定 commit / commit range，并用 `round-<n>` 文件保留多轮结论。
 - `practice/` 中的过程资料和历史计划索引不覆盖后续代码和架构事实。
 
 <!-- BEGIN HARNESS ENGINEERING: docs-navigation -->
