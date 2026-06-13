@@ -5,7 +5,7 @@
 
 **Goal:** 将 `2026-06-12-backend-error-management-improvement-plan.md` 拆成可独立启动、实现、验证和 review 的 code-workflow slice，逐步收口错误边界、日志安全、异步错误传播、外部依赖错误分类和可观测性。
 
-**Status:** `in-progress`
+**Status:** `in-progress`（Slice 1 已通过 review / governance，等待合并；其余 slice 未开始）
 
 **Created:** `2026-06-13T00:00:00Z`
 
@@ -30,13 +30,14 @@
 ### Slice 1: 敏感日志脱敏基础能力
 
 - Task Slug: `2026-06-13-backend-sensitive-log-sanitizer`
-- Status: `review-passed`
-- Plan: [implementation-plan](../2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md)
+- Status: `ready-to-merge`
+- Plan: [implementation-plan](../../archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md)
 - Review: [security review](../../../reviews/security/2026-06-13-backend-review-sensitive-log-sanitizer.md)
 - Depends On: 无
 - Goal: 新增共享日志脱敏能力，先拦住 password/token/secret/key 这类高风险日志字段。
 - Validation: `go test ./internal/platform/logsanitize ./tests/architecture -run 'Test(Sanitize|NoRawSensitiveZapFields)' -count=1`
 - Review Focus: 脱敏工具落点不能制造新的 module 反向依赖，architecture guardrail 不能误伤普通业务 key。
+- Notes: `completion-full`、独立 security review、`workflow-governance` 和 plan 归档已完成；当前 task 分支等待合并。
 
 ### Slice 2: 错误边界基线与 architecture guardrail
 
