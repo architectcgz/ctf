@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/infrastructure/redislock"
 	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
 	"ctf-platform/internal/shared/lockkeepalive"
+	"ctf-platform/internal/shared/safego"
 )
 
 type Cleaner struct {
@@ -36,6 +37,9 @@ type cleanerService interface {
 func NewCleaner(service cleanerService, redis *redislib.Client, lockTTL time.Duration, logger *zap.Logger) *Cleaner {
 	if lockTTL <= 0 {
 		lockTTL = 2 * time.Minute
+	}
+	if logger == nil {
+		logger = zap.NewNop()
 	}
 	return &Cleaner{
 		service: service,
@@ -71,11 +75,9 @@ func (c *Cleaner) Start(ctx context.Context, interval string) error {
 }
 
 func (c *Cleaner) startRunOnce() {
-	c.wg.Add(1)
-	go func() {
-		defer c.wg.Done()
+	safego.Go(&c.wg, c.baseCtx, c.logger, "runtime_cleaner_run_once", func(context.Context) {
 		c.runOnce()
-	}()
+	})
 }
 
 func (c *Cleaner) runOnce() {
@@ -153,10 +155,10 @@ func (c *Cleaner) Stop(ctx context.Context) error {
 	}
 
 	done := make(chan struct{})
-	go func() {
+	safego.Go(nil, ctx, c.logger, "runtime_cleaner_stop_wait", func(context.Context) {
 		c.wg.Wait()
 		close(done)
-	}()
+	})
 	select {
 	case <-done:
 		c.logger.Info("实例清理定时任务已停止")

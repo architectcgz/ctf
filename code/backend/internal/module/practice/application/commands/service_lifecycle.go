@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/safego"
 )
 
 func (s *serviceCore) StartBackgroundTasks(ctx context.Context) {
@@ -28,10 +29,10 @@ func (s *serviceCore) Close(ctx context.Context) error {
 	}
 
 	done := make(chan struct{})
-	go func() {
+	safego.Go(nil, ctx, s.logger, "practice_service_close_wait", func(context.Context) {
 		s.tasks.Wait()
 		close(done)
-	}()
+	})
 
 	select {
 	case <-done:
@@ -61,22 +62,19 @@ func (s *serviceCore) triggerScoreUpdate(userID int64) {
 }
 
 func (s *serviceCore) runAsyncTask(fn func(context.Context)) {
-	if s.baseCtx == nil {
+	if s.baseCtx == nil || fn == nil {
 		return
 	}
 
-	s.tasks.Add(1)
-	go func() {
-		defer s.tasks.Done()
-
+	safego.Go(&s.tasks, s.baseCtx, s.logger, "practice_async_task", func(ctx context.Context) {
 		select {
-		case <-s.baseCtx.Done():
+		case <-ctx.Done():
 			return
 		default:
 		}
 
-		fn(s.baseCtx)
-	}()
+		fn(ctx)
+	})
 }
 
 func (s *serviceCore) publishWeakEvent(ctx context.Context, evt platformevents.Event) {

@@ -15,6 +15,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/platform/clustersecret"
 	"ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/safego"
 )
 
 type Root struct {
@@ -44,7 +45,7 @@ func NewBackgroundJob(name string, start func(context.Context) error, stop func(
 	return BackgroundJob{name: name, start: start, stop: stop}
 }
 
-func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob {
+func NewLoopBackgroundJobWithLogger(name string, logger *zap.Logger, run func(context.Context)) BackgroundJob {
 	var (
 		mu      sync.Mutex
 		cancel  context.CancelFunc
@@ -67,11 +68,7 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 
 			runCtx, runCancel := context.WithCancel(ctx)
 			cancel = runCancel
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				run(runCtx)
-			}()
+			safego.Go(&wg, runCtx, logger, name, run)
 			return nil
 		},
 		func(ctx context.Context) error {
@@ -88,10 +85,10 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 			}
 
 			done := make(chan struct{})
-			go func() {
+			safego.Go(nil, ctx, logger, name+"_stop_wait", func(context.Context) {
 				wg.Wait()
 				close(done)
-			}()
+			})
 
 			select {
 			case <-done:
@@ -265,10 +262,10 @@ func (r *Root) registerPlatformEventJobs() {
 		r.outboxHandlers,
 		r.log.Named("platform_event_outbox_dispatcher"),
 	)
-	r.RegisterBackgroundJob(NewLoopBackgroundJob("platform_event_outbox_dispatcher", func(ctx context.Context) {
+	r.RegisterBackgroundJob(NewLoopBackgroundJobWithLogger("platform_event_outbox_dispatcher", r.log.Named("platform_event_outbox_dispatcher"), func(ctx context.Context) {
 		dispatcher.Run(ctx, platformEventWorkerID("dispatcher"))
 	}))
-	r.RegisterBackgroundJob(NewLoopBackgroundJob("platform_event_stream_consumer", func(ctx context.Context) {
+	r.RegisterBackgroundJob(NewLoopBackgroundJobWithLogger("platform_event_stream_consumer", r.log.Named("platform_event_stream_consumer"), func(ctx context.Context) {
 		runPlatformEventStreamConsumer(ctx, r.eventStream, r.outboxHandlers, platformEventWorkerID("consumer"), r.log.Named("platform_event_stream_consumer"))
 	}))
 }

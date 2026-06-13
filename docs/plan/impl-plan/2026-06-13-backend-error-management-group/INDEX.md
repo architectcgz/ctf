@@ -5,7 +5,7 @@
 
 **Goal:** 将 `2026-06-12-backend-error-management-improvement-plan.md` 拆成可独立启动、实现、验证和 review 的 code-workflow slice，逐步收口错误边界、日志安全、异步错误传播、外部依赖错误分类和可观测性。
 
-**Status:** `in-progress`（Slice 1、Slice 2 已合入；Slice 3 ready-to-merge；其余 slice 未开始）
+**Status:** `in-progress`（Slice 1、Slice 2 已合入；Slice 3、Slice 4 ready-to-merge；其余 slice 未开始）
 
 **Created:** `2026-06-13T00:00:00Z`
 
@@ -66,12 +66,14 @@
 ### Slice 4: Goroutine SafeGo 基础能力
 
 - Task Slug: `2026-06-13-backend-async-safego`
-- Status: `not-started`
-- Plan: 待 `scripts/start-implementation.sh backend-async-safego` 生成
+- Status: `ready-to-merge`
+- Plan: [implementation-plan](../2026-06-13-backend-async-safego-implementation-plan.md)
+- Review: [backend review](../../reviews/backend/2026-06-13-backend-review-async-safego.md)
 - Depends On: `2026-06-13-backend-context-logging-contract`
 - Goal: 新增 SafeGo 包装器，捕获 panic/error 并记录带上下文的结构化日志，迁移最高风险后台任务。
 - Validation: SafeGo 单测、受影响 jobs tests、裸 `go func` guardrail。
 - Review Focus: 区分 request ctx 与 lifecycle ctx，不让后台任务保存短生命周期 request ctx。
+- Notes: `completion-full`、独立 backend review 和 `workflow-governance` 均已通过，等待合并回 `main`。
 
 ### Slice 5: Redis 错误语义收口
 
