@@ -2,6 +2,9 @@ package infrastructure
 
 import (
 	"context"
+	"errors"
+
+	"gorm.io/gorm"
 
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeentity "ctf-platform/internal/module/challenge/entity"
@@ -20,6 +23,9 @@ func NewContractRepository(source *Repository) *ContractRepository {
 
 func (r *ContractRepository) FindByID(ctx context.Context, id int64) (*challengecontracts.ContestChallenge, error) {
 	challenge, err := r.source.FindByID(ctx, id)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, challengecontracts.ErrChallengeNotFound
+	}
 	if err != nil || challenge == nil {
 		return nil, err
 	}

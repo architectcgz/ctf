@@ -5,7 +5,7 @@
 
 **Goal:** 将 `2026-06-12-backend-error-management-improvement-plan.md` 拆成可独立启动、实现、验证和 review 的 code-workflow slice，逐步收口错误边界、日志安全、异步错误传播、外部依赖错误分类和可观测性。
 
-**Status:** `in-progress`（Slice 1 已通过 review / governance，等待合并；其余 slice 未开始）
+**Status:** `in-progress`（Slice 1 已合入；Slice 2 已通过 review / governance，等待合并；其余 slice 未开始）
 
 **Created:** `2026-06-13T00:00:00Z`
 
@@ -30,24 +30,26 @@
 ### Slice 1: 敏感日志脱敏基础能力
 
 - Task Slug: `2026-06-13-backend-sensitive-log-sanitizer`
-- Status: `ready-to-merge`
+- Status: `completed`
 - Plan: [implementation-plan](../../archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md)
 - Review: [security review](../../../reviews/security/2026-06-13-backend-review-sensitive-log-sanitizer.md)
 - Depends On: 无
 - Goal: 新增共享日志脱敏能力，先拦住 password/token/secret/key 这类高风险日志字段。
 - Validation: `go test ./internal/platform/logsanitize ./tests/architecture -run 'Test(Sanitize|NoRawSensitiveZapFields)' -count=1`
 - Review Focus: 脱敏工具落点不能制造新的 module 反向依赖，architecture guardrail 不能误伤普通业务 key。
-- Notes: `completion-full`、独立 security review、`workflow-governance` 和 plan 归档已完成；当前 task 分支等待合并。
+- Notes: 已合入 `main`；plan、security review 和 governance evidence 已归档。
 
 ### Slice 2: 错误边界基线与 architecture guardrail
 
 - Task Slug: `2026-06-13-backend-error-contract-baseline`
-- Status: `not-started`
-- Plan: 待 `scripts/start-implementation.sh backend-error-contract-baseline` 生成
+- Status: `ready-to-merge`
+- Plan: [implementation-plan](../../archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md)
+- Review: [backend review](../../../reviews/backend/2026-06-13-backend-review-error-contract-baseline.md)
 - Depends On: 无
 - Goal: 建立 application / ports / infrastructure 错误边界基线，先加 guardrail 和少量试点，不做全量业务迁移。
 - Validation: `go test ./internal/apperror ./tests/architecture ./internal/app -run 'Error|Architecture' -count=1`
 - Review Focus: handler 只消费 public app error；application 不直接分支 GORM/Redis/Docker sentinel。
+- Notes: challenge contract repository not-found 映射、transport sentinel guardrail 和 contest adapter 兼容已完成；`completion-full`、独立 backend review、`workflow-governance` 和 plan 归档完成，当前 task 分支等待合并。
 
 ### Slice 3: Context-aware 错误日志契约
 
