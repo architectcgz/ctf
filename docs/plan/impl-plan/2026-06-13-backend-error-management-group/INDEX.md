@@ -5,7 +5,7 @@
 
 **Goal:** 将 `2026-06-12-backend-error-management-improvement-plan.md` 拆成可独立启动、实现、验证和 review 的 code-workflow slice，逐步收口错误边界、日志安全、异步错误传播、外部依赖错误分类和可观测性。
 
-**Status:** `in-progress`（Slice 1、Slice 2 已合入；Slice 3 进行中；其余 slice 未开始）
+**Status:** `in-progress`（Slice 1、Slice 2 已合入；Slice 3 ready-to-merge；其余 slice 未开始）
 
 **Created:** `2026-06-13T00:00:00Z`
 
@@ -54,13 +54,14 @@
 ### Slice 3: Context-aware 错误日志契约
 
 - Task Slug: `2026-06-13-backend-context-logging-contract`
-- Status: `in-progress`
-- Plan: `docs/plan/impl-plan/2026-06-13-backend-context-logging-contract-implementation-plan.md`
+- Status: `ready-to-merge`
+- Plan: [implementation-plan](../../archive/impl-plan/2026-06/2026-06-13-backend-context-logging-contract-implementation-plan.md)
+- Review: [backend review round 1](../../../reviews/backend/2026-06-13-backend-review-context-logging-contract-round-1.md), [backend review round 2](../../../reviews/backend/2026-06-13-backend-review-context-logging-contract-round-2.md)
 - Depends On: `2026-06-13-backend-sensitive-log-sanitizer`
 - Goal: 定义 context-aware logging helper 和新增错误日志约束，先迁移容器/实例/认证等少量关键路径。
 - Validation: logger helper tests、受影响模块 tests、architecture guardrail。
 - Review Focus: 保留 request context，不把 application 层绑定到 `internal/infrastructure/logger` builder。
-- Notes: worktree 已建立，当前按 `requestctx + logctx` 双包落点推进试点迁移，并把试点内 `Debug` 一并纳入共享 helper。
+- Notes: worktree 已建立，当前按 `requestctx + logctx` 双包落点推进试点迁移，并把试点内 `Debug` 一并纳入共享 helper；已完成 review，待合并回 main。
 
 ### Slice 4: Goroutine SafeGo 基础能力
 

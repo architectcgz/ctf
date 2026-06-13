@@ -22,7 +22,7 @@
 
 ## Plan Status
 
-- Status: `review-pending` <!-- draft | ready-for-implementation | implemented | review-pending | review-passed | archived -->
+- Status: `archived` <!-- draft | ready-for-implementation | implemented | review-pending | review-passed | archived -->
 - Coding may start only after:
   - [x] Intake analysis gate completed
   - [x] Plan review / architecture-fit check completed
@@ -310,7 +310,7 @@
   - auth / instance / container_runtime focused tests
   - architecture guardrail
   - `completion-full`
-- Architecture / contract inputs:
+ - Architecture / contract inputs:
   - `AGENTS.md`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
@@ -319,12 +319,13 @@
   - helper 是否误绑到 `internal/infrastructure/logger`
   - guardrail 是否只锁试点，不误伤非试点文件
   - 新增 `Debug` 覆盖后，实例维护试点是否仍保持 request-scoped logging 一致性
-- Project-local checks to consider:
+ - Project-local checks to consider:
   - `go test ./tests/architecture -run 'Test(NoRawSensitiveZapFields|ContextAwareLoggingContractPilots)' -count=1`
  - Independent review result:
    - `2026-06-13-backend-review-context-logging-contract-round-1.md`
-   - Gate verdict: `pass`
-   - Round 1 non-blocking follow-up 已转入当前 patch：把试点内裸 `Debug` 一并纳入 `logctx`
+   - `2026-06-13-backend-review-context-logging-contract-round-2.md`
+   - Gate verdict: `pass with minor issues`
+   - Round 1 follow-up 已转入当前 patch；Round 2 仅剩 `logctx.Debug` 的 nil fallback 单测缺口，未阻塞合并
 
 ## Rollback / Recovery
 
