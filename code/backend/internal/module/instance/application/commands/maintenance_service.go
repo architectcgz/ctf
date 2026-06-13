@@ -13,6 +13,7 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
 	platformevents "ctf-platform/internal/platform/events"
+	"ctf-platform/internal/platform/logctx"
 )
 
 type instanceMaintenanceRepository interface {
@@ -119,16 +120,16 @@ func (s *InstanceMaintenanceService) CleanExpiredInstances(ctx context.Context) 
 	}
 
 	for _, instance := range instances {
-		s.logger.Info("清理过期实例", zap.Int64("instance_id", instance.ID))
+		logctx.Info(ctx, s.logger, "清理过期实例", zap.Int64("instance_id", instance.ID))
 
 		if s.cleaner != nil {
 			if err := s.cleaner.CleanupRuntime(normalizeContext(ctx), instance); err != nil {
-				s.logger.Warn("清理过期实例运行时失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+				logctx.Warn(ctx, s.logger, "清理过期实例运行时失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
 				continue
 			}
 		}
 		if err := s.repo.UpdateStatusAndReleasePort(ctx, instance.ID, instancecontracts.InstanceStatusExpired); err != nil {
-			s.logger.Warn("更新过期实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
+			logctx.Warn(ctx, s.logger, "更新过期实例状态并释放端口失败", zap.Int64("instance_id", instance.ID), zap.Int("host_port", instance.HostPort), zap.Error(err))
 		}
 	}
 
@@ -153,7 +154,7 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 		}
 		lost, reason, stoppedContainerIDs, err := s.isInstanceRuntimeLost(ctx, instance, now)
 		if err != nil {
-			s.logger.Warn("检查实例运行时状态失败，跳过本实例",
+			logctx.Warn(ctx, s.logger, "检查实例运行时状态失败，跳过本实例",
 				zap.Int64("instance_id", instance.ID),
 				zap.String("status", instance.Status),
 				zap.String("container_id", instance.ContainerID),
@@ -175,7 +176,7 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 		}
 		if requeued {
 			s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecreate, instanceports.AWDServiceOperationStatusProvisioning, reason, "")
-			s.logger.Warn("实例运行时丢失，已重新入队",
+			logctx.Warn(ctx, s.logger, "实例运行时丢失，已重新入队",
 				zap.Int64("instance_id", instance.ID),
 				zap.String("status", instance.Status),
 				zap.String("reason", reason),
@@ -199,7 +200,7 @@ func (s *InstanceMaintenanceService) HandleRuntimeNodeOffline(ctx context.Contex
 			continue
 		}
 		s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecreate, instanceports.AWDServiceOperationStatusProvisioning, "runtime_node_offline", "")
-		s.logger.Warn("runtime node offline; instance requeued",
+		logctx.Warn(ctx, s.logger, "runtime node offline; instance requeued",
 			zap.Int64("node_id", nodeID),
 			zap.Int64("instance_id", instance.ID),
 			zap.String("status", instance.Status))
@@ -212,7 +213,7 @@ func (s *InstanceMaintenanceService) RunStoppingCleanupLoop(ctx context.Context)
 		return
 	}
 	if ctx == nil {
-		s.logger.Warn("stopping 实例清理循环缺少上下文")
+		logctx.Warn(ctx, s.logger, "stopping 实例清理循环缺少上下文")
 		return
 	}
 
@@ -252,7 +253,7 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanup(ctx context.Context
 	})
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			s.logger.Warn("获取 stopping 实例清理锁失败", zap.Error(err))
+			logctx.Warn(ctx, s.logger, "获取 stopping 实例清理锁失败", zap.Error(err))
 		}
 		return
 	}
@@ -269,7 +270,7 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanupLocked(ctx context.C
 	instances, err := s.repo.ListStoppingInstances(ctx, time.Time{}, s.stoppingCleanupMaxConcurrent())
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			s.logger.Warn("查询 stopping 实例失败", zap.Error(err))
+			logctx.Warn(ctx, s.logger, "查询 stopping 实例失败", zap.Error(err))
 		}
 		return
 	}
@@ -288,7 +289,7 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanupLocked(ctx context.C
 			defer s.releaseStoppingInstance(mu, inFlight, item.ID)
 
 			if err := s.cleanupStoppingInstance(ctx, item); err != nil && !errors.Is(err, context.Canceled) {
-				s.logger.Warn("清理 stopping 实例运行时失败",
+				logctx.Warn(ctx, s.logger, "清理 stopping 实例运行时失败",
 					zap.Int64("instance_id", item.ID),
 					zap.Error(err))
 			}
@@ -323,13 +324,13 @@ func (s *InstanceMaintenanceService) CleanupOrphans(ctx context.Context) error {
 
 	for _, orphan := range selectOrphanContainers(managedContainers, activeSet, s.config.OrphanGracePeriod) {
 		if err := s.cleaner.RemoveContainer(ctx, orphan.ID); err != nil {
-			s.logger.Warn("删除孤儿容器失败",
+			logctx.Warn(ctx, s.logger, "删除孤儿容器失败",
 				zap.String("container_id", orphan.ID),
 				zap.String("container_name", orphan.Name),
 				zap.Error(err))
 			continue
 		}
-		s.logger.Warn("已清理孤儿容器",
+		logctx.Warn(ctx, s.logger, "已清理孤儿容器",
 			zap.String("container_id", orphan.ID),
 			zap.String("container_name", orphan.Name),
 			zap.Time("created_at", orphan.CreatedAt))
@@ -394,13 +395,13 @@ func (s *InstanceMaintenanceService) restartStoppedContainers(ctx context.Contex
 	for _, containerID := range containerIDs {
 		if err := s.engine.StartContainer(ctx, containerID); err != nil {
 			s.finishAWDOperation(ctx, operationID, instanceports.AWDServiceOperationStatusFailed, err.Error())
-			s.logger.Warn("恢复停止的实例容器失败，准备重新入队",
+			logctx.Warn(ctx, s.logger, "恢复停止的实例容器失败，准备重新入队",
 				zap.Int64("instance_id", instance.ID),
 				zap.String("container_id", containerID),
 				zap.Error(err))
 			return err
 		}
-		s.logger.Warn("实例容器已自动恢复运行",
+		logctx.Warn(ctx, s.logger, "实例容器已自动恢复运行",
 			zap.Int64("instance_id", instance.ID),
 			zap.String("container_id", containerID))
 	}
@@ -429,7 +430,7 @@ func (s *InstanceMaintenanceService) recordSystemAWDOperation(ctx context.Contex
 		UpdatedAt:     now,
 	}
 	if err := s.repo.CreateAWDServiceOperation(ctx, operation); err != nil {
-		s.logger.Warn("记录 AWD 系统服务操作失败",
+		logctx.Warn(ctx, s.logger, "记录 AWD 系统服务操作失败",
 			zap.Int64("instance_id", instance.ID),
 			zap.String("operation_type", operationType),
 			zap.Error(err))
@@ -443,7 +444,7 @@ func (s *InstanceMaintenanceService) finishAWDOperation(ctx context.Context, ope
 		return
 	}
 	if err := s.repo.FinishAWDServiceOperation(ctx, operationID, status, errorMessage, time.Now().UTC()); err != nil {
-		s.logger.Warn("更新 AWD 系统服务操作失败",
+		logctx.Warn(ctx, s.logger, "更新 AWD 系统服务操作失败",
 			zap.Int64("operation_id", operationID),
 			zap.String("status", status),
 			zap.Error(err))
@@ -509,7 +510,7 @@ func (s *InstanceMaintenanceService) cleanupStoppingInstance(ctx context.Context
 	if err := s.repo.FinalizeStoppedRuntime(ctx, instance.ID); err != nil {
 		return err
 	}
-	s.logger.Info("已收尾 stopping 实例",
+	logctx.Info(ctx, s.logger, "已收尾 stopping 实例",
 		zap.Int64("instance_id", instance.ID))
 	return nil
 }

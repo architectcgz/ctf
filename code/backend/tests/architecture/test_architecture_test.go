@@ -80,6 +80,24 @@ var transportConcreteSentinelPatterns = []struct {
 	},
 }
 
+var contextAwareLoggingPilotFiles = map[string][]string{
+	"internal/module/auth/application/commands/service.go": {
+		"s.log.Info(",
+		"s.log.Warn(",
+		"s.log.Error(",
+	},
+	"internal/module/instance/application/commands/maintenance_service.go": {
+		"s.logger.Info(",
+		"s.logger.Warn(",
+		"s.logger.Error(",
+	},
+	"internal/module/container_runtime/application/commands/provisioning_service.go": {
+		"s.logger.Info(",
+		"s.logger.Warn(",
+		"s.logger.Error(",
+	},
+}
+
 func TestAWDCheckerTypeValuesStayAlignedAcrossChallengeAndContest(t *testing.T) {
 	t.Parallel()
 
@@ -286,6 +304,28 @@ func TestTransportLayersDoNotConsumePersistenceOrRuntimeSentinels(t *testing.T) 
 	if len(violations) > 0 {
 		sort.Strings(violations)
 		t.Fatalf("transport boundaries must consume public app errors instead of concrete sentinels:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func TestContextAwareLoggingContractPilots(t *testing.T) {
+	t.Parallel()
+
+	violations := make([]string, 0)
+	for file, forbiddenSnippets := range contextAwareLoggingPilotFiles {
+		content := readBackendTestFile(t, file)
+		if !strings.Contains(content, `"ctf-platform/internal/platform/logctx"`) {
+			violations = append(violations, file+" must import internal/platform/logctx")
+		}
+		for _, snippet := range forbiddenSnippets {
+			if strings.Contains(content, snippet) {
+				violations = append(violations, file+" must not use raw logger call "+snippet)
+			}
+		}
+	}
+
+	if len(violations) > 0 {
+		sort.Strings(violations)
+		t.Fatalf("context-aware logging pilot files must use shared logctx helper:\n%s", strings.Join(violations, "\n"))
 	}
 }
 

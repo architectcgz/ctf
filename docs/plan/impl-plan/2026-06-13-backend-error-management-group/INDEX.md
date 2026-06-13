@@ -5,7 +5,7 @@
 
 **Goal:** 将 `2026-06-12-backend-error-management-improvement-plan.md` 拆成可独立启动、实现、验证和 review 的 code-workflow slice，逐步收口错误边界、日志安全、异步错误传播、外部依赖错误分类和可观测性。
 
-**Status:** `in-progress`（Slice 1 已合入；Slice 2 已通过 review / governance，等待合并；其余 slice 未开始）
+**Status:** `in-progress`（Slice 1、Slice 2 已合入；Slice 3 进行中；其余 slice 未开始）
 
 **Created:** `2026-06-13T00:00:00Z`
 
@@ -42,24 +42,25 @@
 ### Slice 2: 错误边界基线与 architecture guardrail
 
 - Task Slug: `2026-06-13-backend-error-contract-baseline`
-- Status: `ready-to-merge`
+- Status: `completed`
 - Plan: [implementation-plan](../../archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md)
 - Review: [backend review](../../../reviews/backend/2026-06-13-backend-review-error-contract-baseline.md)
 - Depends On: 无
 - Goal: 建立 application / ports / infrastructure 错误边界基线，先加 guardrail 和少量试点，不做全量业务迁移。
 - Validation: `go test ./internal/apperror ./tests/architecture ./internal/app -run 'Error|Architecture' -count=1`
 - Review Focus: handler 只消费 public app error；application 不直接分支 GORM/Redis/Docker sentinel。
-- Notes: challenge contract repository not-found 映射、transport sentinel guardrail 和 contest adapter 兼容已完成；`completion-full`、独立 backend review、`workflow-governance` 和 plan 归档完成，当前 task 分支等待合并。
+- Notes: challenge contract repository not-found 映射、transport sentinel guardrail 和 contest adapter 兼容已完成；`completion-full`、独立 backend review、`workflow-governance` 和 plan 归档完成，已合入 `main`。
 
 ### Slice 3: Context-aware 错误日志契约
 
 - Task Slug: `2026-06-13-backend-context-logging-contract`
-- Status: `not-started`
-- Plan: 待 `scripts/start-implementation.sh backend-context-logging-contract` 生成
+- Status: `in-progress`
+- Plan: `docs/plan/impl-plan/2026-06-13-backend-context-logging-contract-implementation-plan.md`
 - Depends On: `2026-06-13-backend-sensitive-log-sanitizer`
 - Goal: 定义 context-aware logging helper 和新增错误日志约束，先迁移容器/实例/认证等少量关键路径。
 - Validation: logger helper tests、受影响模块 tests、architecture guardrail。
 - Review Focus: 保留 request context，不把 application 层绑定到 `internal/infrastructure/logger` builder。
+- Notes: worktree 已建立，当前按 `requestctx + logctx` 双包落点推进试点迁移。
 
 ### Slice 4: Goroutine SafeGo 基础能力
 
