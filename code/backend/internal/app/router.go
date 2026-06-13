@@ -170,6 +170,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		log.Named("contest_realtime_handler"),
 	)
 	practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
+	composition.WireRuntimeNodeFailover(containerRuntimeModule, instanceModule, practiceModule)
 	instanceModule.BuildHandler(root, opsModule)
 
 	registerTeacherAuthoringRoutes(authoring, adminRouteDeps{

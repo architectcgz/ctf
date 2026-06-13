@@ -25,6 +25,7 @@ type instanceMaintenanceRepository interface {
 	FinishAWDServiceOperation(ctx context.Context, operationID int64, status, errorMessage string, finishedAt time.Time) error
 	FinalizeStoppedRuntime(ctx context.Context, id int64) error
 	RequeueLostRuntime(ctx context.Context, id int64) (bool, error)
+	RequeueLostRuntimesByNode(ctx context.Context, nodeID int64) ([]*instanceentity.Instance, error)
 	ListActiveContainerIDs(ctx context.Context) ([]string, error)
 }
 
@@ -180,6 +181,28 @@ func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Con
 				zap.String("reason", reason),
 				zap.String("container_id", instance.ContainerID))
 		}
+	}
+	return nil
+}
+
+func (s *InstanceMaintenanceService) HandleRuntimeNodeOffline(ctx context.Context, nodeID int64) error {
+	ctx = normalizeContext(ctx)
+	if s == nil || s.repo == nil || nodeID <= 0 {
+		return nil
+	}
+	instances, err := s.repo.RequeueLostRuntimesByNode(ctx, nodeID)
+	if err != nil {
+		return err
+	}
+	for _, instance := range instances {
+		if instance == nil {
+			continue
+		}
+		s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecreate, instanceports.AWDServiceOperationStatusProvisioning, "runtime_node_offline", "")
+		s.logger.Warn("runtime node offline; instance requeued",
+			zap.Int64("node_id", nodeID),
+			zap.Int64("instance_id", instance.ID),
+			zap.String("status", instance.Status))
 	}
 	return nil
 }

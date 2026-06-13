@@ -5,7 +5,7 @@
 这份说明覆盖 runtime control plane / agent split 落地后的运行模式、最小部署步骤和配置入口。
 
 - 负责：说明本地单机模式、API + 单 remote agent 模式、正式多 node 模式的差异，以及 `runtime_agent` / `runtime_nodes` 的最小配置方式。
-- 不负责：替代完整的比赛运维手册、容量规划、证书签发体系或多机自动均衡方案。
+- 不负责：替代完整的比赛运维手册、容量规划、证书签发体系、容量智能分配方案或 live migration 方案。
 
 ## 当前模式
 
@@ -33,7 +33,9 @@
 
 - 每台靶机宿主运行一个 `runtime-agent`
 - API 侧在 `runtime_nodes` 表中登记多个 schedulable node
-- 当前调度只保证“显式绑定或单节点默认”正确，不声明自动均衡、故障迁移或容量智能分配已经落地
+- `runtime_node_health` 后台任务会探测每个 runtime node，默认新调度只选择 `schedulable + ready / degraded` 且心跳未过期的 node
+- node 离线后，该 node 上未过期的 `creating / running` 实例会重新进入 `pending`，由现有 scheduler / AWD desired reconciler 在健康节点上重建
+- 当前不声明容量智能分配、live migration 或已有 SSH/WebSocket 会话透明迁移已经落地
 
 ## 启动 runtime-agent
 
@@ -120,6 +122,37 @@ runtime_agent:
 - API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
 - 如果部署了多个 `awd-defense-ssh-gateway` 副本，LB 只需要把新连接导向健康副本；已有 SSH 会话在某个 gateway 或 runtime node 故障时允许中断，客户端后续重连会重新走 ticket + scope 校验
 
+### runtime node health
+
+API 侧默认开启 runtime node 健康探测：
+
+```yaml
+container:
+  runtime_node_health:
+    enabled: true
+    poll_interval: 10s
+    probe_timeout: 2s
+    stale_after: 30s
+    failure_threshold: 3
+```
+
+字段含义：
+
+- `enabled`: 开启后，默认 selector 和 execution router 会使用健康过滤；关闭后回退到旧的 `schedulable=true` 查找语义，适合作为生产回滚开关。
+- `poll_interval`: 每轮探测间隔。
+- `probe_timeout`: 单个 node 探测超时，探测入口复用 runtime-agent 的 managed container stats 能力。
+- `stale_after`: `runtime_nodes.last_seen_at` 超过该阈值后视为心跳过期。
+- `failure_threshold`: 连续探测失败达到该次数后标记 node `offline`。
+
+运行事实：
+
+- 成功探测会写 `runtime_nodes.health_status=ready`、`last_seen_at=now` 和 `capacity_snapshot`。
+- `ready / degraded` 且心跳未过期的 schedulable node 可被新实例选择。
+- `schedulable=false` 用于 cordon 新调度，不会停止健康探测；显式 `node_id` 绑定的旧容器操作在该 node 健康且心跳新鲜时仍继续路由到原 node。
+- `unknown / offline`、从未成功探测或心跳过期的 node 不会被默认新调度选择。
+- 显式绑定到离线或心跳过期 node 的旧容器操作会失败，不会透明切换到其他 node。
+- 离线 node 上未过期的 `creating / running` 实例会被置回 `pending` 并清空旧 `node_id / container_id / network_id / runtime_details / access_url`，后续由现有 provisioning scheduler 在健康 node 上重建。
+
 ## PostgreSQL / Redis 连接基线
 
 - PostgreSQL 连接串由后端统一生成 keyword/value DSN，并显式带 `TimeZone=UTC`；如果生产侧通过代理、VIP 或 DNS 提供单主写 HA，业务层不需要额外改配置或改 `/ready` 逻辑。
@@ -136,9 +169,30 @@ runtime_agent:
 - 新实例启动时会把选中的 `node_id` 持久化到实例记录
 - checker job metadata、AWD service instance 和容器文件写入路径都会显式携带或反查 `node_id`
 - 容器清理、checker 执行、AWD 防守工作区写入和 AWD defense SSH interactive exec 都不再以“当前 API 进程连着哪台宿主机”作为 authority
+- `runtime_nodes.last_seen_at` 是心跳事实源，不使用 `updated_at` 推断 node 健康状态
+
+## runtime node failover 手工验证
+
+正式多 node 部署完成后，可以用下面步骤做最小演练：
+
+1. 准备 node A / node B 两个 `runtime-agent`，并在 `runtime_nodes` 中保持两个 node `schedulable=true`。
+2. 确认 API 配置 `container.runtime_node_health.enabled: true`，并使用默认 `stale_after: 30s` 或按演练需要调小。
+3. 在 node B 上启动一个普通实例或 AWD service runtime，确认实例记录写入 node B 的 `node_id`。
+4. 停止 node B 的 `runtime-agent` 进程。
+5. 等待超过 `stale_after`，或等待连续失败达到 `failure_threshold`。
+6. 检查 node B 的 `runtime_nodes.health_status` 已变为 `offline`，新实例不再选择 node B。
+7. 检查 node B 上未过期的 `running / creating` 实例变为 `pending`，旧 runtime identity 和 `node_id` 被清空。
+8. 等待 `practice_instance_scheduler` 领取 pending 实例，确认它在 node A 或其他健康 node 上重新变为 `running`。
+9. 对 AWD 比赛，确认缺失的 `team × visible service` 不再被旧 active 行阻塞，desired reconciler 会补齐新的 runtime。
+
+预期限制：
+
+- 原 node B 上的 TCP / HTTP / SSH / WebSocket 会话允许中断。
+- 平台不会迁移旧容器或保留原会话；用户重新访问时会通过新实例的 access 入口进入重建后的 runtime。
+- 如果 node B 恢复，下一轮成功探测会重新写 `ready` heartbeat，但已经重新入队并在其他 node 上创建的实例不会被迁回 node B。
 
 ## 运维限制
 
 - 现阶段不把 `DOCKER_HOST` 直连远端 daemon 当成正式多机方案；它只能解决 Docker client 连接目标，不能替代 agent 对 ACL、checker sandbox 和容器文件副作用的 owner 收口
-- 当前多 node 只保证绑定正确，不保证自动均衡、故障转移和跨 node 重调度
+- 当前多 node 已支持健康过滤与 offline 后重建，但不保证容量智能均衡、live migration、原会话保持或跨 node 原地迁移
 - 如果更新 node 的 endpoint 或 TLS 身份，按当前实现需要让 API 进程重新建立该节点的 runtime client；不要把在线热切节点配置写成已落地能力

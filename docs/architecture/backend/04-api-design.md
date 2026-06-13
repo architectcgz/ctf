@@ -68,13 +68,14 @@
 - 2026-05-17 的 challenge request DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`challenge` 与 `challenge/awd` 路由保持原路径、query 参数、请求体字段和校验口径不变，变化仅在内部 owner：request/query DTO 从全局 `internal/dto` 收回 `challenge/api/http`，handler 统一经 `request mapper` 转换到既有 application 输入。
 - 2026-05-17 的 challenge response DTO localization（core query/image/tag/flag/topology/awd）同样没有新增、删除或重命名外部 HTTP 契约；相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：handler 输出改为通过 `challenge/api/http` response mapper 把全局 `dto` 映射为模块内 response DTO。
 - 2026-06-11 的 challenge command service decomposition 同样没有新增、删除或重命名外部 HTTP 契约；challenge import / commit / self-check / publish-check / package export 相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：`challenge/api/http.Handler` 不再依赖宽 command service，而是显式接收 core command、import、self-check、publish-check、package export 与 package delivery service。
+- 2026-06-12 的 runtime node health 与 failover rebuild 同样没有新增、删除或重命名外部 HTTP / WebSocket 契约；`router.go` 的变化仅在 composition root 装配 `WireRuntimeNodeFailover`，用于把 runtime node offline callback 接到 instance requeue 与 practice AWD desired reconciler。实例启动、实例访问、AWD service instance、防守 SSH ticket 和 WebSocket 路由保持原路径、查询参数、响应 Envelope 与消息 payload 不变；节点故障后的用户可见变化是已有会话可能中断，重连仍走既有 access / ticket 入口。
 - 2026-06-13 的 backend error contract baseline 同样没有新增、删除或重命名外部 HTTP 契约；教师 authoring challenge owner guard 遇到题目不存在时仍返回既有 `challengecontracts.ErrChallengeNotFound` 对应的 `404 / code=13004`，变化仅在内部错误边界：`challenge/infrastructure.ContractRepository` 负责把 raw `gorm.ErrRecordNotFound` 映射为 public app error，`internal/app/router_routes.go` 只通过 `httpresponse.FromError` 消费 public error，不再直接分支 persistence sentinel。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail
 
 - 路由装配与全链路 HTTP 验证：`code/backend/internal/app/router_test.go`、`code/backend/internal/app/full_router_integration_test.go`
-- runtime access facade 与 retired defense workbench 约束：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/runtime/architecture_test.go`
+- runtime access facade 与 retired defense workbench 约束：`code/backend/internal/app/composition/architecture_test.go`、`code/backend/internal/module/container_runtime/architecture_test.go`
 - 状态矩阵与实例访问链路：`code/backend/internal/app/full_router_state_matrix_integration_test.go`
 - Auth / Session 契约：`code/backend/internal/module/auth/api/http/http_integration_test.go`
 - 通知与 WebSocket 契约：`code/backend/internal/module/ops/api/http/notification_http_integration_test.go`

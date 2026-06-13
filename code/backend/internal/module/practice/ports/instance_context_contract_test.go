@@ -19,6 +19,10 @@ func (ctxOnlyInstanceRepository) UpdateRuntime(context.Context, *instanceentity.
 	return nil
 }
 
+func (ctxOnlyInstanceRepository) BindRuntimeNode(context.Context, int64, *int64) (bool, error) {
+	return false, nil
+}
+
 func (ctxOnlyInstanceRepository) PersistProvisionedRuntime(context.Context, *instanceentity.Instance) (bool, error) {
 	return false, nil
 }
@@ -36,6 +40,10 @@ func (ctxOnlyInstanceRepository) UpdateStatusAndReleasePort(context.Context, int
 }
 
 func (ctxOnlyInstanceRepository) FailProvisioning(context.Context, int64) (bool, error) {
+	return false, nil
+}
+
+func (ctxOnlyInstanceRepository) RequeueLostRuntime(context.Context, int64) (bool, error) {
 	return false, nil
 }
 

@@ -1,6 +1,8 @@
 <!-- Managed by code-workflow package (version: 2026-06-10.1) -->
 # Runtime Node Health 与 Failover Rebuild Implementation Plan
 
+> Status: Superseded. Current task delivery plan is `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`; this earlier task-group slice draft is kept only for historical planning context.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use `subagent-driven-development` (recommended) or `executing-plans` to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking; flip each checkbox immediately after the expected result is reached.
 
 **Goal:** 把 `runtime_nodes` 从“可选 metadata + first schedulable selector”升级为运行时可用性 owner：维护 node heartbeat / health / capacity，调度排除失效 node，并在 node 失联后把其上 active runtime 标记为可重建，由现有 actual / desired runtime owner 在健康 node 上重建。
@@ -15,7 +17,7 @@
 
 - Task Slug: `2026-06-12-runtime-node-health-and-failover-rebuild`
 - Started At: `2026-06-12T00:00:00Z`
-- Worktree: `后续实现时运行 scripts/start-implementation.sh 2026-06-12-runtime-node-health-and-failover-rebuild 生成`
+- Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-12-runtime-node-health-and-failover-rebuild`
 - Branch: `task/2026-06-12-runtime-node-health-and-failover-rebuild`
 
 ## Objective And Non-Goals

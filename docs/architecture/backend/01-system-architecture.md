@@ -19,8 +19,8 @@
   - 不负责：把只读取 practice 自有事实的用户态查询继续拆成独立查询模块，或作为业务 owner 模块修改练习、竞赛、评估等业务状态
 
 - `code/backend/internal/module/container_runtime`、`code/backend/internal/module/instance`、`code/backend/internal/app/composition/container_runtime_module.go`、`code/backend/internal/app/composition/instance_module.go`
-  - 负责：`internal/module/container_runtime/*` 承接 container runtime capability、共享 adapter、runtime-agent 协议、`runtime_nodes` 数据模型、allocation 持久化和容器执行通道；`internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery 与实例访问 owner；app 层把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，其中 `runtime_node_execution_router` 会按 `instance.node_id`、AWD service `node_id` 和 checker metadata `node_id` 路由到单节点执行 client；Guardrail 见 `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/app/composition/runtime_node_execution_router_test.go`
-  - 不负责：把实例业务 owner 重新塞回容器运行时模块，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图；也不再把“当前 API 进程连到哪台 Docker 宿主机”当成执行 authority
+  - 负责：`internal/module/container_runtime/*` 承接 container runtime capability、共享 adapter、runtime-agent 协议、`runtime_nodes` 数据模型、allocation 持久化和容器执行通道；其中 `runtime_nodes.last_seen_at / health_status / capacity_snapshot` 由 `container_runtime/application.NodeHealthService` 周期探测并维护，`ready / degraded` 且心跳未过期的 schedulable node 才能进入默认新调度；`schedulable=false` 只摘除新调度，显式 `node_id` 旧容器操作在 node 健康且心跳新鲜时仍可路由到原 node；`internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery 与实例访问 owner；app 层把它们收口成 `ContainerRuntimeModule` 与 `InstanceModule` 两个组合视图，其中 `runtime_node_execution_router` 会按 `instance.node_id`、AWD service `node_id` 和 checker metadata `node_id` 路由到单节点执行 client，显式绑定到离线节点的旧容器操作返回 `ErrRuntimeNodeUnavailable`，不会自动漂移到其他节点；Guardrail 见 `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/app/composition/runtime_node_execution_router_test.go`
+  - 不负责：把实例业务 owner 重新塞回容器运行时模块，或让 `practice`、用户实例路由重新直接依赖整块容器运行时视图；也不再把“当前 API 进程连到哪台 Docker 宿主机”当成执行 authority；runtime node failover 只承诺重新入队和重建，不承诺原容器 live migration 或已有 SSH/WebSocket 会话透明迁移
 
 ## 1. 架构概览
 
@@ -262,9 +262,9 @@ flowchart LR
 | `auth` | 业务 owner | 注册、登录、登出、CAS、会话票据、WebSocket ticket | `identity`（代码），`ops`（装配注入审计记录器） |
 | `identity` | 业务 owner | 用户、角色、权限、当前用户解析、管理端用户能力 | 无业务上游依赖 |
 | `challenge` | 业务 owner | 题目元数据、附件、镜像信息、Flag 规则、题包导入/导出 | `container_runtime`（装配注入运行时探针与镜像探测），代码级无跨模块 import；发布自检通过时由 publish-check 事务同时更新题目发布状态、job final 状态与 `challenge.publish_check_finished` outbox，通知通过该事件交给 `ops` 消费 |
-| `container_runtime` | 底层容器运行时模块 + app 层组合视图 | Docker 运行时、镜像探针、容器文件访问、运行时统计、runtime-agent bridge、runtime nodes、allocation 和 sandbox executor；`ContainerRuntimeModule` 向 challenge / contest / ops / instance 暴露显式 capability fields | PostgreSQL / Redis / Docker Engine；业务规则由 `challenge`、`contest`、`instance` 等 owner 承接 |
-| `instance` | 业务 owner + app 层组合视图 | `internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口，以及 `practice` 依赖的实例仓储与运行时服务 | `container_runtime`（装配注入显式 runtime capability），`contest`（AWD runtime state adapter） |
-| `practice` | 业务 owner | 练习开题、排队与 provisioning、Flag 提交、个人训练进度与时间线查询 | `challenge`、`instance`（装配），`container_runtime`、`contest`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
+| `container_runtime` | 底层容器运行时模块 + app 层组合视图 | Docker 运行时、镜像探针、容器文件访问、运行时统计、runtime-agent bridge、runtime nodes、allocation、sandbox executor，以及 runtime node 心跳 / stale / offline / capacity snapshot 事实；`ContainerRuntimeModule` 向 challenge / contest / ops / instance 暴露显式 capability fields | PostgreSQL / Redis / Docker Engine；业务规则由 `challenge`、`contest`、`instance` 等 owner 承接；节点离线后的实例生命周期修复不在本模块内直接改状态 |
+| `instance` | 业务 owner + app 层组合视图 | `internal/module/instance/*` 负责实例命令、查询、proxy ticket、maintenance、startup recovery；`InstanceModule` 负责实例访问 handler、AWD target / defense SSH 入口、runtime node offline 时按 `node_id` 重排可恢复 active 实例并清空旧 runtime identity | `container_runtime`（装配注入显式 runtime capability），`contest`（AWD runtime state adapter） |
+| `practice` | 业务 owner | 练习开题、排队与 provisioning、AWD desired runtime reconciliation、Flag 提交、个人训练进度与时间线查询；runtime node offline 后仍由现有 pending scheduler / desired reconciler 在健康节点上重建 | `challenge`、`instance`（装配），`container_runtime`、`contest`（代码）；画像与推荐刷新通过 `practice.flag_accepted` 事件异步触发 `assessment` 消费 |
 | `contest` | 业务 owner | 竞赛配置、队伍、排行榜、公告、AWD 轮次与服务运行态 | `challenge`、`container_runtime`（装配），`auth`、`identity`、`instance`（代码）；公告、榜单刷新和 AWD 预览进度通过 `contest` 事件交给 `ops` relay |
 | `assessment` | 业务 owner | 评估任务、技能画像、报告导出、评估归档 | `challenge`（装配），`practice`、`contest`（代码） |
 | `ops` | 业务 owner / 运营支撑 | 审计日志、站内通知、WebSocket 管理、运行时概览与后台运营支撑 | `container_runtime`（装配），`auth`、`challenge`、`contest`、`practice`（代码）；其中 challenge / practice 通知与 contest realtime relay 都由事件消费者处理 |
@@ -699,10 +699,10 @@ flowchart LR
 |------|------|
 | 控制面职责 | 主机 A 负责认证、业务状态、实例生命周期编排、节点选择与审计，不直接执行宿主机 `iptables`、checker 本地落盘或远端文件注入 |
 | 执行面职责 | 每台靶机宿主机运行一个 `runtime-agent`，负责容器 / 网络 / 镜像、ACL apply/remove、checker sandbox、容器文件 copy / exec |
-| 网络要求 | API 主机与 runtime-agent 节点保持内网互通；当前默认只做显式绑定或单节点默认，不做自动均衡 |
+| 网络要求 | API 主机与 runtime-agent 节点保持内网互通；节点探测由 `runtime_node_health` 后台任务按 `container.runtime_node_health.*` 覆盖所有 runtime node，只有 `ready / degraded` 且 `last_seen_at` 未过期的 schedulable node 才会被默认新调度选择 |
 | 端口暴露 | 用户仍通过 Nginx 访问主机 A；题目实例端口和 AWD SSH 网关按业务配置直接暴露在对应 runtime node 上 |
 | 节点 authority | 实例、AWD service、checker 执行都绑定 `node_id`；容器创建、清理、checker 和 AWD 文件写入均按 `node_id` 路由 |
-| 兼容边界 | `DOCKER_HOST` 仍可作为底层 Docker client 的连接参数，但不再是完整多机方案；正式多机边界以 `runtime_agent` 协议和 `runtime_nodes` 数据模型为准 |
+| 兼容边界 | `DOCKER_HOST` 仍可作为底层 Docker client 的连接参数，但不再是完整多机方案；正式多机边界以 `runtime_agent` 协议和 `runtime_nodes` 数据模型为准；节点 failover 复用 pending scheduler / AWD desired reconciler 重建，不承诺 live migration 或会话透明迁移 |
 
 ### 7.3 Docker Compose 编排（平台基础设施）
 
@@ -901,7 +901,7 @@ contest:
 
 - 本地开发单机模式默认保持 `runtime_agent.enabled: false`，API 直接复用本机 executor，方便本地联调。
 - API + 单 remote agent 模式由 API 侧开启 `runtime_agent.enabled: true`，并在默认 `runtime_nodes` 里注册 `agent-default`；实例 / checker / AWD service 仍按 `node_id` 路由。
-- 正式多 node 模式在同一份 `runtime_nodes` 表里登记多个 schedulable node；当前调度仍以显式绑定或单节点默认为主，不把复杂自动均衡写成已落地事实。
+- 正式多 node 模式在同一份 `runtime_nodes` 表里登记多个 runtime node；当前已落地健康过滤与故障重建：默认新调度只选择 `schedulable + ready / degraded` 且心跳新鲜的节点，`schedulable=false` 只用于 cordon 新调度，不会阻断健康节点上的显式旧容器操作；节点离线后该节点上可恢复的 `creating / running` 实例会重新进入 `pending`，再由现有 scheduler / AWD desired reconciler 在健康节点上重建。容量智能分配仍未落地，`capacity_snapshot` 目前只作为可观测事实与后续调度输入。
 
 ---
 

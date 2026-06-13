@@ -381,6 +381,108 @@ func TestRequeuePendingTransitionAndCountStatus(t *testing.T) {
 	}
 }
 
+func TestRequeueLostRuntimesByNodeOnlyRequeuesRecoverableActiveRows(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceRepositoryTestDB(t)
+	repo := NewRepository(db)
+	now := time.Now().UTC()
+	nodeAID := int64(7001)
+	nodeBID := int64(7002)
+
+	instances := []instancecontracts.Instance{
+		{ID: 101, UserID: 7, ChallengeID: 41, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusCreating, HostPort: 30001, ContainerID: "ctr-101", NetworkID: "net-101", RuntimeDetails: "detail-101", AccessURL: "http://runtime-101", ExpiresAt: now.Add(time.Hour)},
+		{ID: 102, UserID: 7, ChallengeID: 42, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30002, ContainerID: "ctr-102", NetworkID: "net-102", RuntimeDetails: "detail-102", AccessURL: "http://runtime-102", ExpiresAt: now.Add(time.Hour)},
+		{ID: 103, UserID: 7, ChallengeID: 43, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusStopping, HostPort: 30003, ContainerID: "ctr-103", NetworkID: "net-103", RuntimeDetails: "detail-103", AccessURL: "http://runtime-103", ExpiresAt: now.Add(time.Hour)},
+		{ID: 104, UserID: 7, ChallengeID: 44, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30004, ContainerID: "ctr-104", NetworkID: "net-104", RuntimeDetails: "detail-104", AccessURL: "http://runtime-104", ExpiresAt: now.Add(-time.Minute)},
+		{ID: 105, UserID: 7, ChallengeID: 45, NodeID: &nodeBID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30005, ContainerID: "ctr-105", NetworkID: "net-105", RuntimeDetails: "detail-105", AccessURL: "http://runtime-105", ExpiresAt: now.Add(time.Hour)},
+		{ID: 106, UserID: 7, ChallengeID: 46, Status: instancecontracts.InstanceStatusRunning, HostPort: 30006, ContainerID: "ctr-106", NetworkID: "net-106", RuntimeDetails: "detail-106", AccessURL: "http://runtime-106", ExpiresAt: now.Add(time.Hour)},
+	}
+	if err := db.Create(&instances).Error; err != nil {
+		t.Fatalf("seed instances: %v", err)
+	}
+
+	requeued, err := repo.RequeueLostRuntimesByNode(context.Background(), nodeAID)
+	if err != nil {
+		t.Fatalf("RequeueLostRuntimesByNode() error = %v", err)
+	}
+	if len(requeued) != 2 || requeued[0].ID != 101 || requeued[1].ID != 102 {
+		t.Fatalf("requeued ids = %+v, want [101 102]", extractInstanceIDs(requeued))
+	}
+
+	var rows []instancecontracts.Instance
+	if err := db.Order("id ASC").Find(&rows).Error; err != nil {
+		t.Fatalf("load instances: %v", err)
+	}
+	byID := make(map[int64]instancecontracts.Instance, len(rows))
+	for _, row := range rows {
+		byID[row.ID] = row
+	}
+	for _, id := range []int64{101, 102} {
+		row := byID[id]
+		if row.Status != instancecontracts.InstanceStatusPending || row.NodeID != nil || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
+			t.Fatalf("expected instance %d to be pending with runtime identity cleared, got %+v", id, row)
+		}
+	}
+	for _, id := range []int64{103, 104, 105, 106} {
+		if byID[id].Status != instances[id-101].Status || byID[id].ContainerID != instances[id-101].ContainerID {
+			t.Fatalf("expected instance %d to stay untouched, got %+v", id, byID[id])
+		}
+	}
+}
+
+func TestRequeueLostRuntimesByNodeReturnsOnlyRowsStillRequeued(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceRepositoryTestDB(t)
+	repo := NewRepository(db)
+	now := time.Now().UTC()
+	nodeID := int64(7101)
+	otherNodeID := int64(7102)
+
+	instances := []instancecontracts.Instance{
+		{ID: 201, UserID: 7, ChallengeID: 51, NodeID: &nodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-201", NetworkID: "net-201", RuntimeDetails: "detail-201", AccessURL: "http://runtime-201", ExpiresAt: now.Add(time.Hour)},
+		{ID: 203, UserID: 7, ChallengeID: 53, NodeID: &otherNodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-203", NetworkID: "net-203", RuntimeDetails: "detail-203", AccessURL: "http://runtime-203", ExpiresAt: now.Add(time.Hour)},
+	}
+	if err := db.Create(&instances).Error; err != nil {
+		t.Fatalf("seed instances: %v", err)
+	}
+
+	callbackName := "requeue_lost_runtimes_by_node_concurrent_status_change"
+	flipped := false
+	if err := db.Callback().Update().Before("gorm:update").Register(callbackName, func(tx *gorm.DB) {
+		if flipped || tx.Statement == nil || tx.Statement.Table != "instances" {
+			return
+		}
+		flipped = true
+		if err := tx.Session(&gorm.Session{NewDB: true}).
+			Exec("UPDATE instances SET status = ? WHERE id = ?", instancecontracts.InstanceStatusStopping, 201).Error; err != nil {
+			t.Fatalf("simulate concurrent status change: %v", err)
+		}
+	}); err != nil {
+		t.Fatalf("register update callback: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = db.Callback().Update().Remove(callbackName)
+	})
+
+	requeued, err := repo.RequeueLostRuntimesByNode(context.Background(), nodeID)
+	if err != nil {
+		t.Fatalf("RequeueLostRuntimesByNode() error = %v", err)
+	}
+	if len(requeued) != 0 {
+		t.Fatalf("requeued ids = %+v, want [] after row left recoverable status", extractInstanceIDs(requeued))
+	}
+
+	var stopping instancecontracts.Instance
+	if err := db.First(&stopping, 201).Error; err != nil {
+		t.Fatalf("load stopping instance: %v", err)
+	}
+	if stopping.Status != instancecontracts.InstanceStatusStopping || stopping.NodeID == nil || *stopping.NodeID != nodeID || stopping.ContainerID != "ctr-201" {
+		t.Fatalf("stopping instance should stay untouched, got %+v", stopping)
+	}
+}
+
 func int64Ptr(v int64) *int64 {
 	return &v
 }
