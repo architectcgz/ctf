@@ -62,6 +62,23 @@ var systemHTTPReadmeDirPattern = regexp.MustCompile("`tests/system/http/([a-z0-9
 var rawSensitiveZapFieldPattern = regexp.MustCompile(`(?i)zap\.(?:Any|ByteString|String|Stringer)\("([^"]*(?:password|token|secret)[^"]*)"\s*,`)
 var rawSensitiveKeyZapStringPattern = regexp.MustCompile(`zap\.String\("key"\s*,\s*(?:key|keys\[[^\]]+\])\)`)
 var rawRequestZapAnyPattern = regexp.MustCompile(`(?i)zap\.Any\("(?:req|request)"\s*,`)
+var transportConcreteSentinelPatterns = []struct {
+	name    string
+	pattern *regexp.Regexp
+}{
+	{
+		name:    "gorm not-found sentinel",
+		pattern: regexp.MustCompile(`\bgorm\.ErrRecordNotFound\b`),
+	},
+	{
+		name:    "redis nil sentinel",
+		pattern: regexp.MustCompile(`\bredis(?:lib)?\.Nil\b`),
+	},
+	{
+		name:    "docker errdefs sentinel",
+		pattern: regexp.MustCompile(`\berrdefs\.(?:Is[A-Za-z0-9_]+|[A-Za-z0-9_]*Error)\b`),
+	},
+}
 
 func TestAWDCheckerTypeValuesStayAlignedAcrossChallengeAndContest(t *testing.T) {
 	t.Parallel()
@@ -248,6 +265,53 @@ func TestNoRawSensitiveZapFields(t *testing.T) {
 		sort.Strings(violations)
 		t.Fatalf("sensitive values must be sanitized before logging:\n%s", strings.Join(violations, "\n"))
 	}
+}
+
+func TestTransportLayersDoNotConsumePersistenceOrRuntimeSentinels(t *testing.T) {
+	t.Parallel()
+
+	files := collectTransportBoundaryGoFiles(t)
+	violations := make([]string, 0)
+	for _, file := range files {
+		content := readBackendTestFile(t, file)
+		for lineNumber, line := range strings.Split(content, "\n") {
+			for _, forbidden := range transportConcreteSentinelPatterns {
+				if forbidden.pattern.FindStringIndex(line) != nil {
+					violations = append(violations, file+":"+itoa(lineNumber+1)+" must not consume "+forbidden.name+" in transport boundary")
+				}
+			}
+		}
+	}
+
+	if len(violations) > 0 {
+		sort.Strings(violations)
+		t.Fatalf("transport boundaries must consume public app errors instead of concrete sentinels:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func collectTransportBoundaryGoFiles(t *testing.T) []string {
+	t.Helper()
+
+	files := make([]string, 0)
+	files = append(files, collectGoFiles(t, "internal/middleware")...)
+	files = append(files, collectGoFiles(t, "internal/module")...)
+	files = append(files, collectGoFiles(t, "internal/app")...)
+
+	filtered := files[:0]
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		if strings.HasPrefix(file, "internal/module/") && !strings.Contains(file, "/api/") {
+			continue
+		}
+		if strings.HasPrefix(file, "internal/app/composition/") {
+			continue
+		}
+		filtered = append(filtered, file)
+	}
+	sort.Strings(filtered)
+	return filtered
 }
 
 func collectGoFiles(t *testing.T, root string) []string {

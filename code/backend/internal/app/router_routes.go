@@ -2,12 +2,10 @@ package app
 
 import (
 	"context"
-	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
 	"ctf-platform/internal/apperror"
@@ -69,11 +67,7 @@ func challengeOwnerGuard(catalog challengeLookup) gin.HandlerFunc {
 
 		challenge, err := catalog.FindByID(c.Request.Context(), challengeID)
 		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				response.Error(c, challengecontracts.ErrChallengeNotFound)
-			} else {
-				response.FromError(c, err)
-			}
+			response.FromError(c, err)
 			c.Abort()
 			return
 		}

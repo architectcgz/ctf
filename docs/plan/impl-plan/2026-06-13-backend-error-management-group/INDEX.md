@@ -41,8 +41,8 @@
 ### Slice 2: 错误边界基线与 architecture guardrail
 
 - Task Slug: `2026-06-13-backend-error-contract-baseline`
-- Status: `not-started`
-- Plan: 待 `scripts/start-implementation.sh backend-error-contract-baseline` 生成
+- Status: `in-progress`
+- Plan: [implementation-plan](../2026-06-13-backend-error-contract-baseline-implementation-plan.md)
 - Depends On: 无
 - Goal: 建立 application / ports / infrastructure 错误边界基线，先加 guardrail 和少量试点，不做全量业务迁移。
 - Validation: `go test ./internal/apperror ./tests/architecture ./internal/app -run 'Error|Architecture' -count=1`

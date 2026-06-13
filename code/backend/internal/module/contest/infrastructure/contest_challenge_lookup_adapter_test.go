@@ -49,6 +49,7 @@ func TestContestChallengeLookupAdapterMapsNotFoundErrors(t *testing.T) {
 		{name: "gorm", err: gorm.ErrRecordNotFound},
 		{name: "query sentinel", err: challengeports.ErrChallengeQueryChallengeNotFound},
 		{name: "command sentinel", err: challengeports.ErrChallengeCommandChallengeNotFound},
+		{name: "public challenge contract error", err: challengecontracts.ErrChallengeNotFound},
 	}
 
 	for _, tc := range testCases {

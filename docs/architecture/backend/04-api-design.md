@@ -68,6 +68,7 @@
 - 2026-05-17 的 challenge request DTO localization 同样没有新增、删除或重命名外部 HTTP 契约；`challenge` 与 `challenge/awd` 路由保持原路径、query 参数、请求体字段和校验口径不变，变化仅在内部 owner：request/query DTO 从全局 `internal/dto` 收回 `challenge/api/http`，handler 统一经 `request mapper` 转换到既有 application 输入。
 - 2026-05-17 的 challenge response DTO localization（core query/image/tag/flag/topology/awd）同样没有新增、删除或重命名外部 HTTP 契约；相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：handler 输出改为通过 `challenge/api/http` response mapper 把全局 `dto` 映射为模块内 response DTO。
 - 2026-06-11 的 challenge command service decomposition 同样没有新增、删除或重命名外部 HTTP 契约；challenge import / commit / self-check / publish-check / package export 相关路由保持原路径、状态码与 JSON 字段不变，变化仅在内部 owner：`challenge/api/http.Handler` 不再依赖宽 command service，而是显式接收 core command、import、self-check、publish-check、package export 与 package delivery service。
+- 2026-06-13 的 backend error contract baseline 同样没有新增、删除或重命名外部 HTTP 契约；教师 authoring challenge owner guard 遇到题目不存在时仍返回既有 `challengecontracts.ErrChallengeNotFound` 对应的 `404 / code=13004`，变化仅在内部错误边界：`challenge/infrastructure.ContractRepository` 负责把 raw `gorm.ErrRecordNotFound` 映射为 public app error，`internal/app/router_routes.go` 只通过 `httpresponse.FromError` 消费 public error，不再直接分支 persistence sentinel。
 - 当前 AWD 学生侧运行时 HTTP 面只保留 `POST /api/v1/contests/:id/awd/services/:sid/defense/ssh`；不存在 `defense/files`、`defense/directories`、`defense/commands` 路由，runtime HTTP facade 也不再为这组已下线路由保留 service interface。
 
 ## Guardrail
@@ -78,6 +79,7 @@
 - Auth / Session 契约：`code/backend/internal/module/auth/api/http/http_integration_test.go`
 - 通知与 WebSocket 契约：`code/backend/internal/module/ops/api/http/notification_http_integration_test.go`
 - 题目导入与附件 / 自检契约：`code/backend/internal/app/challenge_import_integration_test.go`
+- Transport 错误边界：`code/backend/tests/architecture/test_architecture_test.go` 的 `TestTransportLayersDoNotConsumePersistenceOrRuntimeSentinels` 禁止 `internal/app` 非 composition、`internal/module/*/api` 与 `internal/middleware` 直接消费 GORM / Redis / Docker concrete sentinel。
 
 ## 历史迁移
 
