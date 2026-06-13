@@ -4,10 +4,13 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
+
+	"ctf-platform/internal/platform/requestctx"
 )
 
 const RequestIDKey = "request_id"
@@ -16,12 +19,13 @@ var fallbackRequestIDCounter atomic.Uint64
 
 func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		requestID := c.GetHeader("X-Request-ID")
+		requestID := strings.TrimSpace(c.GetHeader("X-Request-ID"))
 		if requestID == "" {
 			requestID = newRequestID()
 		}
 
 		c.Set(RequestIDKey, requestID)
+		c.Request = c.Request.WithContext(requestctx.WithRequestID(c.Request.Context(), requestID))
 		c.Request.Header.Set("X-Request-ID", requestID)
 		c.Writer.Header().Set("X-Request-ID", requestID)
 		c.Next()

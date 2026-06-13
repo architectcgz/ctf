@@ -14,6 +14,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimedomain "ctf-platform/internal/module/container_runtime/domain"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
+	"ctf-platform/internal/platform/logctx"
 )
 
 const (
@@ -206,7 +207,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 				return nil, err
 			}
 			occupiedSubnets = appendUniqueSubnet(occupiedSubnets, subnet)
-			finish := s.startTopologyStage()
+			finish := s.startTopologyStage(ctx)
 			networkID, err = s.engine.CreateNetwork(ctx, networkName, managedLabels, network.Internal, network.Shared, subnet)
 			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
@@ -263,7 +264,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 		}
 		servicePort := node.ServicePort
 		if node.IsEntryPoint && servicePort <= 0 {
-			finish := s.startTopologyStage()
+			finish := s.startTopologyStage(ctx)
 			resolvedPort, err := s.resolveServicePort(ctx, node.Image)
 			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
@@ -287,7 +288,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 			}
 		}
 
-		finish := s.startTopologyStage()
+		finish := s.startTopologyStage(ctx)
 		containerID, err := s.engine.CreateContainer(ctx, &runtimecontracts.ContainerConfig{
 			Image:          node.Image,
 			Name:           buildManagedContainerName(req.ContainerName),
@@ -316,7 +317,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 			s.cleanupTopologyResources(ctx, createdContainerIDs, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
-		finish = s.startTopologyStage()
+		finish = s.startTopologyStage(ctx)
 		err = s.engine.StartContainer(ctx, containerID)
 		finish(err, topologyStageContext{
 			instanceID:  req.OwnerInstanceID,
@@ -336,7 +337,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 		}
 		for _, networkKey := range nodeNetworkKeys[1:] {
 			extraNetwork := networkByKey[networkKey]
-			finish = s.startTopologyStage()
+			finish = s.startTopologyStage(ctx)
 			err = s.engine.ConnectContainerToNetwork(ctx, containerID, extraNetwork.name)
 			finish(err, topologyStageContext{
 				instanceID:  req.OwnerInstanceID,
@@ -355,7 +356,7 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 				return nil, err
 			}
 		}
-		finish = s.startTopologyStage()
+		finish = s.startTopologyStage(ctx)
 		networkIPs, err := s.engine.InspectContainerNetworkIPs(ctx, containerID)
 		finish(err, topologyStageContext{
 			instanceID:  req.OwnerInstanceID,
@@ -593,7 +594,7 @@ func (s *ProvisioningService) removeContainer(ctx context.Context, containerID s
 		return nil
 	}
 	if s.engine == nil {
-		s.logger.Info("删除容器（降级模拟）", zap.String("container_id", containerID))
+		logctx.Info(ctx, s.logger, "删除容器（降级模拟）", zap.String("container_id", containerID))
 		return nil
 	}
 
@@ -604,7 +605,7 @@ func (s *ProvisioningService) removeContainer(ctx context.Context, containerID s
 		return err
 	}
 
-	s.logger.Info("删除容器", zap.String("container_id", containerID))
+	logctx.Info(ctx, s.logger, "删除容器", zap.String("container_id", containerID))
 	return nil
 }
 
@@ -613,7 +614,7 @@ func (s *ProvisioningService) removeNetwork(ctx context.Context, networkID strin
 		return nil
 	}
 	if s.engine == nil {
-		s.logger.Info("删除网络（降级跳过）", zap.String("network_id", networkID))
+		logctx.Info(ctx, s.logger, "删除网络（降级跳过）", zap.String("network_id", networkID))
 		return nil
 	}
 
@@ -623,18 +624,18 @@ func (s *ProvisioningService) removeNetwork(ctx context.Context, networkID strin
 		return err
 	}
 
-	s.logger.Info("删除网络", zap.String("network_id", networkID))
+	logctx.Info(ctx, s.logger, "删除网络", zap.String("network_id", networkID))
 	return nil
 }
 
-func (s *ProvisioningService) startTopologyStage() func(error, topologyStageContext) {
+func (s *ProvisioningService) startTopologyStage(ctx context.Context) func(error, topologyStageContext) {
 	startedAt := time.Now()
 	return func(err error, stageCtx topologyStageContext) {
-		s.logTopologyStage(time.Since(startedAt), err, stageCtx)
+		s.logTopologyStage(ctx, time.Since(startedAt), err, stageCtx)
 	}
 }
 
-func (s *ProvisioningService) logTopologyStage(duration time.Duration, err error, stageCtx topologyStageContext) {
+func (s *ProvisioningService) logTopologyStage(ctx context.Context, duration time.Duration, err error, stageCtx topologyStageContext) {
 	fields := make([]zap.Field, 0, 10)
 	fields = append(fields,
 		zap.String("stage", stageCtx.stage),
@@ -666,10 +667,10 @@ func (s *ProvisioningService) logTopologyStage(duration time.Duration, err error
 	}
 	if err != nil {
 		fields = append(fields, zap.Error(err))
-		s.logger.Warn("runtime provisioning stage failed", fields...)
+		logctx.Warn(ctx, s.logger, "runtime provisioning stage failed", fields...)
 		return
 	}
-	s.logger.Info("runtime provisioning stage succeeded", fields...)
+	logctx.Info(ctx, s.logger, "runtime provisioning stage succeeded", fields...)
 }
 
 func envMapToList(env map[string]string) []string {
