@@ -656,6 +656,23 @@ func TestLoadResolvesContainerFlagSecretFileRelativeToSharedStorageRoot(t *testi
 	}
 }
 
+func TestLoadResolvesDefenseSSHHostKeyPathRelativeToSharedStorageRoot(t *testing.T) {
+	chdirToBackendRoot(t)
+	sharedRoot := filepath.Join(t.TempDir(), "shared")
+	t.Setenv("CTF_SHARED_STORAGE_SHARED_FS_ROOT", sharedRoot)
+	t.Setenv("CTF_CONTAINER_FLAG_GLOBAL_SECRET", "integration-secret-123456789012345")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	want := filepath.Join(sharedRoot, "runtime", "awd-defense-ssh-host-key.pem")
+	if cfg.Container.DefenseSSHHostKeyPath != want {
+		t.Fatalf("defense ssh host key path = %q, want %q", cfg.Container.DefenseSSHHostKeyPath, want)
+	}
+}
+
 func TestValidateRejectsTooLargeStartupRecoveryLockTTL(t *testing.T) {
 	cfg := validConfigForValidationTests()
 	cfg.Container.StartupRecoveryLockTTL = containerStartupRecoveryMaxLockTTL + time.Second
@@ -674,7 +691,7 @@ func TestValidateAllowsEnabledDefenseSSHWithHostKeyPath(t *testing.T) {
 	cfg.Container.DefenseSSHEnabled = true
 	cfg.Container.DefenseSSHHost = "127.0.0.1"
 	cfg.Container.DefenseSSHPort = 2222
-	cfg.Container.DefenseSSHHostKeyPath = "storage/runtime/awd-defense-ssh-host-key.pem"
+	cfg.Container.DefenseSSHHostKeyPath = "runtime/awd-defense-ssh-host-key.pem"
 
 	if err := cfg.Validate(); err != nil {
 		t.Fatalf("expected Validate() to allow enabled defense ssh with host key path, got %v", err)

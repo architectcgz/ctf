@@ -43,8 +43,14 @@
   - 负责：`internal/infrastructure/redis` 根据配置创建 single client 或 Sentinel failover client，但对上层继续暴露 `*redis.Client`；不把哨兵分支扩散到业务模块
   - 负责：PostgreSQL 连接串统一显式带 `TimeZone=UTC`，driver / 代理层负责多地址或 failover 语义；`/ready` 继续按 live Ping 反映 PostgreSQL / Redis 当前依赖状态
   - 不负责：引入 Redis Cluster，或在 health / service 层维护额外的 Redis / PostgreSQL failover 状态机
+  - 负责：`shared_storage.shared_fs.root` 作为多副本共享文件根目录，当前至少承载四类对象：
+    - `reports/*`：assessment 报表导出文件，由 `ReportOutputStore` 统一读写，任一 API 副本都要能下载
+    - `challenge-attachments/*`：题包导入附件与 bundle，由 `ChallengeAttachmentStore` 统一持久化和下载
+    - `runtime/flag-global-secret`：AWD dynamic flag 全局密钥持久化文件
+    - `runtime/awd-defense-ssh-host-key.pem`：AWD defense SSH gateway 共享 host key 文件
+  - 负责：compose dev 通过 `CTF_SHARED_STORAGE_SHARED_FS_ROOT=/app/storage` 把这套 shared root 显式接到宿主持久化目录；裸配置里的相对路径统一按 shared root 解析
   - 负责：在进程启动时通过 `container.flag_global_secret_file` 解析 AWD dynamic flag 的全局密钥；显式 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 仍然优先，但若与持久化文件值不一致会直接报错，而不是静默覆盖
-  - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认路径是 `storage/runtime/flag-global-secret`，镜像预建 `/app/storage/runtime`，compose dev 通过 `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
+  - 负责：非生产环境在环境变量未注入时优先读取持久化文件；文件不存在时才自动生成新 secret 并原子写回。默认逻辑路径是 `runtime/flag-global-secret`，镜像与 compose dev 通过 shared root `/app/storage` 挂载把 secret 留在持久化卷里，避免 API / Docker 宿主重启后丢失
   - 负责：生产环境禁止在文件缺失时自动生成 secret；多 API 实例必须通过同一 `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 或预置的一致 `container.flag_global_secret_file` 启动
   - 负责：启动时把 active key id、active fingerprint 和 key id -> fingerprint 映射注册到 `runtime_cluster_secrets`，后续 API 实例若 active key、fingerprint 或仍被有效实例引用的 keyring 条目不一致，会启动失败，`/ready` 也会将 `container_flag_secret` 标记为 down
   - 负责：当需要轮换 active key 时，部署配置必须同时带上旧 active key、新 active key，以及仍被 `instances.flag_key_id` 引用的历史 key；升级前空 `flag_key_id` 的实例固定按 `default` key 解释。active key 变化必须显式开启 `container.flag_global_secret_allow_rotation`，否则仍按错配处理
@@ -65,7 +71,7 @@
   - 负责：把 `container.defense_ssh_host` 解释成客户端访问的对外地址或 TCP LB 地址，而不是本进程 bind host；gateway 自身继续监听 `:container.defense_ssh_port`
   - 负责：gateway 生命周期内的 `ready -> draining -> stopped` 状态切换；`Drain(ctx)` 只负责停止接收新 SSH 连接并等待 accept loop 收敛，不承诺会话透明迁移，`Stop(ctx)` 仍保留 hard-stop 语义
   - 负责：对外摘流可观测性直接体现在 TCP listener 上。`Drain(ctx)` 会关闭 `container.defense_ssh_port` 的监听，让 TCP health check / LB 停止把新连接导向该副本，而不是额外暴露 HTTP `/ready`
-  - 负责：启动时只加载预先存在的 `container.defense_ssh_host_key_path`，缺失时直接失败；多副本 behind TCP LB 依赖部署层把同一份 host key 文件挂到所有 gateway 实例。`docker/docker-compose.dev.yml` 里的 `ctf-awd-defense-ssh-host-key` 只是开发态预置 owner，不改变运行时 load-only 契约
+  - 负责：启动时只加载预先存在的 `container.defense_ssh_host_key_path`，缺失时直接失败；相对路径按 `shared_storage.shared_fs.root` 解析，多副本 behind TCP LB 依赖部署层把同一份 host key 文件挂到所有 gateway 实例。`docker/docker-compose.dev.yml` 里的 `ctf-awd-defense-ssh-host-key` 只是开发态预置 owner，不改变运行时 load-only 契约
   - 不负责：签发 ticket、决定 contest/team/service 作用域规则，或替 `runtime-agent` 承担执行面 owner
 
 ## 接口或数据影响
