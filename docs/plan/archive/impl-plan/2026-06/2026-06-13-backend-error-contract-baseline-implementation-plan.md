@@ -24,7 +24,7 @@
 
 ## Plan Status
 
-- Status: `review-pending`
+- Status: `review-passed`
 - Coding may start only after:
   - [x] Intake analysis gate completed
   - [x] Plan review / architecture-fit check completed
@@ -233,9 +233,9 @@
   - [x] Step 17: 运行 `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh pre-commit-quick`。
   - [x] Step 18: 运行 `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`。
   - [x] Step 19: 提交本 slice，commit message 包含正文两行和 `Task: 2026-06-13-backend-error-contract-baseline`。
-  - [ ] Step 20: 运行独立 `code-reviewer` gate，归档 review 到 `docs/reviews/backend/2026-06-13-backend-review-error-contract-baseline.md`。
-  - [ ] Step 21: 处理 material findings 后重跑受影响验证；无 findings 时更新 plan、group index 和 review link。
-  - [ ] Step 22: 运行 `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh workflow-governance`。
+  - [x] Step 20: 运行独立 `code-reviewer` gate，归档 review 到 `docs/reviews/backend/2026-06-13-backend-review-error-contract-baseline.md`。
+  - [x] Step 21: 处理 material findings 后重跑受影响验证；无 findings 时更新 plan、group index 和 review link。
+  - [x] Step 22: 运行 `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh workflow-governance`。
 - Validation: 见上。
 - Review focus: error boundary owner、guardrail 精度、public error response 兼容。
 - Done criteria: focused tests、workflow stages 和 independent review gate 通过；plan/group index/review evidence 同步。
@@ -372,6 +372,18 @@
 - Command: `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
   - Result: PASS
   - Notes: Re-run after the contest adapter compatibility fix; code changes, backend architecture, frontend architecture no-op, and test architecture guard passed.
+- Command: `timeout 420s codex exec --sandbox read-only --cd /home/azhi/workspace/projects/.worktrees/ctf/2026-06-13-backend-error-contract-baseline --output-last-message /tmp/ctf-error-contract-baseline-review.md`
+  - Result: PASS
+  - Notes: Independent `code-reviewer` gate returned `pass` with no material findings. Review archived at `docs/reviews/backend/2026-06-13-backend-review-error-contract-baseline.md`.
+- Command: `cd code/backend && go test ./internal/apperror ./internal/module/challenge/infrastructure ./internal/module/contest/infrastructure ./internal/module/contest/application/commands ./tests/architecture -run 'Test(AppError|ContractRepository|TransportLayers|ContestChallengeLookupAdapter|ChallengeServiceAddChallengeToContestTreatsChallengeSentinelAsErrChallengeNotFound|TestContestAWDServiceSyncContestChallengeRelationTreatsChallengeSentinelAsErrChallengeNotFound)' -count=1`
+  - Result: PASS
+  - Notes: Fresh focused verification on the branch after merging latest `main`.
+- Command: `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
+  - Result: PASS
+  - Notes: Fresh completion gate on the branch after merging latest `main`; API contract surface unchanged.
+- Command: `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh workflow-governance`
+  - Result: PASS
+  - Notes: Governance audit passed after archiving review evidence and syncing the branch with latest `main`.
 
 ## Independent Review Handoff
 
@@ -395,6 +407,17 @@
   - `bash scripts/check-startup-gate.sh`
   - `cd code/backend && go test ./internal/apperror ./internal/module/challenge/infrastructure ./tests/architecture -run 'Test(AppError|ContractRepository|TransportLayers)' -count=1`
   - `bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
+
+## Review Gate Status
+
+- Independent review gate: `pass`
+- Review archive: `docs/reviews/backend/2026-06-13-backend-review-error-contract-baseline.md`
+- Notes:
+  - First independent review blocked on `ContestChallengeLookupAdapter` not mapping the new public challenge sentinel back to contest port semantics.
+  - The implementation context fixed that compatibility gap, re-ran the focused contest adapter / command tests and `completion-full`, then requested a fresh independent re-review.
+  - Final independent read-only review returned `pass` with no material findings.
+- Required next action: 运行 `workflow-governance`，随后归档当前 slice plan 并把 startup gate 推进到 `ready_to_merge`。
+- Required next action: 归档当前 slice plan 并把 startup gate 推进到 `ready_to_merge`。
 
 ## Rollback / Recovery
 
