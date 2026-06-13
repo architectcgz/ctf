@@ -139,7 +139,7 @@ func (s *InstanceMaintenanceService) CleanExpiredInstances(ctx context.Context) 
 func (s *InstanceMaintenanceService) ReconcileLostActiveRuntimes(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	if s.engine == nil {
-		s.logger.Debug("跳过运行时丢失恢复，Docker 引擎未启用")
+		logctx.Debug(ctx, s.logger, "跳过运行时丢失恢复，Docker 引擎未启用")
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanup(ctx context.Context
 		return
 	}
 	if !acquired {
-		s.logger.Debug("stopping 实例清理已由其他节点执行")
+		logctx.Debug(ctx, s.logger, "stopping 实例清理已由其他节点执行")
 	}
 }
 
@@ -300,11 +300,11 @@ func (s *InstanceMaintenanceService) dispatchStoppingCleanupLocked(ctx context.C
 func (s *InstanceMaintenanceService) CleanupOrphans(ctx context.Context) error {
 	ctx = normalizeContext(ctx)
 	if s.engine == nil {
-		s.logger.Debug("跳过孤儿容器清理，Docker 引擎未启用")
+		logctx.Debug(ctx, s.logger, "跳过孤儿容器清理，Docker 引擎未启用")
 		return nil
 	}
 	if s.cleaner == nil {
-		s.logger.Debug("跳过孤儿容器清理，运行时清理服务未启用")
+		logctx.Debug(ctx, s.logger, "跳过孤儿容器清理，运行时清理服务未启用")
 		return nil
 	}
 

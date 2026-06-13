@@ -8,6 +8,10 @@ import (
 	"ctf-platform/internal/platform/requestctx"
 )
 
+func Debug(ctx context.Context, logger *zap.Logger, msg string, fields ...zap.Field) {
+	withContext(ctx, logger).Debug(msg, fields...)
+}
+
 func Info(ctx context.Context, logger *zap.Logger, msg string, fields ...zap.Field) {
 	withContext(ctx, logger).Info(msg, fields...)
 }

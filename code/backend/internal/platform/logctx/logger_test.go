@@ -41,3 +41,21 @@ func TestWarnSkipsRequestIDWhenContextDoesNotHaveIt(t *testing.T) {
 		t.Fatalf("unexpected request_id field: %v", fields["request_id"])
 	}
 }
+
+func TestDebugAddsRequestIDFromContext(t *testing.T) {
+	t.Parallel()
+
+	core, observed := observer.New(zap.DebugLevel)
+	logger := zap.New(core)
+	ctx := requestctx.WithRequestID(context.Background(), "req-logctx-debug-1")
+
+	Debug(ctx, logger, "debugged", zap.String("component", "instance-maintenance"))
+
+	if observed.Len() != 1 {
+		t.Fatalf("expected 1 log entry, got %d", observed.Len())
+	}
+	fields := observed.All()[0].ContextMap()
+	if got := fields["request_id"]; got != "req-logctx-debug-1" {
+		t.Fatalf("request_id = %v, want req-logctx-debug-1", got)
+	}
+}

@@ -60,7 +60,7 @@
 - Goal: 定义 context-aware logging helper 和新增错误日志约束，先迁移容器/实例/认证等少量关键路径。
 - Validation: logger helper tests、受影响模块 tests、architecture guardrail。
 - Review Focus: 保留 request context，不把 application 层绑定到 `internal/infrastructure/logger` builder。
-- Notes: worktree 已建立，当前按 `requestctx + logctx` 双包落点推进试点迁移。
+- Notes: worktree 已建立，当前按 `requestctx + logctx` 双包落点推进试点迁移，并把试点内 `Debug` 一并纳入共享 helper。
 
 ### Slice 4: Goroutine SafeGo 基础能力
 

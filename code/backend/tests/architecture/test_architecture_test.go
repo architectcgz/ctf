@@ -82,16 +82,19 @@ var transportConcreteSentinelPatterns = []struct {
 
 var contextAwareLoggingPilotFiles = map[string][]string{
 	"internal/module/auth/application/commands/service.go": {
+		"s.log.Debug(",
 		"s.log.Info(",
 		"s.log.Warn(",
 		"s.log.Error(",
 	},
 	"internal/module/instance/application/commands/maintenance_service.go": {
+		"s.logger.Debug(",
 		"s.logger.Info(",
 		"s.logger.Warn(",
 		"s.logger.Error(",
 	},
 	"internal/module/container_runtime/application/commands/provisioning_service.go": {
+		"s.logger.Debug(",
 		"s.logger.Info(",
 		"s.logger.Warn(",
 		"s.logger.Error(",

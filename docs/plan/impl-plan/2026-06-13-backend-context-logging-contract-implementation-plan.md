@@ -1,7 +1,7 @@
 <!-- Managed by code-workflow package (version: 2026-06-12.1) -->
 # 2026-06-13-backend-context-logging-contract Implementation Plan
 
-**Goal:** 建立 request-context 日志契约，让认证、实例维护、容器运行时试点路径的结构化日志自动带上 `request_id`，并用源码 guardrail 防止试点文件回退到裸 `*zap.Logger` 调用。
+**Goal:** 建立 request-context 日志契约，让认证、实例维护、容器运行时试点路径的结构化日志自动带上 `request_id`，并用源码 guardrail 防止试点文件回退到裸 `*zap.Logger` `Debug/Info/Warn/Error` 调用。
 
 **Architecture:** 先把 `request_id` 从 Gin middleware 写入 `http.Request.Context()`，再提供一个不落在 `internal/infrastructure/logger` 下的共享 helper，从 `context.Context` 提取链路字段并补到 zap fields。试点只迁移少量关键路径，并用窄范围 architecture test 约束这些文件必须经 helper 打日志，不在本 slice 做全仓替换。
 
@@ -32,7 +32,7 @@
 
 - Objective:
   - 让 request 级 `request_id` 真正进入 downstream `context.Context`。
-  - 新增共享 context-aware logging helper，供 application / infrastructure 关键路径复用。
+  - 新增共享 context-aware logging helper，供 application / infrastructure 关键路径复用，并覆盖试点所需的 `Debug/Info/Warn/Error`。
   - 迁移认证、实例维护、容器运行时三条试点路径，并为试点文件加回退 guardrail。
 - Non-Goals:
   - 不在本 slice 做全仓 `logger.Info/Warn/Error` 替换。
@@ -110,7 +110,7 @@
 - Reuse / extend / split / create-new decision:
   - 复用 `RequestID` middleware 作为 request id owner。
   - 新建 `internal/platform/requestctx` 作为 request-scoped field owner。
-  - 新建 `internal/platform/logctx` 作为共享日志 helper；不扩展 `internal/infrastructure/logger`。
+  - 新建 `internal/platform/logctx` 作为共享日志 helper；试点先覆盖 `Debug/Info/Warn/Error`，不扩展 `internal/infrastructure/logger`。
   - 保留 `wrappedErrorCauseField` 这类局部 helper，改为与 `logctx` 组合使用。
 - Owner boundary:
   - `middleware/request_id.go` 负责把 request id 写入 gin/http 双上下文。
@@ -168,6 +168,7 @@
   - `go test ./internal/middleware ./internal/platform/requestctx ./internal/platform/logctx -count=1`
 - Review focus:
   - helper 落点不能反向依赖 module / gin。
+  - `Debug` 不能继续作为例外留在裸 logger。
   - nil context / 空 request id / nil logger 的行为必须可预期。
 - Done criteria:
   - request id 进入 request context。
@@ -205,10 +206,10 @@
   - `go test ./tests/architecture -run 'Test(NoRawSensitiveZapFields|ContextAwareLoggingContractPilots)' -count=1`
 - Review focus:
   - 只改日志契约，不顺带改变业务错误分支。
-  - guardrail 先锁试点文件，不扩大到全仓。
+  - guardrail 先锁试点文件，不扩大到全仓；`Debug` 也不能成为回退口。
 - Done criteria:
   - 试点路径日志在 context 带 request id 时能自动落字段。
-  - 试点文件没有裸 `logger.Info/Warn/Error` 回退。
+  - 试点文件没有裸 `logger.Debug/Info/Warn/Error` 回退。
   - task group index 与当前实际状态一致。
 
 ## Impact And Compatibility
@@ -287,6 +288,18 @@
 - Command: `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
   - Result: `PASS`（review blocker 修复后复跑）
   - Notes: backend architecture / tests architecture gate 均通过。
+- Command: `timeout 240s go test ./internal/middleware ./internal/platform/requestctx ./internal/platform/logctx -count=1`
+  - Result: `PASS`（补充 `Debug` context-aware logging 后复跑）
+  - Notes: 确认 `logctx.Debug` 与 request-id 注入没有破坏 middleware/requestctx/logctx 基线。
+- Command: `timeout 240s go test ./internal/module/auth/application/commands ./internal/module/instance/application/commands ./internal/module/container_runtime/application/commands -count=1`
+  - Result: `PASS`（补充 `Debug` context-aware logging 后复跑）
+  - Notes: 覆盖实例维护试点 `Debug` 迁移以及三条试点路径回归。
+- Command: `timeout 240s go test ./tests/architecture -run 'Test(NoRawSensitiveZapFields|ContextAwareLoggingContractPilots)' -count=1`
+  - Result: `PASS`（补充 `Debug` context-aware logging 后复跑）
+  - Notes: 确认试点 guardrail 已把裸 `Debug` 也纳入约束。
+- Command: `timeout 180s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
+  - Result: `PASS`（补充 `Debug` context-aware logging 后复跑）
+  - Notes: 确认扩面后 backend architecture/test architecture 阶段仍通过。
 
 ## Independent Review Handoff
 
@@ -301,12 +314,17 @@
   - `AGENTS.md`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-- Known risks / review focus:
+ - Known risks / review focus:
   - request_id 是否真正进入 downstream `context.Context`
   - helper 是否误绑到 `internal/infrastructure/logger`
   - guardrail 是否只锁试点，不误伤非试点文件
+  - 新增 `Debug` 覆盖后，实例维护试点是否仍保持 request-scoped logging 一致性
 - Project-local checks to consider:
   - `go test ./tests/architecture -run 'Test(NoRawSensitiveZapFields|ContextAwareLoggingContractPilots)' -count=1`
+ - Independent review result:
+   - `2026-06-13-backend-review-context-logging-contract-round-1.md`
+   - Gate verdict: `pass`
+   - Round 1 non-blocking follow-up 已转入当前 patch：把试点内裸 `Debug` 一并纳入 `logctx`
 
 ## Rollback / Recovery
 
