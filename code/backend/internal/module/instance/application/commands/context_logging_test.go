@@ -40,3 +40,25 @@ func TestRuntimeMaintenanceServiceOfflineLogIncludesRequestID(t *testing.T) {
 		t.Fatalf("request_id = %v, want req-instance-log-1", got)
 	}
 }
+
+func TestRuntimeMaintenanceServiceDebugLogIncludesRequestID(t *testing.T) {
+	t.Parallel()
+
+	core, observed := observer.New(zap.DebugLevel)
+	logger := zap.New(core)
+	service := instancecmd.NewInstanceMaintenanceService(&maintenanceTestRepository{}, nil, nil, &config.ContainerConfig{}, logger)
+
+	ctx := requestctx.WithRequestID(context.Background(), "req-instance-debug-1")
+	if err := service.ReconcileLostActiveRuntimes(ctx); err != nil {
+		t.Fatalf("ReconcileLostActiveRuntimes() error = %v", err)
+	}
+
+	entries := observed.All()
+	if len(entries) == 0 {
+		t.Fatal("expected maintenance debug log entry")
+	}
+	fields := entries[len(entries)-1].ContextMap()
+	if got := fields["request_id"]; got != "req-instance-debug-1" {
+		t.Fatalf("request_id = %v, want req-instance-debug-1", got)
+	}
+}
