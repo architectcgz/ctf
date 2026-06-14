@@ -26,6 +26,7 @@ func NewContestChallengeLookupAdapter(source challengecontracts.ContestChallenge
 func (r *ContestChallengeLookupAdapter) FindByID(ctx context.Context, id int64) (*contestentity.Challenge, error) {
 	challenge, err := r.source.FindByID(ctx, id)
 	if errors.Is(err, gorm.ErrRecordNotFound) ||
+		errors.Is(err, challengecontracts.ErrChallengeNotFound) ||
 		errors.Is(err, challengeports.ErrChallengeQueryChallengeNotFound) ||
 		errors.Is(err, challengeports.ErrChallengeCommandChallengeNotFound) {
 		return nil, contestports.ErrContestChallengeEntityNotFound
