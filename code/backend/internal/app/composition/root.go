@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/platform/clustersecret"
 	"ctf-platform/internal/platform/events"
+	"ctf-platform/internal/shared/safego"
 )
 
 type Root struct {
@@ -38,7 +39,7 @@ func NewBackgroundJob(name string, start func(context.Context) error, stop func(
 	return BackgroundJob{name: name, start: start, stop: stop}
 }
 
-func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob {
+func NewLoopBackgroundJobWithLogger(name string, logger *zap.Logger, run func(context.Context)) BackgroundJob {
 	var (
 		mu      sync.Mutex
 		cancel  context.CancelFunc
@@ -61,11 +62,7 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 
 			runCtx, runCancel := context.WithCancel(ctx)
 			cancel = runCancel
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				run(runCtx)
-			}()
+			safego.Go(&wg, runCtx, logger, name, run)
 			return nil
 		},
 		func(ctx context.Context) error {
@@ -82,10 +79,10 @@ func NewLoopBackgroundJob(name string, run func(context.Context)) BackgroundJob 
 			}
 
 			done := make(chan struct{})
-			go func() {
+			safego.Go(nil, ctx, logger, name+"_stop_wait", func(context.Context) {
 				wg.Wait()
 				close(done)
-			}()
+			})
 
 			select {
 			case <-done:

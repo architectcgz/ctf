@@ -101,6 +101,18 @@ var contextAwareLoggingPilotFiles = map[string][]string{
 	},
 }
 
+var safeGoPilotFiles = map[string][]string{
+	"internal/app/composition/root.go": {
+		"go func() {",
+	},
+	"internal/module/practice/application/commands/service_lifecycle.go": {
+		"go func() {",
+	},
+	"internal/module/instance/infrastructure/cleaner.go": {
+		"go func() {",
+	},
+}
+
 func TestAWDCheckerTypeValuesStayAlignedAcrossChallengeAndContest(t *testing.T) {
 	t.Parallel()
 
@@ -329,6 +341,28 @@ func TestContextAwareLoggingContractPilots(t *testing.T) {
 	if len(violations) > 0 {
 		sort.Strings(violations)
 		t.Fatalf("context-aware logging pilot files must use shared logctx helper:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func TestSafeGoContractPilots(t *testing.T) {
+	t.Parallel()
+
+	violations := make([]string, 0)
+	for file, forbiddenSnippets := range safeGoPilotFiles {
+		content := readBackendTestFile(t, file)
+		if !strings.Contains(content, `"ctf-platform/internal/shared/safego"`) {
+			violations = append(violations, file+" must import internal/shared/safego")
+		}
+		for _, snippet := range forbiddenSnippets {
+			if strings.Contains(content, snippet) {
+				violations = append(violations, file+" must not use raw goroutine launch "+snippet)
+			}
+		}
+	}
+
+	if len(violations) > 0 {
+		sort.Strings(violations)
+		t.Fatalf("safeGo pilot files must use shared safego helper:\n%s", strings.Join(violations, "\n"))
 	}
 }
 
