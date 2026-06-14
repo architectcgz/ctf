@@ -1,7 +1,7 @@
 # 题包 Registry 交付架构
 
 > 状态：Current
-> 事实源：`code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`、`code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`
+> 事实源：`code/backend/internal/module/challenge/domain/image_delivery.go`、`code/backend/internal/module/challenge/application/challengeimport/service.go`、`code/backend/internal/module/challenge/application/commands/image_build_service.go`、`code/backend/internal/module/challenge/infrastructure/registry_client.go`、`code/backend/internal/module/challenge/runtime/module.go`、`code/backend/internal/config/`、`scripts/registry/deploy-private-registry.sh`
 > 替代：无
 
 ## 定位
@@ -21,7 +21,7 @@
   - 负责：对 `container.registry.server` 做 image ref 归属判断；若配置了 `container.registry.access_server`，则用它发起 `HEAD /v2/.../manifests/...` 直连请求
   - 不负责：改写镜像 ref、影响 Docker daemon 的 push/pull 目标，或替代 image build service 决定状态推进
 
-- `code/backend/internal/config/config.go`、`scripts/registry/deploy-private-registry.sh`、`docker/infra/registry/ctf-platform-registry.env`
+- `code/backend/internal/config/`、`scripts/registry/deploy-private-registry.sh`、`docker/infra/registry/ctf-platform-registry.env`
   - 负责：把 registry 配置拆成两层含义
     - `server`：镜像 ref 与 Docker daemon 看到的 canonical registry server
     - `access_server`：仅给 `ctf-api` 进程直连 registry API 的可选 host:port
@@ -225,7 +225,7 @@ pending -> building -> pushed -> verifying -> available
 - `code/backend/internal/module/challenge/application/commands/awd_challenge_import_service.go`
 - `code/backend/internal/module/challenge/infrastructure/challenge_import_preview_store.go`
 - `code/backend/internal/module/challenge/infrastructure/challenge_package_storage.go`
-- `code/backend/internal/config/config.go`
+- `code/backend/internal/config/`
 - `code/frontend/src/api/admin/authoring.ts`
 - `code/frontend/src/features/platform/challenge-package-import/ui/ChallengePackageImportReview.vue`
 - `code/frontend/src/components/platform/images/ImageDirectoryPanel.vue`
