@@ -155,6 +155,7 @@ container:
   defense_ssh_enabled: false
   defense_ssh_host: 127.0.0.1
   defense_ssh_port: 2222
+  defense_ssh_host_key_path: runtime/awd-defense-ssh-host-key.pem # 相对 shared_storage.shared_fs.root 解析；多 gateway 副本时应挂载同一份预置 key 文件
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
   network:

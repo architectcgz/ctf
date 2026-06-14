@@ -28,6 +28,11 @@
 
 - 使用的部署确实把 PostgreSQL、Redis 数据目录和 `/app/storage` 放在持久化卷上。
 - `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 已由部署层统一注入，或 `CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE` / `container.flag_global_secret_file` 指向所有 API 实例一致可见的持久化路径。compose dev 默认是 `/app/storage/runtime/flag-global-secret`。
+- `shared_storage.shared_fs.root` 必须在所有 API / gateway 副本上指向同一份持久化目录。compose dev 通过 `CTF_SHARED_STORAGE_SHARED_FS_ROOT=/app/storage` 显式把 shared root 接到宿主挂载。
+- `CTF_CONTAINER_FLAG_GLOBAL_SECRET` 已由部署层统一注入，或 `CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE` / `container.flag_global_secret_file` 指向 shared root 下所有 API 实例一致可见的持久化路径。compose dev 默认逻辑路径是 `runtime/flag-global-secret`，实际落盘为 `/app/storage/runtime/flag-global-secret`。
+- 如果同时部署独立 `awd-defense-ssh-gateway`，`container.defense_ssh_host_key_path` 也需要指向所有 gateway 副本一致可见的持久化文件。
+- assessment 报表导出和题包导入附件下载也依赖同一 shared root；如果这份挂载丢失，多副本下会出现“生成在副本 A、下载落到副本 B”的 correctness 问题。
+- compose dev 场景下，这份文件默认由一次性的 `ctf-awd-defense-ssh-host-key` service 预置到共享 `/app/storage/runtime`；如果删掉宿主 `docker/runtime/app-storage`，下次启动会重新生成开发用 key。
 - 演练目标中至少有一场 `running` 或 `frozen` 的 AWD 比赛，并且至少存在一组可见 service。
 - 最好提前准备一条“正常 scope”和一条“坏配置 scope”，方便同时观察恢复与 suppress 行为。
 - 选定本次观测的 `<contest_id>`，并记住至少一组 `<team_id> + <service_id>`。

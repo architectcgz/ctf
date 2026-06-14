@@ -48,11 +48,12 @@ services:
       CTF_POSTGRES_USERNAME: postgres
       CTF_POSTGRES_PASSWORD: postgres123456
       CTF_AUTO_MIGRATE: "true"
+      CTF_SHARED_STORAGE_SHARED_FS_ROOT: /app/storage
       CTF_REDIS_ADDR: ctf-redis:6379
       CTF_REDIS_PASSWORD: redis123456
       CTF_REDIS_DB: 2
       CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
-      CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: /app/storage/runtime/flag-global-secret
+      CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: runtime/flag-global-secret
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
@@ -104,11 +105,12 @@ services:
       CTF_POSTGRES_USERNAME: postgres
       CTF_POSTGRES_PASSWORD: postgres123456
       CTF_AUTO_MIGRATE: "false"
+      CTF_SHARED_STORAGE_SHARED_FS_ROOT: /app/storage
       CTF_REDIS_ADDR: ctf-redis:6379
       CTF_REDIS_PASSWORD: redis123456
       CTF_REDIS_DB: 2
       CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
-      CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: /app/storage/runtime/flag-global-secret
+      CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: runtime/flag-global-secret
     ports:
       - "127.0.0.1:2222:2222"
     depends_on:

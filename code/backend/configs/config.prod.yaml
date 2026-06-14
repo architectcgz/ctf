@@ -60,6 +60,8 @@ container:
   defense_ssh_enabled: false
   defense_ssh_host: ctf.example.com
   defense_ssh_port: 2222
+  # 多 gateway 副本 behind TCP LB 时，所有副本必须挂载同一份预置 host key 文件。
+  defense_ssh_host_key_path: runtime/awd-defense-ssh-host-key.pem # 相对 shared_storage.shared_fs.root 解析
   defense_workbench_readonly_enabled: true
   defense_workbench_root: /app
   # 启动判定会在容器创建后探测访问地址，只有探测通过才进入 running

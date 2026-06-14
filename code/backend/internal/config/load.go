@@ -46,6 +46,10 @@ func Load(env string) (*Config, error) {
 	if cfg.Container.FlagGlobalSecretFile != "" {
 		cfg.Container.FlagGlobalSecretFile = cfg.SharedStoragePath(cfg.Container.FlagGlobalSecretFile)
 	}
+	cfg.Container.DefenseSSHHostKeyPath = strings.TrimSpace(cfg.Container.DefenseSSHHostKeyPath)
+	if cfg.Container.DefenseSSHHostKeyPath != "" {
+		cfg.Container.DefenseSSHHostKeyPath = cfg.SharedStoragePath(cfg.Container.DefenseSSHHostKeyPath)
+	}
 	if cfg.Container.FlagGlobalSecret != "" && len(cfg.Container.FlagGlobalSecret) < 32 {
 		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
 	}

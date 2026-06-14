@@ -65,6 +65,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --b
 
 这条路径下，`ctf-api` 容器会在启动应用前先执行一次 `/app/migrations` 里的正式 SQL migration；如需临时关闭，可给 `ctf-api` 设置 `CTF_AUTO_MIGRATE=false`。如果容器数据库仍停留在旧的 `000002..000012` 增量链上，入口脚本会明确报错并要求你先重建本地数据库。
 
+同一条 compose 路径里，会先用 `CTF_SHARED_STORAGE_SHARED_FS_ROOT=/app/storage` 把 shared storage root 接到宿主持久化目录。`ctf-awd-defense-ssh-host-key` 会在共享的 `/app/storage/runtime/awd-defense-ssh-host-key.pem` 不存在时预置一份开发用 SSH host key，随后 `ctf-awd-defense-ssh-gateway` 再只按 load-only 契约启动；`runtime/flag-global-secret` 也会通过同一 shared root 落到 `/app/storage/runtime/flag-global-secret`。删除 `docker/runtime/app-storage` 或切换新的宿主目录后，第一次 `up` 会重新生成这份 key；后续重启会复用同一 fingerprint。
 这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
 
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”

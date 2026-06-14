@@ -90,7 +90,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("container.defense_ssh_enabled", false)
 	v.SetDefault("container.defense_ssh_host", "127.0.0.1")
 	v.SetDefault("container.defense_ssh_port", 2222)
-	v.SetDefault("container.defense_ssh_host_key_path", "storage/runtime/awd-defense-ssh-host-key.pem")
+	v.SetDefault("container.defense_ssh_host_key_path", "runtime/awd-defense-ssh-host-key.pem")
 	v.SetDefault("container.defense_workbench_readonly_enabled", true)
 	v.SetDefault("container.defense_workbench_root", "/app")
 	v.SetDefault("container.network.single_container_subnet_base", "10.11.0.0/16")
