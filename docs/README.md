@@ -33,7 +33,7 @@
 <!-- BEGIN HARNESS ENGINEERING: docs-navigation -->
 ## Harness 入口
 
-- `../concepts/`：Harness 核心概念与 CTF 项目映射。
+- `../concepts/`：项目 `AGENTS.md` 的补充，记录长期概念、原则和 harness 定义。
 - `../thinking/`：项目 harness 边界、取舍和质疑。
 - `../practice/`：初始化和实验记录。
 - `../feedback/`：踩坑、修正和可复用经验。

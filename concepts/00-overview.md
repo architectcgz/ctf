@@ -1,6 +1,6 @@
 # Harness Overview
 
-Harness Engineering 在本仓库中的含义：人类维护约束、事实源、反馈与检查，AI agent 在这些边界内完成工程任务。
+Harness Engineering 在本仓库中的含义：人类维护约束、事实源、反馈与检查，AI agent 在这些边界内完成工程任务。本目录作为项目根 `AGENTS.md` 的补充，只承接长期稳定的概念层说明。
 
 ## 项目落点
 

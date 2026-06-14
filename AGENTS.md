@@ -107,7 +107,7 @@
 - `docs/reports/`：阶段性报告、汇总结论、差距报告和分析输出。
 - `docs/Q&A/`：会被重复引用的问答式说明。
 - `docs/thesis/`、`docs/weekly-reports/`、`docs/开题报告/`、`docs/文献/`、`docs/毕业设计文档相关/`：论文与学校材料，不混入产品事实源。
-- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；各目录局部规则见对应 `AGENTS.md`。
+- `concepts/`、`thinking/`、`practice/`、`feedback/`、`works/`、`references/` 是 harness 顶层目录；其中 `concepts/` 作为项目 `AGENTS.md` 的补充层，根 `AGENTS.md` 负责项目说明和索引，各目录局部规则见对应 `AGENTS.md`。
 - `scripts/` 顶层文件是稳定入口层：给 hook、README、AGENTS、review 流程和操作者长期直接调用；新增顶层入口前，先更新 `harness/policies/script-layer-manifest.json` 并通过 `bash scripts/check-script-layer.sh`。
 - `harness/checks/` 存放项目本地、可提交、长期维护的机械检查主体；`scripts/` 中对应 `check-*` 命令默认只保留稳定 wrapper 入口。
 - `scripts/check-workflow-governance-core.sh`、`scripts/check-review-governance-core.sh` 与 `scripts/doctor-local-harness.sh` 也是稳定入口；真正的检查主体默认继续下沉到 `harness/checks/`，不要再把大段检查逻辑直接堆回 `scripts/`。
@@ -136,7 +136,7 @@
 
 ## Harness Engineering Map
 
-- `concepts/`：Harness 核心概念与 CTF 项目映射。
+- `concepts/`：项目 `AGENTS.md` 的补充，记录长期概念、原则和 harness 定义。
 - `thinking/`：对项目 harness 边界和取舍的判断。
 - `practice/`：初始化和后续实验记录。
 - `feedback/`：踩坑、修正和可复用经验。

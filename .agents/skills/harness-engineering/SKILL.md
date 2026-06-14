@@ -65,7 +65,7 @@ python3 .agents/skills/harness-engineering/scripts/init_harness_project.py --pro
 bash scripts/check-agent-entrypoints.sh
 ```
 
-The script is idempotent. In both modes it also ensures the repo root keeps `CLAUDE.md -> AGENTS.md`, unless an existing conflicting `CLAUDE.md` requires manual resolution. In default CTF-current mode it creates `.harness/`, `.harness/reuse-decisions/`, optional local `.harness/reuse-index/`, `harness/policies/`, `harness/templates/`, `harness/prompts/`, `harness/checks/`, `feedback/`, `scripts/check-test-workflow.sh`, and a consistency check. In strict reference mode it creates top-level `concepts/`, `thinking/`, `practice/`, `feedback/`, `works/`, `prompts/`, `references/`, `scripts/check-test-workflow.sh`, and a consistency check.
+The script is idempotent. In both modes it also ensures the repo root keeps `CLAUDE.md -> AGENTS.md`, unless an existing conflicting `CLAUDE.md` requires manual resolution. In default CTF-current mode it creates `.harness/`, `.harness/reuse-decisions/`, optional local `.harness/reuse-index/`, `harness/policies/`, `harness/templates/`, `harness/prompts/`, `harness/checks/`, `feedback/`, `scripts/check-test-workflow.sh`, and a consistency check. In strict reference mode it creates top-level `concepts/`, `thinking/`, `practice/`, `feedback/`, `works/`, `prompts/`, `references/`, `scripts/check-test-workflow.sh`, and a consistency check; in that layout, `concepts/` should be treated as a supplement to the root `AGENTS.md`, while the root `AGENTS.md` remains the project description and navigation entrypoint.
 
 ## Harness Shape
 
@@ -84,7 +84,7 @@ Keep the harness as a map, not a manual. In the current local standard:
 - `scripts/check-test-workflow.sh`: deterministic guard that checks whether test workflow instructions are documented and actually wired into enforcement paths.
 - `scripts/check-open-todos.sh`: non-blocking reminder for unchecked backlog items under `docs/todo/`, `docs/todos/`, or `todo/`.
 
-When strict upstream reference mode is requested, use `concepts/`, `thinking/`, `practice/`, `feedback/`, `works/`, `prompts/`, and `references/` as demonstrated by `deusyu/harness-engineering`.
+When strict upstream reference mode is requested, use `concepts/`, `thinking/`, `practice/`, `feedback/`, `works/`, `prompts/`, and `references/` as demonstrated by `deusyu/harness-engineering`. In that mode, `concepts/` supplements the root `AGENTS.md` with long-lived concepts and principles rather than replacing the root navigation role.
 
 ## Guardrails
 
