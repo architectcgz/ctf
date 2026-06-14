@@ -59,6 +59,9 @@ var allowedAutoMigrateOwners = map[string]struct{}{
 
 var setupDBPattern = regexp.MustCompile(`\bsetup[A-Za-z0-9_]*DB\(`)
 var systemHTTPReadmeDirPattern = regexp.MustCompile("`tests/system/http/([a-z0-9]+)/?`")
+var rawSensitiveZapFieldPattern = regexp.MustCompile(`(?i)zap\.(?:Any|ByteString|String|Stringer)\("([^"]*(?:password|token|secret)[^"]*)"\s*,`)
+var rawSensitiveKeyZapStringPattern = regexp.MustCompile(`zap\.String\("key"\s*,\s*(?:key|keys\[[^\]]+\])\)`)
+var rawRequestZapAnyPattern = regexp.MustCompile(`(?i)zap\.Any\("(?:req|request)"\s*,`)
 var transportConcreteSentinelPatterns = []struct {
 	name    string
 	pattern *regexp.Regexp
@@ -232,6 +235,35 @@ func TestAutoMigrateStaysInTestSupport(t *testing.T) {
 	if len(violations) > 0 {
 		sort.Strings(violations)
 		t.Fatalf("AutoMigrate must stay inside test-support helpers:\n%s", strings.Join(violations, "\n"))
+	}
+}
+
+func TestNoRawSensitiveZapFields(t *testing.T) {
+	t.Parallel()
+
+	files := collectGoFiles(t, "internal")
+	violations := make([]string, 0)
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		content := readBackendTestFile(t, file)
+		for lineNumber, line := range strings.Split(content, "\n") {
+			if rawSensitiveZapFieldPattern.FindStringIndex(line) != nil {
+				violations = append(violations, file+":"+itoa(lineNumber+1)+" must not log raw password/token/secret fields")
+			}
+			if rawSensitiveKeyZapStringPattern.FindStringIndex(line) != nil {
+				violations = append(violations, file+":"+itoa(lineNumber+1)+" must sanitize high-risk cache/session key fields")
+			}
+			if rawRequestZapAnyPattern.FindStringIndex(line) != nil {
+				violations = append(violations, file+":"+itoa(lineNumber+1)+" must not log raw request objects")
+			}
+		}
+	}
+
+	if len(violations) > 0 {
+		sort.Strings(violations)
+		t.Fatalf("sensitive values must be sanitized before logging:\n%s", strings.Join(violations, "\n"))
 	}
 }
 

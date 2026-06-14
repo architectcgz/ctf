@@ -13,6 +13,7 @@ import (
 
 	"ctf-platform/internal/config"
 	opsports "ctf-platform/internal/module/ops/ports"
+	"ctf-platform/internal/platform/logsanitize"
 )
 
 const defaultDashboardSessionPrefix = "ctf:auth:session"
@@ -113,13 +114,13 @@ func (s *DashboardStateStore) CountOnlineUsers(ctx context.Context) (int64, erro
 
 				payload, ok := dashboardPayloadString(value)
 				if !ok {
-					s.logger.Warn("忽略无法识别的在线会话记录", zap.String("key", keys[index]))
+					s.logger.Warn("忽略无法识别的在线会话记录", zap.String("key", logsanitize.SanitizeKey(keys[index])))
 					continue
 				}
 
 				var session dashboardSessionRecord
 				if err := json.Unmarshal([]byte(payload), &session); err != nil || session.UserID <= 0 {
-					s.logger.Warn("忽略无效的在线会话记录", zap.String("key", keys[index]), zap.Error(err))
+					s.logger.Warn("忽略无效的在线会话记录", zap.String("key", logsanitize.SanitizeKey(keys[index])), zap.Error(err))
 					continue
 				}
 
