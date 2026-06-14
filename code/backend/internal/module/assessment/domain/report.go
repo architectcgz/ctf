@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"io"
 	"time"
 
 	"ctf-platform/internal/apperror"
@@ -11,7 +12,8 @@ import (
 )
 
 type ReportDownload struct {
-	Path        string
+	Reader      io.ReadCloser
+	Size        int64
 	FileName    string
 	ContentType string
 }

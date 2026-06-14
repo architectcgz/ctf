@@ -16,6 +16,7 @@ import (
 	challengecore "ctf-platform/internal/module/challenge/application/challengecore"
 	challengecmd "ctf-platform/internal/module/challenge/application/commands"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
+	challengeports "ctf-platform/internal/module/challenge/ports"
 )
 
 type challengeImportHandlerCommandStub struct {
@@ -23,6 +24,7 @@ type challengeImportHandlerCommandStub struct {
 	listChallengeImportsFn   func(ctx context.Context, actorUserID int64) ([]challengecontracts.ChallengeImportPreviewResp, error)
 	getChallengeImportFn     func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeImportPreviewResp, error)
 	commitChallengeImportFn  func(ctx context.Context, actorUserID int64, id string) (*challengecontracts.ChallengeResp, error)
+	openAttachmentFn         func(ctx context.Context, relativePath string) (*challengeports.ChallengeAttachmentDownload, error)
 }
 
 func (s challengeImportHandlerCommandStub) CreateChallenge(ctx context.Context, actorUserID int64, req challengecore.CreateChallengeInput) (*challengecontracts.ChallengeResp, error) {
@@ -77,11 +79,22 @@ func (s challengeImportHandlerCommandStub) CommitChallengeImport(ctx context.Con
 	return nil, nil
 }
 
+func (s challengeImportHandlerCommandStub) PersistImportedAttachmentBundle(ctx context.Context, req challengeports.ChallengeImportedAttachmentBundleRequest) (string, error) {
+	return "", nil
+}
+
 func (s challengeImportHandlerCommandStub) ExportChallengePackage(ctx context.Context, actorUserID int64, challengeID int64) (*challengecontracts.ChallengePackageExportResp, error) {
 	return nil, nil
 }
 
 func (s challengeImportHandlerCommandStub) GetChallengePackageExport(ctx context.Context, challengeID int64, revisionID *int64) (*challengecontracts.ChallengePackageExportResp, error) {
+	return nil, nil
+}
+
+func (s challengeImportHandlerCommandStub) OpenAttachment(ctx context.Context, relativePath string) (*challengeports.ChallengeAttachmentDownload, error) {
+	if s.openAttachmentFn != nil {
+		return s.openAttachmentFn(ctx, relativePath)
+	}
 	return nil, nil
 }
 
@@ -110,6 +123,7 @@ func newChallengeImportHandlerForTest(command challengeImportHandlerCommandStub)
 		Commands:        command,
 		Queries:         challengeImportHandlerQueryStub{},
 		Imports:         command,
+		Attachments:     command,
 		PackageDelivery: challengecmd.NewPackageDeliveryService(command, nil),
 	})
 }

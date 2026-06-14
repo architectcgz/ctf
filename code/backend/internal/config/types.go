@@ -14,6 +14,7 @@ type Config struct {
 	Log            LogConfig            `mapstructure:"log"`
 	Postgres       PostgresConfig       `mapstructure:"postgres"`
 	Redis          RedisConfig          `mapstructure:"redis"`
+	SharedStorage  SharedStorageConfig  `mapstructure:"shared_storage"`
 	CORS           CORSConfig           `mapstructure:"cors"`
 	Auth           AuthConfig           `mapstructure:"auth"`
 	RateLimit      RateLimitConfig      `mapstructure:"rate_limit"`
@@ -29,6 +30,15 @@ type Config struct {
 	WebSocket      WebSocketConfig      `mapstructure:"websocket"`
 	Contest        ContestConfig        `mapstructure:"contest"`
 	RuntimeAgent   RuntimeAgentConfig   `mapstructure:"runtime_agent"`
+}
+
+type SharedStorageConfig struct {
+	Type     string                `mapstructure:"type"`
+	SharedFS SharedFSStorageConfig `mapstructure:"shared_fs"`
+}
+
+type SharedFSStorageConfig struct {
+	Root string `mapstructure:"root"`
 }
 
 type AppConfig struct {

@@ -57,27 +57,37 @@ func newTestReportOutputStore(t *testing.T) assessmentports.ReportOutputStore {
 	return &testReportOutputStore{root: t.TempDir()}
 }
 
-func (s *testReportOutputStore) PrepareReportOutput(ctx context.Context, fileName string) (string, error) {
+func (s *testReportOutputStore) PrepareReportOutput(ctx context.Context, fileName string) (*assessmentports.ReportOutput, error) {
 	if err := ctx.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
 	if err := os.MkdirAll(s.root, 0o755); err != nil {
-		return "", err
+		return nil, err
 	}
-	return filepath.Join(s.root, filepath.Base(fileName)), nil
+	baseName := filepath.Base(fileName)
+	return &assessmentports.ReportOutput{
+		StorageKey: filepath.ToSlash(filepath.Join("reports", baseName)),
+		LocalPath:  filepath.Join(s.root, baseName),
+	}, nil
 }
 
-func (s *testReportOutputStore) ResolveReportDownloadPath(ctx context.Context, path string) (string, error) {
+func (s *testReportOutputStore) OpenReportDownload(ctx context.Context, storageKey string) (*assessmentports.ReportDownloadStream, error) {
 	if err := ctx.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
-	if _, err := os.Stat(path); err != nil {
+	path := filepath.Join(s.root, filepath.Base(storageKey))
+	info, err := os.Stat(path)
+	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", assessmentports.ErrAssessmentReportOutputNotFound
+			return nil, assessmentports.ErrAssessmentReportOutputNotFound
 		}
-		return "", err
+		return nil, err
 	}
-	return path, nil
+	reader, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	return &assessmentports.ReportDownloadStream{StorageKey: storageKey, Reader: reader, Size: info.Size()}, nil
 }
 
 func (r *testReportRepository) Create(ctx context.Context, report *assessmententity.Report) error {

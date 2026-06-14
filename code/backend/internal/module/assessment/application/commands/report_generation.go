@@ -22,15 +22,15 @@ func (s *ReportService) generatePersonalReport(ctx context.Context, reportID, us
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypePersonal, format)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypePersonal, format)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, data); err != nil {
+	if err := s.renderReport(output.LocalPath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateClassReport(ctx context.Context, reportID int64, className, format string, window classwindow.Range) (string, time.Time, error) {
@@ -39,15 +39,15 @@ func (s *ReportService) generateClassReport(ctx context.Context, reportID int64,
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeClass, format)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeClass, format)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, data); err != nil {
+	if err := s.renderReport(output.LocalPath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateContestExport(ctx context.Context, reportID, contestID int64, format string) (string, time.Time, error) {
@@ -56,15 +56,15 @@ func (s *ReportService) generateContestExport(ctx context.Context, reportID, con
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeContest, format)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeContest, format)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, data); err != nil {
+	if err := s.renderReport(output.LocalPath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateStudentReviewArchive(ctx context.Context, reportID, studentID int64, format string) (string, time.Time, error) {
@@ -73,37 +73,37 @@ func (s *ReportService) generateStudentReviewArchive(ctx context.Context, report
 		return "", time.Time{}, err
 	}
 
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeReview, format)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeReview, format)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.renderReport(filePath, format, data); err != nil {
+	if err := s.renderReport(output.LocalPath, format, data); err != nil {
 		return "", time.Time{}, err
 	}
 
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateTeacherAWDReviewArchive(ctx context.Context, reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeAWDReviewArchive, assessmententity.ReportFormatZIP)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeAWDReviewArchive, assessmententity.ReportFormatZIP)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := assessmentreporting.RenderAWDReviewArchiveZip(filePath, archive); err != nil {
+	if err := assessmentreporting.RenderAWDReviewArchiveZip(output.LocalPath, archive); err != nil {
 		return "", time.Time{}, err
 	}
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) generateTeacherAWDReviewReport(ctx context.Context, reportID int64, archive *assessmentqry.TeacherAWDReviewArchiveResp) (string, time.Time, error) {
-	filePath, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeAWDReviewReport, assessmententity.ReportFormatPDF)
+	output, err := s.reportFilePath(ctx, reportID, assessmententity.ReportTypeAWDReviewReport, assessmententity.ReportFormatPDF)
 	if err != nil {
 		return "", time.Time{}, apperror.ErrInternal.WithCause(err)
 	}
-	if err := assessmentreporting.RenderAWDReviewReportPDF(filePath, archive); err != nil {
+	if err := assessmentreporting.RenderAWDReviewReportPDF(output.LocalPath, archive); err != nil {
 		return "", time.Time{}, err
 	}
-	return filePath, reportNow().Add(s.config.FileTTL), nil
+	return output.StorageKey, reportNow().Add(s.config.FileTTL), nil
 }
 
 func (s *ReportService) buildPersonalReportData(ctx context.Context, userID int64) (*personalReportData, error) {

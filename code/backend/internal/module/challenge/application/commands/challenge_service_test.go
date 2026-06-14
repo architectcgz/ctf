@@ -14,6 +14,7 @@ import (
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	platformevents "ctf-platform/internal/platform/events"
 	"ctf-platform/internal/platform/randomstring"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 	flagcrypto "ctf-platform/internal/shared/flagcrypto"
 	"ctf-platform/internal/shared/taxonomy"
 	"database/sql"
@@ -51,12 +52,15 @@ func newDBBackedChallengeService(
 }
 
 func newDBBackedChallengeImportService(
+	t *testing.T,
 	repo *challengeinfra.Repository,
 	imageBuildService *ImageBuildService,
 ) *ChallengeImportService {
+	t.Helper()
+
 	service := NewChallengeImportService(
 		challengeinfra.NewChallengeImportPreviewStore(""),
-		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengeAttachmentStore(platformsharedfs.NewStore(t.TempDir()), ""),
 		challengeinfra.NewChallengePackageStorage(challengeinfra.ChallengePackageStorageConfig{}),
 		nil,
 		imageBuildService,

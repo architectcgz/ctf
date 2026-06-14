@@ -69,6 +69,7 @@ import (
 	teachinganalysisqueries "ctf-platform/internal/module/teaching_analysis/application/queries"
 	teachinganalysisinfra "ctf-platform/internal/module/teaching_analysis/infrastructure"
 	queryports "ctf-platform/internal/module/teaching_analysis/ports"
+	platformsharedfs "ctf-platform/internal/platform/storage/sharedfs"
 	"ctf-platform/internal/shared/taxonomy"
 	runtimeadapters "ctf-platform/internal/testutil/runtimeadapters"
 	"ctf-platform/internal/validation"
@@ -395,7 +396,10 @@ func NewPracticeFlowTestEnv(t *testing.T) *PracticeFlowEnv {
 	)
 	challengeImportService := challengeimport.NewChallengeImportService(
 		challengeinfra.NewChallengeImportPreviewStore(""),
-		challengeinfra.NewChallengeAttachmentStore(""),
+		challengeinfra.NewChallengeAttachmentStore(
+			platformsharedfs.NewStore(cfg.SharedStoragePath("challenge-attachments")),
+			"",
+		),
 		challengePackageStorage,
 		challengeruntime.NewChallengeImportTxRunner(challengeRepo, nil),
 		nil,
@@ -673,6 +677,12 @@ func NewPracticeFlowTestConfig(t *testing.T) *config.Config {
 		},
 		Cache: config.CacheConfig{
 			ProgressTTL: time.Minute,
+		},
+		SharedStorage: config.SharedStorageConfig{
+			Type: "shared_fs",
+			SharedFS: config.SharedFSStorageConfig{
+				Root: t.TempDir(),
+			},
 		},
 		Container: config.ContainerConfig{
 			FlagGlobalSecret:     "12345678901234567890123456789012",

@@ -371,8 +371,15 @@ type ChallengeImportedAttachmentBundleRequest struct {
 	Attachments []ChallengeImportedAttachment
 }
 
+type ChallengeAttachmentDownload struct {
+	FileName string
+	Reader   io.ReadCloser
+	Size     int64
+}
+
 type ChallengeAttachmentStore interface {
 	PersistImportedAttachmentBundle(ctx context.Context, req ChallengeImportedAttachmentBundleRequest) (string, error)
+	OpenAttachment(ctx context.Context, relativePath string) (*ChallengeAttachmentDownload, error)
 }
 
 type ChallengeImportedPackageSourceRequest struct {

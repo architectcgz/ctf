@@ -14,13 +14,13 @@ func TestReportFilePathUsesXLSXExtensionForExcel(t *testing.T) {
 		outputStore: newTestReportOutputStore(t),
 	}
 
-	path, err := service.reportFilePath(context.Background(), 42, "class", "excel")
+	output, err := service.reportFilePath(context.Background(), 42, "class", "excel")
 	if err != nil {
 		t.Fatalf("reportFilePath() error = %v", err)
 	}
 
-	if filepath.Ext(path) != ".xlsx" {
-		t.Fatalf("expected .xlsx extension, got %s", filepath.Ext(path))
+	if filepath.Ext(output.LocalPath) != ".xlsx" {
+		t.Fatalf("expected .xlsx extension, got %s", filepath.Ext(output.LocalPath))
 	}
 }
 

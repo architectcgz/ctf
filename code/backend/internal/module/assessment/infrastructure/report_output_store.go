@@ -4,67 +4,75 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	assessmentports "ctf-platform/internal/module/assessment/ports"
+	platformstorage "ctf-platform/internal/platform/storage"
 )
 
 type ReportOutputStore struct {
-	storageDir string
+	store     platformstorage.LocalWritableStore
+	namespace string
 }
 
 var _ assessmentports.ReportOutputStore = (*ReportOutputStore)(nil)
 
-func NewReportOutputStore(storageDir string) *ReportOutputStore {
-	return &ReportOutputStore{storageDir: strings.TrimSpace(storageDir)}
+func NewReportOutputStore(store platformstorage.LocalWritableStore, namespace string) *ReportOutputStore {
+	return &ReportOutputStore{store: store, namespace: strings.TrimSpace(namespace)}
 }
 
-func (s *ReportOutputStore) PrepareReportOutput(ctx context.Context, fileName string) (string, error) {
+func (s *ReportOutputStore) PrepareReportOutput(ctx context.Context, fileName string) (*assessmentports.ReportOutput, error) {
 	if err := ctx.Err(); err != nil {
-		return "", err
+		return nil, err
 	}
 	fileName = strings.TrimSpace(fileName)
-	if fileName == "" || fileName != filepath.Base(fileName) {
-		return "", assessmentports.ErrAssessmentReportOutputUnsafePath
+	if fileName == "" || strings.Contains(fileName, "/") || strings.Contains(fileName, `\`) {
+		return nil, assessmentports.ErrAssessmentReportOutputUnsafePath
 	}
-	storageDir := filepath.Clean(s.storageDir)
-	if err := os.MkdirAll(storageDir, 0o755); err != nil {
-		return "", fmt.Errorf("create report output dir: %w", err)
-	}
-	return filepath.Join(storageDir, fileName), nil
-}
-
-func (s *ReportOutputStore) ResolveReportDownloadPath(ctx context.Context, path string) (string, error) {
-	if err := ctx.Err(); err != nil {
-		return "", err
-	}
-	filePath, err := s.safeReportPath(path)
+	storageKey := s.reportKey(fileName)
+	localPath, err := s.store.PrepareLocalWrite(ctx, storageKey)
 	if err != nil {
-		return "", err
-	}
-	if _, statErr := os.Stat(filePath); statErr != nil {
-		if errors.Is(statErr, os.ErrNotExist) {
-			return "", assessmentports.ErrAssessmentReportOutputNotFound
+		if errors.Is(err, platformstorage.ErrUnsafeKey) {
+			return nil, assessmentports.ErrAssessmentReportOutputUnsafePath
 		}
-		return "", statErr
+		return nil, fmt.Errorf("prepare report output: %w", err)
 	}
-	return filePath, nil
+	return &assessmentports.ReportOutput{StorageKey: storageKey, LocalPath: localPath}, nil
 }
 
-func (s *ReportOutputStore) safeReportPath(path string) (string, error) {
-	absPath, err := filepath.Abs(path)
+func (s *ReportOutputStore) OpenReportDownload(ctx context.Context, storageKey string) (*assessmentports.ReportDownloadStream, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	reader, err := s.store.Open(ctx, storageKey)
 	if err != nil {
-		return "", err
+		if errors.Is(err, platformstorage.ErrUnsafeKey) {
+			return nil, assessmentports.ErrAssessmentReportOutputUnsafePath
+		}
+		if errors.Is(err, platformstorage.ErrNotFound) {
+			return nil, assessmentports.ErrAssessmentReportOutputNotFound
+		}
+		return nil, err
 	}
-	absStorage, err := filepath.Abs(s.storageDir)
+	info, err := s.store.Stat(ctx, storageKey)
 	if err != nil {
-		return "", err
+		_ = reader.Close()
+		if errors.Is(err, platformstorage.ErrUnsafeKey) {
+			return nil, assessmentports.ErrAssessmentReportOutputUnsafePath
+		}
+		if errors.Is(err, platformstorage.ErrNotFound) {
+			return nil, assessmentports.ErrAssessmentReportOutputNotFound
+		}
+		return nil, err
 	}
-	prefix := absStorage + string(os.PathSeparator)
-	if absPath != absStorage && !strings.HasPrefix(absPath, prefix) {
-		return "", assessmentports.ErrAssessmentReportOutputUnsafePath
+	return &assessmentports.ReportDownloadStream{StorageKey: info.Key, Reader: reader, Size: info.Size}, nil
+}
+
+
+func (s *ReportOutputStore) reportKey(fileName string) string {
+	namespace := strings.TrimSpace(s.namespace)
+	if namespace == "" {
+		return fileName
 	}
-	return absPath, nil
+	return strings.TrimSuffix(namespace, "/") + "/" + fileName
 }

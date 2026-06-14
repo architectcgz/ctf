@@ -13,23 +13,18 @@ import (
 
 	"ctf-platform/internal/apperror"
 	challengeports "ctf-platform/internal/module/challenge/ports"
+	platformstorage "ctf-platform/internal/platform/storage"
 )
 
 type ChallengeAttachmentStore struct {
-	root string
+	store     platformstorage.LocalWritableStore
+	namespace string
 }
 
 var _ challengeports.ChallengeAttachmentStore = (*ChallengeAttachmentStore)(nil)
 
-func NewChallengeAttachmentStore(root string) *ChallengeAttachmentStore {
-	return &ChallengeAttachmentStore{root: strings.TrimSpace(root)}
-}
-
-func (s *ChallengeAttachmentStore) rootDir() string {
-	if s != nil && strings.TrimSpace(s.root) != "" {
-		return strings.TrimSpace(s.root)
-	}
-	return challengeImportedAttachmentRoot()
+func NewChallengeAttachmentStore(store platformstorage.LocalWritableStore, namespace string) *ChallengeAttachmentStore {
+	return &ChallengeAttachmentStore{store: store, namespace: strings.TrimSpace(namespace)}
 }
 
 func (s *ChallengeAttachmentStore) PersistImportedAttachmentBundle(
@@ -39,6 +34,9 @@ func (s *ChallengeAttachmentStore) PersistImportedAttachmentBundle(
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
+	if s == nil || s.store == nil {
+		return "", fmt.Errorf("challenge attachment store is not configured")
+	}
 	if len(req.Attachments) == 0 {
 		return "", nil
 	}
@@ -47,27 +45,65 @@ func (s *ChallengeAttachmentStore) PersistImportedAttachmentBundle(
 		return "", err
 	}
 
-	targetDir := filepath.Join(s.rootDir(), "imports", packageSlug)
-	if err := os.MkdirAll(targetDir, 0o755); err != nil {
-		return "", fmt.Errorf("create attachment dir: %w", err)
-	}
-
 	if len(req.Attachments) == 1 {
 		attachment := req.Attachments[0]
 		fileName := sanitizeImportedAttachmentName(attachment.Name, attachment.Path)
-		targetPath := filepath.Join(targetDir, fileName)
+		storageKey := s.attachmentKey(packageSlug, fileName)
+		targetPath, err := s.store.PrepareLocalWrite(ctx, storageKey)
+		if err != nil {
+			return "", fmt.Errorf("prepare attachment target: %w", err)
+		}
 		if err := copyFile(attachment.AbsolutePath, targetPath); err != nil {
 			return "", fmt.Errorf("copy attachment: %w", err)
 		}
-		return buildAttachmentURLFromRelativePath(filepath.ToSlash(filepath.Join("imports", packageSlug, fileName))), nil
+		return buildAttachmentURLFromRelativePath(storageKey), nil
 	}
 
 	bundleName := sanitizeImportedAttachmentName(packageSlug+"-attachments.zip", packageSlug+"-attachments.zip")
-	targetPath := filepath.Join(targetDir, bundleName)
+	storageKey := s.attachmentKey(packageSlug, bundleName)
+	targetPath, err := s.store.PrepareLocalWrite(ctx, storageKey)
+	if err != nil {
+		return "", fmt.Errorf("prepare attachment bundle target: %w", err)
+	}
 	if err := writeImportedAttachmentBundle(targetPath, req.Attachments); err != nil {
 		return "", err
 	}
-	return buildAttachmentURLFromRelativePath(filepath.ToSlash(filepath.Join("imports", packageSlug, bundleName))), nil
+	return buildAttachmentURLFromRelativePath(storageKey), nil
+}
+
+func (s *ChallengeAttachmentStore) OpenAttachment(ctx context.Context, relativePath string) (*challengeports.ChallengeAttachmentDownload, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if s == nil || s.store == nil {
+		return nil, apperror.ErrServiceUnavailable
+	}
+	reader, err := s.store.Open(ctx, relativePath)
+	if err != nil {
+		if errors.Is(err, platformstorage.ErrUnsafeKey) {
+			return nil, apperror.ErrInvalidParams.WithCause(err)
+		}
+		if errors.Is(err, platformstorage.ErrNotFound) {
+			return nil, apperror.ErrNotFound
+		}
+		return nil, err
+	}
+	info, err := s.store.Stat(ctx, relativePath)
+	if err != nil {
+		_ = reader.Close()
+		if errors.Is(err, platformstorage.ErrUnsafeKey) {
+			return nil, apperror.ErrInvalidParams.WithCause(err)
+		}
+		if errors.Is(err, platformstorage.ErrNotFound) {
+			return nil, apperror.ErrNotFound
+		}
+		return nil, err
+	}
+	return &challengeports.ChallengeAttachmentDownload{
+		FileName: filepath.Base(info.Key),
+		Reader:   reader,
+		Size:     info.Size,
+	}, nil
 }
 
 func writeImportedAttachmentBundle(
@@ -136,6 +172,15 @@ func buildAttachmentURLFromRelativePath(relativePath string) string {
 		segments = append(segments, part)
 	}
 	return strings.Join(segments, "/")
+}
+
+func (s *ChallengeAttachmentStore) attachmentKey(packageSlug, fileName string) string {
+	base := "imports/" + packageSlug + "/" + fileName
+	namespace := strings.Trim(strings.TrimSpace(s.namespace), "/")
+	if namespace == "" {
+		return base
+	}
+	return namespace + "/" + base
 }
 
 func sanitizeImportedAttachmentName(name, fallback string) string {
