@@ -1,3 +1,0 @@
-interface:
-  display_name: "Development Pipeline"
-  short_description: "Run staged engineering delivery with reviews, validation, and branch finishing"
