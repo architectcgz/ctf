@@ -41,11 +41,11 @@ npm run dev
 
 说明：
 
-- `./scripts/dev-run.sh --infra --migrate --hot` 会自动启动本地 PostgreSQL / Redis 容器，补齐开发环境变量，并在启动前执行数据库迁移
+- `./scripts/dev-run.sh --infra --migrate --hot` 会自动启动本地 PostgreSQL / Redis 容器、本机 runtime-agent，补齐开发环境变量，并在启动前执行数据库迁移
 - `2026-06-08` 起，runtime migration 已收口到单文件 baseline；如果你的本地库还来自旧的 `000002..000012` 增量链，需要先删库重建或重置 PostgreSQL volume，再执行 `--migrate`
 - 如果 `8080` 已被占用，脚本会自动把后端切到 `18080`
 - 如果不需要热重载，也可以用 `cd code/backend && ./scripts/dev-run.sh --infra --migrate`
-- 如果只想直接运行后端，也可以用 `cd code/backend && APP_ENV=dev go run ./cmd/api`，但这时数据库和 Redis 相关环境变量需要自己提供
+- 如果只想直接运行后端，也可以用 `cd code/backend && APP_ENV=dev go run ./cmd/api`，但这时数据库、Redis 和 `CTF_RUNTIME_AGENT_*` 相关环境变量需要自己提供
 - 这是默认推荐路径。当前架构假设 API 迟早会出现实现或配置缺陷，因此默认开发链路不让 `ctf-api` 容器直接持有宿主 Docker daemon 控制权；部署边界说明见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”
 
 默认开发账号由初始迁移写入，密码均为 `Password123`：
@@ -67,12 +67,12 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --b
 
 同一条 compose 路径里，会先用 `CTF_SHARED_STORAGE_SHARED_FS_ROOT=/app/storage` 把 shared storage root 接到宿主持久化目录。`ctf-awd-defense-ssh-host-key` 会在共享的 `/app/storage/runtime/awd-defense-ssh-host-key.pem` 不存在时预置一份开发用 SSH host key，随后 `ctf-awd-defense-ssh-gateway` 再只按 load-only 契约启动；`runtime/flag-global-secret` 也会通过同一 shared root 落到 `/app/storage/runtime/flag-global-secret`。删除 `docker/runtime/app-storage` 或切换新的宿主目录后，第一次 `up` 会重新生成这份 key；后续重启会复用同一 fingerprint。
 
-这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。原因是 `docker/docker-compose.dev.yml` 里的 `ctf-api` 会直接访问宿主 Docker daemon，用来管理靶机、checker sandbox 和运行时网络；如果 API 容器失陷，攻击者通常可以继续控制宿主 Docker 运行时。因此：
+这条路径默认只适合单用户、本机临时联调，不适合作为共享开发、演示或正式部署方案。`docker/docker-compose.dev.yml` 会把宿主 Docker daemon 只挂载给 `ctf-runtime-agent`，`ctf-api` 和 `ctf-awd-defense-ssh-gateway` 通过 mTLS 访问 agent；这比把 docker.sock 直接交给 API/gateway 更接近正式边界，但仍然是单机开发拓扑。因此：
 
 - 日常开发优先使用上面的“依赖容器 + 本机前后端”
-- 需要多人长期使用时，至少把 API 改成宿主机进程运行
+- 需要多人长期使用时，至少把 API 控制面与 runtime node 的进程和权限边界拆开
 - 正式比赛或共享环境，推荐把 API 主机与靶机 Docker 主机拆开，由 API 通过 `runtime-agent` + mTLS 调用执行面；`DOCKER_HOST` 只能作为底层 Docker client 连接参数，不再等同于完整多机方案
-- 当前 dev compose 里，`ctf-api` 和 `ctf-awd-defense-ssh-gateway` 都挂载了宿主 `docker.sock`；这只适合本机开发，不应当视为共享环境的安全边界
+- 需要临时回到 API/gateway 本地 Docker executor 时，只能在非生产环境显式设置 `runtime_agent.allow_local_fallback=true` 或 `CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK=true`
 - 当前 dev compose 里，`ctf-awd-defense-ssh-gateway` 的摘流可观测性直接依赖 TCP 端口：`Drain()` 会关闭 `2222` listener，让 TCP health check / LB 立即停止把新连接导向该副本；这里没有额外的 HTTP `/ready` 端点
 
 更完整的威胁模型与部署建议见 `docs/architecture/backend/01-system-architecture.md` 的“7.5 安全边界设计”；运行模式和最小配置见 `docs/operations/runtime-agent-deployment.md`。
@@ -81,6 +81,7 @@ CTF_HOST_ROOT="$(pwd)" docker compose -f docker/docker-compose.dev.yml up -d --b
 
 - `ctf-frontend`：`5173`
 - `ctf-api`：`8080`
+- `ctf-runtime-agent`：compose 内部 `9443`
 - `ctf-awd-defense-ssh-gateway`：`2222`
 - `ctf-postgres`：`15432`
 - `ctf-redis`：`16379`

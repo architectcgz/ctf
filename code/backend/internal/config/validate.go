@@ -264,6 +264,9 @@ func (c *Config) Validate() error {
 		if isPlaceholderSecret(c.Redis.Password) {
 			return fmt.Errorf("redis.password must be provided from a non-placeholder secret in prod")
 		}
+		if c.RuntimeAgent.AllowLocalFallback {
+			return fmt.Errorf("runtime_agent.allow_local_fallback must be false in prod")
+		}
 	}
 	redisMode := normalizedRedisMode(c.Redis.Mode)
 	switch redisMode {

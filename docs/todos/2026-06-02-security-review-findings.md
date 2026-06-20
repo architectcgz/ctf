@@ -5,9 +5,9 @@
 
 ## P1 — 高风险
 
-- [ ] **Docker socket 挂载权限收窄**
-  `docker/docker-compose.dev.yml:66` — `/var/run/docker.sock` 直接挂载到 API 容器，容器被攻破后攻击者可控制宿主机 Docker daemon。考虑：Docker TLS 远程访问 + 受限权限、只读 rootfs、非 root 运行 API 容器。
-  关联：`docker/docker-compose.dev.yml:63-66`
+- [x] **Docker socket 挂载权限收窄**（2026-06-20 已修复）
+  `docker/docker-compose.dev.yml` 已将宿主 `/var/run/docker.sock` 从 `ctf-api` 和 `ctf-awd-defense-ssh-gateway` 移除，默认改为 API / gateway 通过 mTLS 调用 `ctf-runtime-agent`，只有 runtime-agent 服务继续持有 Docker socket 作为本地 dev execution node。
+  关联：`docker/docker-compose.dev.yml`
 
 - [x] **iptables 命令参数校验加固**（2026-06-02 已修复）
   `code/backend/internal/module/runtime/infrastructure/acl.go` — 已在 `validateAndCanonicalizeACLRule()` 中对 SourceIP/TargetIP（`net/netip` 单 IPv4）、Action（`allow`/`deny` 白名单）、Protocol（`any`/`tcp`/`udp` 白名单）、Ports（1-65535 去重排序、multiport 上限 15、`protocol=any` 禁止端口）、Comment（系统重建，不信任持久化值）做执行前白名单校验。同时 ACL cleanup authority 已从 `acl_rules` 数据库字段收口到实例级 iptables chain handle（`runtime_details.acl`），`acl_rules` 降级为调试快照。

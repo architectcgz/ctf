@@ -305,14 +305,15 @@ type WebSocketConfig struct {
 }
 
 type RuntimeAgentConfig struct {
-	Enabled     bool                     `mapstructure:"enabled"`
-	Endpoint    string                   `mapstructure:"endpoint"`
-	DialTimeout time.Duration            `mapstructure:"dial_timeout"`
-	ServerName  string                   `mapstructure:"server_name"`
-	CAFile      string                   `mapstructure:"ca_file"`
-	CertFile    string                   `mapstructure:"cert_file"`
-	KeyFile     string                   `mapstructure:"key_file"`
-	Server      RuntimeAgentServerConfig `mapstructure:"server"`
+	Enabled            bool                     `mapstructure:"enabled"`
+	AllowLocalFallback bool                     `mapstructure:"allow_local_fallback"`
+	Endpoint           string                   `mapstructure:"endpoint"`
+	DialTimeout        time.Duration            `mapstructure:"dial_timeout"`
+	ServerName         string                   `mapstructure:"server_name"`
+	CAFile             string                   `mapstructure:"ca_file"`
+	CertFile           string                   `mapstructure:"cert_file"`
+	KeyFile            string                   `mapstructure:"key_file"`
+	Server             RuntimeAgentServerConfig `mapstructure:"server"`
 }
 
 type RuntimeAgentServerConfig struct {

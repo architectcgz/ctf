@@ -249,6 +249,7 @@ websocket:
 
 runtime_agent:
   enabled: false
+  allow_local_fallback: false
   endpoint: ""
   dial_timeout: 5s
   server_name: ""
