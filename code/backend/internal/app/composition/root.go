@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"ctf-platform/internal/config"
 	"ctf-platform/internal/platform/clustersecret"
 	"ctf-platform/internal/platform/events"
-	"ctf-platform/internal/shared/safego"
 )
 
 type Root struct {
@@ -68,7 +68,23 @@ func NewLoopBackgroundJobWithLogger(name string, logger *zap.Logger, run func(co
 
 			runCtx, runCancel := context.WithCancel(ctx)
 			cancel = runCancel
-			safego.Go(&wg, runCtx, logger, name, run)
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				defer func() {
+					if recovered := recover(); recovered != nil {
+						if logger != nil {
+							logger.Error("background_job_panicked",
+								zap.Any("panic", recovered),
+								zap.String("task_name", name),
+								zap.ByteString("stack", debug.Stack()),
+							)
+						}
+						panic(recovered)
+					}
+				}()
+				run(runCtx)
+			}()
 			return nil
 		},
 		func(ctx context.Context) error {
@@ -85,10 +101,10 @@ func NewLoopBackgroundJobWithLogger(name string, logger *zap.Logger, run func(co
 			}
 
 			done := make(chan struct{})
-			safego.Go(nil, ctx, logger, name+"_stop_wait", func(context.Context) {
+			go func() {
 				wg.Wait()
 				close(done)
-			})
+			}()
 
 			select {
 			case <-done:

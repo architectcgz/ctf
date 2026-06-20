@@ -101,18 +101,6 @@ var contextAwareLoggingPilotFiles = map[string][]string{
 	},
 }
 
-var safeGoPilotFiles = map[string][]string{
-	"internal/app/composition/root.go": {
-		"go func() {",
-	},
-	"internal/module/practice/application/commands/service_lifecycle.go": {
-		"go func() {",
-	},
-	"internal/module/instance/infrastructure/cleaner.go": {
-		"go func() {",
-	},
-}
-
 func TestAWDCheckerTypeValuesStayAlignedAcrossChallengeAndContest(t *testing.T) {
 	t.Parallel()
 
@@ -344,25 +332,48 @@ func TestContextAwareLoggingContractPilots(t *testing.T) {
 	}
 }
 
-func TestSafeGoContractPilots(t *testing.T) {
+func TestNoSharedSafeGoDefault(t *testing.T) {
 	t.Parallel()
 
 	violations := make([]string, 0)
-	for file, forbiddenSnippets := range safeGoPilotFiles {
-		content := readBackendTestFile(t, file)
-		if !strings.Contains(content, `"ctf-platform/internal/shared/safego"`) {
-			violations = append(violations, file+" must import internal/shared/safego")
+	safeGoDir := filepath.Join(backendRoot, "internal/shared/safego")
+	if _, err := os.Stat(safeGoDir); err == nil {
+		violations = append(violations, "internal/shared/safego package must not exist")
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat internal/shared/safego: %v", err)
+	}
+
+	internalRoot := filepath.Join(backendRoot, "internal")
+	if err := filepath.Walk(internalRoot, func(path string, info os.FileInfo, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
 		}
-		for _, snippet := range forbiddenSnippets {
+		if info == nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
+			return nil
+		}
+		rel, err := filepath.Rel(backendRoot, path)
+		if err != nil {
+			return err
+		}
+		file := filepath.ToSlash(rel)
+		contentBytes, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		content := string(contentBytes)
+		for _, snippet := range []string{`"ctf-platform/internal/shared/safego"`, "safego.Go("} {
 			if strings.Contains(content, snippet) {
-				violations = append(violations, file+" must not use raw goroutine launch "+snippet)
+				violations = append(violations, file+" must not use shared safego default "+snippet)
 			}
 		}
+		return nil
+	}); err != nil {
+		t.Fatalf("walk internal files: %v", err)
 	}
 
 	if len(violations) > 0 {
 		sort.Strings(violations)
-		t.Fatalf("safeGo pilot files must use shared safego helper:\n%s", strings.Join(violations, "\n"))
+		t.Fatalf("goroutine panic owner must stay local; shared safego default is forbidden:\n%s", strings.Join(violations, "\n"))
 	}
 }
 

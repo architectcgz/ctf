@@ -35,6 +35,7 @@ description: >
 ## Common Tasks
 - 拆分大文件 → 读 Refactoring §，按 `feedback/2026-06-12-package-split-by-responsibility-template.md`。
 - 改后台循环 / 重试 → 读 Concurrency & Durable State §，逐条过 ✓Check。
+- 改 goroutine / panic recovery / SafeGo 风格包装 → 读 Concurrency & Durable State §（panic owner 边界）。
 - 改 outbox / 状态机 → 读 Concurrency & Durable State §（CAS 迁移）。
 - 改 auth / session → 读 Security Path §。
 - 改 runtime / 实例生命周期 → 读 Runtime Semantics §。
@@ -64,6 +65,66 @@ description: >
   不能写成 `err != nil && logger != nil` 这种把 backoff 绑到 logger/metrics 存在性上。
   ✓Check：把 logger/metric/debug 设为 nil，pacing/retry/cancel 行为是否完全不变？
   → `feedback/2026-06-07-retry-backoff-should-not-depend-on-logger-presence.md`
+- **goroutine panic 语义由 owner 决定**：不把后台 goroutine 默认套进共享
+  `SafeGo` / recover helper；先明确启动 owner、取消/等待 owner、错误传播和 panic 后果。
+  HTTP 边界、root background job、cron/reconcile 单轮任务、业务状态异步任务和
+  `WaitGroup.Wait()` 辅助 goroutine 的正确处理不同，不能用一个 helper 吞掉差异。
+  ✓Check：panic 后是 re-panic、业务失败、单轮失败重试，还是请求 500？测试锁的是行为边界还是 helper 导入？
+  → `feedback/2026-06-20-goroutine-panic-owner-boundary.md`
+
+  推荐：root 级关键后台任务由 root owner 本地记录后重新抛出，避免后台能力静默死亡。
+
+  ```go
+  wg.Add(1)
+  go func() {
+      defer wg.Done()
+      defer func() {
+          if recovered := recover(); recovered != nil {
+              logger.Error("background_job_panicked",
+                  zap.Any("panic", recovered),
+                  zap.String("task_name", name),
+                  zap.ByteString("stack", debug.Stack()),
+              )
+              panic(recovered)
+          }
+      }()
+      run(runCtx)
+  }()
+  ```
+
+  推荐：只用于等待 `WaitGroup.Wait()` 的 goroutine 保持最小裸等待，不挂 recover 语义。
+
+  ```go
+  done := make(chan struct{})
+  go func() {
+      wg.Wait()
+      close(done)
+  }()
+  ```
+
+  推荐：有业务失败状态的异步任务在业务 owner 内 recover，并写入业务失败结果。
+
+  ```go
+  go func() {
+      defer tasks.Done()
+      defer func() {
+          if recovered := recover(); recovered != nil {
+              service.markFailed(taskCtx, id, fmt.Errorf("report task panicked: %v", recovered))
+          }
+      }()
+      if err := run(ctx); err != nil {
+          service.markFailed(ctx, id, err)
+      }
+  }()
+  ```
+
+  禁止：用共享 helper 默认吞掉所有后台 panic，尤其不要用 no-op logger / inert ctx 兜底掩盖接线错误。
+
+  ```go
+  safego.Go(&wg, ctx, logger, "task_name", func(ctx context.Context) {
+      run(ctx)
+  })
+  ```
 
 ## Security Path
 - **安全语义放主鉴权链路，不依赖清理辅助结构**：用户级会话失效用 session version 在
@@ -93,6 +154,7 @@ description: >
 ## Known Gotchas（最高价值，命中即停）
 - 多实例 worker 的状态迁移不是 CAS → 状态复活、重复广播。见 Concurrency & Durable State §。
 - backoff / retry 绑在 logger 存在性上 → logger 为 nil 时退化成热循环。见 Concurrency & Durable State §。
+- 共享 SafeGo 默认吞 panic → 关键后台任务可能静默死亡，业务失败状态也可能丢失。见 Concurrency & Durable State §。
 - 安全撤销建立在 best-effort 清理上 → 其他设备旧 session 仍有效。见 Security Path §。
 
 ## 添加新 Pattern

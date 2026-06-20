@@ -14,7 +14,6 @@ import (
 	"ctf-platform/internal/infrastructure/redislock"
 	"ctf-platform/internal/module/instance/infrastructure/cachekeys"
 	"ctf-platform/internal/shared/lockkeepalive"
-	"ctf-platform/internal/shared/safego"
 )
 
 type Cleaner struct {
@@ -75,9 +74,11 @@ func (c *Cleaner) Start(ctx context.Context, interval string) error {
 }
 
 func (c *Cleaner) startRunOnce() {
-	safego.Go(&c.wg, c.baseCtx, c.logger, "runtime_cleaner_run_once", func(context.Context) {
+	c.wg.Add(1)
+	go func() {
+		defer c.wg.Done()
 		c.runOnce()
-	})
+	}()
 }
 
 func (c *Cleaner) runOnce() {
@@ -155,10 +156,10 @@ func (c *Cleaner) Stop(ctx context.Context) error {
 	}
 
 	done := make(chan struct{})
-	safego.Go(nil, ctx, c.logger, "runtime_cleaner_stop_wait", func(context.Context) {
+	go func() {
 		c.wg.Wait()
 		close(done)
-	})
+	}()
 	select {
 	case <-done:
 		c.logger.Info("实例清理定时任务已停止")
