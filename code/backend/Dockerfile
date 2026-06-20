@@ -20,6 +20,9 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/ctf-api ./cmd/api
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -trimpath -ldflags="-s -w" -o /out/ctf-runtime-agent ./cmd/runtime-agent
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
     go build -trimpath -ldflags="-s -w" -o /out/ctf-awd-defense-ssh-gateway ./cmd/awd-defense-ssh-gateway
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
@@ -32,6 +35,7 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates tzdata docker-cli
 
 COPY --from=builder /out/ctf-api /app/ctf-api
+COPY --from=builder /out/ctf-runtime-agent /app/ctf-runtime-agent
 COPY --from=builder /out/ctf-awd-defense-ssh-gateway /app/ctf-awd-defense-ssh-gateway
 COPY --from=builder /out/ctf-storage-gc /app/ctf-storage-gc
 COPY --from=builder /out/migrate /app/migrate
@@ -42,6 +46,6 @@ COPY scripts/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN mkdir -p /app/storage/exports /app/storage/runtime
 RUN chmod +x /app/docker-entrypoint.sh
 
-EXPOSE 8080 2222
+EXPOSE 8080 2222 9443
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

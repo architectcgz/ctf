@@ -8,6 +8,14 @@ import (
 )
 
 func Load(env string) (*Config, error) {
+	return load(env, true, "validate config", (*Config).Validate)
+}
+
+func LoadRuntimeAgent(env string) (*Config, error) {
+	return load(env, false, "validate runtime-agent config", (*Config).ValidateRuntimeAgent)
+}
+
+func load(env string, resolveContainerSecrets bool, validateLabel string, validate func(*Config) error) (*Config, error) {
 	if strings.TrimSpace(env) == "" {
 		env = "dev"
 	}
@@ -35,6 +43,22 @@ func Load(env string) (*Config, error) {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
+	normalizeLoadedConfig(cfg, env)
+	if resolveContainerSecrets {
+		if err := cfg.resolveContainerFlagSecretForLoad(); err != nil {
+			return nil, err
+		}
+	}
+	if validate != nil {
+		if err := validate(cfg); err != nil {
+			return nil, fmt.Errorf("%s: %w", validateLabel, err)
+		}
+	}
+
+	return cfg, nil
+}
+
+func normalizeLoadedConfig(cfg *Config, env string) {
 	if cfg.App.Env == "" {
 		cfg.App.Env = env
 	}
@@ -50,24 +74,25 @@ func Load(env string) (*Config, error) {
 	if cfg.Container.DefenseSSHHostKeyPath != "" {
 		cfg.Container.DefenseSSHHostKeyPath = cfg.SharedStoragePath(cfg.Container.DefenseSSHHostKeyPath)
 	}
-	if cfg.Container.FlagGlobalSecret != "" && len(cfg.Container.FlagGlobalSecret) < 32 {
-		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
+}
+
+func (c *Config) resolveContainerFlagSecretForLoad() error {
+	if c == nil {
+		return fmt.Errorf("config is nil")
 	}
-	resolvedFlagSecret, err := resolveContainerFlagGlobalSecret(cfg.Container.FlagGlobalSecret, cfg.Container.FlagGlobalSecretFile, !isProductionEnv(cfg.App.Env))
+	if c.Container.FlagGlobalSecret != "" && len(c.Container.FlagGlobalSecret) < 32 {
+		return fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(c.Container.FlagGlobalSecret))
+	}
+	resolvedFlagSecret, err := resolveContainerFlagGlobalSecret(c.Container.FlagGlobalSecret, c.Container.FlagGlobalSecretFile, !isProductionEnv(c.App.Env))
 	if err != nil {
-		return nil, err
+		return err
 	}
-	cfg.Container.FlagGlobalSecret = resolvedFlagSecret
-	if len(cfg.Container.FlagGlobalSecret) < 32 {
-		return nil, fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(cfg.Container.FlagGlobalSecret))
+	c.Container.FlagGlobalSecret = resolvedFlagSecret
+	if len(c.Container.FlagGlobalSecret) < 32 {
+		return fmt.Errorf("container.flag_global_secret must be at least 32 bytes, current length: %d", len(c.Container.FlagGlobalSecret))
 	}
-	if err := cfg.resolveContainerFlagSecretKeyring(); err != nil {
-		return nil, err
+	if err := c.resolveContainerFlagSecretKeyring(); err != nil {
+		return err
 	}
-
-	if err := cfg.Validate(); err != nil {
-		return nil, fmt.Errorf("validate config: %w", err)
-	}
-
-	return cfg, nil
+	return nil
 }

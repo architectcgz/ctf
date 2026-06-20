@@ -37,18 +37,53 @@
 - node 离线后，该 node 上未过期的 `creating / running` 实例会重新进入 `pending`，由现有 scheduler / AWD desired reconciler 在健康节点上重建
 - 当前不声明容量智能分配、live migration 或已有 SSH/WebSocket 会话透明迁移已经落地
 
-## 启动 runtime-agent
+## 打包和启动 runtime-agent
 
 `runtime-agent` 入口在 `code/backend/cmd/runtime-agent/main.go`，启动逻辑在 `code/backend/internal/bootstrap/runtime_agent.go`。
 
-开发或部署时可以直接启动：
+部署时优先把它编译成宿主机二进制，并交给 systemd 或等价进程管理器运行。仓库提供最小构建脚本：
 
 ```bash
 cd code/backend
-APP_ENV=prod go run ./cmd/runtime-agent
+./scripts/build-runtime-agent.sh
 ```
 
-生产环境更推荐编译成独立二进制后交给 systemd 或等价进程管理器运行。
+默认输出为 `code/backend/bin/ctf-runtime-agent`，目标平台为 `linux/amd64`，可通过 `GOOS`、`GOARCH`、`CGO_ENABLED`、`OUT_DIR` 或第一个位置参数覆盖。例如：
+
+```bash
+cd code/backend
+OUT_DIR=/tmp/ctf-release ./scripts/build-runtime-agent.sh
+```
+
+推荐的宿主机发布目录是 `/opt/ctf/backend`，因为后端配置加载会从当前工作目录下的 `configs/` 读取 `config.yaml` 和 `config.prod.yaml`。下面命令从仓库根目录执行：
+
+```bash
+sudo install -d -m 0755 /opt/ctf/backend
+sudo install -m 0755 code/backend/bin/ctf-runtime-agent /opt/ctf/backend/ctf-runtime-agent
+sudo install -d -m 0755 /opt/ctf/backend/configs
+sudo cp -R code/backend/configs/. /opt/ctf/backend/configs/
+```
+
+systemd 模板位于：
+
+- `code/backend/deploy/systemd/ctf-runtime-agent.service`
+- `code/backend/deploy/systemd/ctf-runtime-agent.env.example`
+
+最小安装流程：
+
+```bash
+sudo install -d -m 0750 /etc/ctf/runtime-agent
+sudo install -m 0640 code/backend/deploy/systemd/ctf-runtime-agent.env.example /etc/ctf/runtime-agent/runtime-agent.env
+sudo install -m 0644 code/backend/deploy/systemd/ctf-runtime-agent.service /etc/systemd/system/ctf-runtime-agent.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now ctf-runtime-agent
+```
+
+启动前必须编辑 `/etc/ctf/runtime-agent/runtime-agent.env`，至少确认 `CTF_RUNTIME_AGENT_SERVER_*` 证书路径、监听地址、端口，以及 Docker client 连接方式。默认不设置 `DOCKER_HOST` 时，runtime-agent 会通过 Docker SDK 访问本机 `/var/run/docker.sock`。
+
+`ctf-runtime-agent` 使用 runtime-agent 专用配置加载入口：它仍读取 `configs/` 和 `CTF_*` 环境覆盖，但只校验 agent server、Docker runtime 默认值、registry 拉取凭据和 checker sandbox。Docker 物理机不需要部署 API 进程使用的 PostgreSQL、Redis、CORS 或动态 Flag secret 配置。
+
+后端 Dockerfile 也会把 runtime-agent 编进镜像，路径为 `/app/ctf-runtime-agent`。这只用于镜像分发或受控 smoke，不作为生产首选：容器化 runtime-agent 仍需要宿主 Docker 和 iptables 权限，通常会重新引入 docker socket、host network、`NET_ADMIN` 或 privileged 等高权限容器问题。生产默认仍推荐宿主机二进制 + systemd。
 
 ## 启动 AWD defense SSH gateway
 

@@ -234,6 +234,25 @@ func TestLoadRejectsCredentialedCORSWithoutAllowOrigins(t *testing.T) {
 	}
 }
 
+func TestLoadRuntimeAgentDoesNotRequireAPIProductionSecrets(t *testing.T) {
+	chdirToBackendRoot(t)
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_ENABLED", "true")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CERT_FILE", "/etc/ctf/runtime-agent/server.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_KEY_FILE", "/etc/ctf/runtime-agent/server-key.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CLIENT_CA_FILE", "/etc/ctf/runtime-agent/ca.pem")
+
+	cfg, err := LoadRuntimeAgent("prod")
+	if err != nil {
+		t.Fatalf("LoadRuntimeAgent() error = %v", err)
+	}
+	if !cfg.RuntimeAgent.Server.Enabled {
+		t.Fatal("runtime agent server should be enabled from env")
+	}
+	if cfg.RuntimeAgent.Server.Port != 9443 {
+		t.Fatalf("runtime agent server port = %d, want 9443", cfg.RuntimeAgent.Server.Port)
+	}
+}
+
 func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	chdirToBackendRoot(t)
 	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")

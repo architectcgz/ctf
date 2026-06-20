@@ -253,23 +253,8 @@ func (c *Config) Validate() error {
 		}
 	}
 	if c.RuntimeAgent.Server.Enabled {
-		if strings.TrimSpace(c.RuntimeAgent.Server.Host) == "" {
-			return fmt.Errorf("runtime_agent.server.host must not be empty when runtime_agent.server.enabled is true")
-		}
-		if c.RuntimeAgent.Server.Port <= 0 || c.RuntimeAgent.Server.Port > 65535 {
-			return fmt.Errorf("runtime_agent.server.port must be between 1 and 65535 when runtime_agent.server.enabled is true")
-		}
-		if strings.TrimSpace(c.RuntimeAgent.Server.CertFile) == "" {
-			return fmt.Errorf("runtime_agent.server.cert_file must not be empty when runtime_agent.server.enabled is true")
-		}
-		if strings.TrimSpace(c.RuntimeAgent.Server.KeyFile) == "" {
-			return fmt.Errorf("runtime_agent.server.key_file must not be empty when runtime_agent.server.enabled is true")
-		}
-		if strings.TrimSpace(c.RuntimeAgent.Server.ClientCAFile) == "" {
-			return fmt.Errorf("runtime_agent.server.client_ca_file must not be empty when runtime_agent.server.enabled is true")
-		}
-		if c.RuntimeAgent.Server.ShutdownTimeout <= 0 {
-			return fmt.Errorf("runtime_agent.server.shutdown_timeout must be greater than 0 when runtime_agent.server.enabled is true")
+		if err := validateRuntimeAgentServerConfig(c.RuntimeAgent.Server); err != nil {
+			return err
 		}
 	}
 	if isProductionEnv(c.App.Env) {
@@ -329,32 +314,8 @@ func (c *Config) Validate() error {
 	if c.Contest.AWD.CheckerTimeout <= 0 {
 		return fmt.Errorf("contest.awd.checker_timeout must be greater than 0")
 	}
-	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.Image) == "" {
-		return fmt.Errorf("contest.awd.checker_sandbox.image must not be empty")
-	}
-	if strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "" {
-		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must not be empty")
-	}
-	if !strings.HasPrefix(strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir), "/") || strings.TrimSpace(c.Contest.AWD.CheckerSandbox.WorkDir) == "/" {
-		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must be an absolute non-root path")
-	}
-	if c.Contest.AWD.CheckerSandbox.Timeout <= 0 {
-		return fmt.Errorf("contest.awd.checker_sandbox.timeout must be greater than 0")
-	}
-	if c.Contest.AWD.CheckerSandbox.CPUQuota <= 0 || c.Contest.AWD.CheckerSandbox.CPUQuota > 4 {
-		return fmt.Errorf("contest.awd.checker_sandbox.cpu_quota must be between 0 and 4 cores")
-	}
-	if c.Contest.AWD.CheckerSandbox.MemoryBytes < 32*1024*1024 || c.Contest.AWD.CheckerSandbox.MemoryBytes > 2*1024*1024*1024 {
-		return fmt.Errorf("contest.awd.checker_sandbox.memory_bytes must be between 32MB and 2GB")
-	}
-	if c.Contest.AWD.CheckerSandbox.PidsLimit <= 0 || c.Contest.AWD.CheckerSandbox.PidsLimit > 1024 {
-		return fmt.Errorf("contest.awd.checker_sandbox.pids_limit must be between 1 and 1024")
-	}
-	if c.Contest.AWD.CheckerSandbox.NofileLimit <= 0 || c.Contest.AWD.CheckerSandbox.NofileLimit > 4096 {
-		return fmt.Errorf("contest.awd.checker_sandbox.nofile_limit must be between 1 and 4096")
-	}
-	if c.Contest.AWD.CheckerSandbox.OutputLimitBytes <= 0 || c.Contest.AWD.CheckerSandbox.OutputLimitBytes > 1024*1024 {
-		return fmt.Errorf("contest.awd.checker_sandbox.output_limit_bytes must be between 1 and 1MB")
+	if err := validateCheckerSandboxConfig(c.Contest.AWD.CheckerSandbox); err != nil {
+		return err
 	}
 	if c.Auth.CAS.Enabled {
 		if strings.TrimSpace(c.Auth.CAS.BaseURL) == "" {
@@ -363,6 +324,118 @@ func (c *Config) Validate() error {
 		if strings.TrimSpace(c.Auth.CAS.ServiceURL) == "" {
 			return fmt.Errorf("auth.cas.service_url must not be empty when CAS is enabled")
 		}
+	}
+	return nil
+}
+
+func (c *Config) ValidateRuntimeAgent() error {
+	if c == nil {
+		return fmt.Errorf("config is nil")
+	}
+	if !c.RuntimeAgent.Server.Enabled {
+		return fmt.Errorf("runtime_agent.server.enabled must be true for runtime-agent")
+	}
+	if err := validateRuntimeAgentServerConfig(c.RuntimeAgent.Server); err != nil {
+		return err
+	}
+	if err := validateRuntimeAgentContainerConfig(c.Container); err != nil {
+		return err
+	}
+	if err := validateCheckerSandboxConfig(c.Contest.AWD.CheckerSandbox); err != nil {
+		return err
+	}
+	return nil
+}
+
+func validateRuntimeAgentServerConfig(server RuntimeAgentServerConfig) error {
+	if strings.TrimSpace(server.Host) == "" {
+		return fmt.Errorf("runtime_agent.server.host must not be empty when runtime_agent.server.enabled is true")
+	}
+	if server.Port <= 0 || server.Port > 65535 {
+		return fmt.Errorf("runtime_agent.server.port must be between 1 and 65535 when runtime_agent.server.enabled is true")
+	}
+	if strings.TrimSpace(server.CertFile) == "" {
+		return fmt.Errorf("runtime_agent.server.cert_file must not be empty when runtime_agent.server.enabled is true")
+	}
+	if strings.TrimSpace(server.KeyFile) == "" {
+		return fmt.Errorf("runtime_agent.server.key_file must not be empty when runtime_agent.server.enabled is true")
+	}
+	if strings.TrimSpace(server.ClientCAFile) == "" {
+		return fmt.Errorf("runtime_agent.server.client_ca_file must not be empty when runtime_agent.server.enabled is true")
+	}
+	if server.ShutdownTimeout <= 0 {
+		return fmt.Errorf("runtime_agent.server.shutdown_timeout must be greater than 0 when runtime_agent.server.enabled is true")
+	}
+	return nil
+}
+
+func validateRuntimeAgentContainerConfig(container ContainerConfig) error {
+	if container.DefaultCPUQuota <= 0 || container.DefaultCPUQuota > 16 {
+		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
+	}
+	if container.DefaultMemory < 64*1024*1024 || container.DefaultMemory > 16*1024*1024*1024 {
+		return fmt.Errorf("container.default_memory must be between 64MB and 16GB")
+	}
+	if container.DefaultPidsLimit <= 0 || container.DefaultPidsLimit > 10000 {
+		return fmt.Errorf("container.default_pids_limit must be between 1 and 10000")
+	}
+	if container.Registry.Enabled {
+		if strings.TrimSpace(container.Registry.Server) == "" {
+			return fmt.Errorf("container.registry.server must not be empty when container.registry.enabled is true")
+		}
+		hasIdentityToken := strings.TrimSpace(container.Registry.IdentityToken) != ""
+		hasBasicAuth := strings.TrimSpace(container.Registry.Username) != "" && strings.TrimSpace(container.Registry.Password) != ""
+		if !hasIdentityToken && !hasBasicAuth {
+			return fmt.Errorf("container.registry requires username/password or identity_token when enabled")
+		}
+	}
+	if container.Registry.BuildEnabled {
+		if strings.TrimSpace(container.Registry.Server) == "" {
+			return fmt.Errorf("container.registry.server must not be empty when container.registry.build_enabled is true")
+		}
+		if container.Registry.BuildTimeout <= 0 {
+			return fmt.Errorf("container.registry.build_timeout must be greater than 0")
+		}
+		if container.Registry.BuildConcurrency <= 0 {
+			return fmt.Errorf("container.registry.build_concurrency must be greater than 0")
+		}
+	}
+	if (container.Registry.Enabled || container.Registry.BuildEnabled) &&
+		runningInContainer() &&
+		isLocalRegistryServer(container.Registry.Server) &&
+		strings.TrimSpace(container.Registry.AccessServer) == "" {
+		return fmt.Errorf("container.registry.access_server must not be empty when container.registry.server points to localhost and the backend runs inside a container")
+	}
+	return nil
+}
+
+func validateCheckerSandboxConfig(sandbox CheckerSandboxConfig) error {
+	if strings.TrimSpace(sandbox.Image) == "" {
+		return fmt.Errorf("contest.awd.checker_sandbox.image must not be empty")
+	}
+	if strings.TrimSpace(sandbox.WorkDir) == "" {
+		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must not be empty")
+	}
+	if !strings.HasPrefix(strings.TrimSpace(sandbox.WorkDir), "/") || strings.TrimSpace(sandbox.WorkDir) == "/" {
+		return fmt.Errorf("contest.awd.checker_sandbox.work_dir must be an absolute non-root path")
+	}
+	if sandbox.Timeout <= 0 {
+		return fmt.Errorf("contest.awd.checker_sandbox.timeout must be greater than 0")
+	}
+	if sandbox.CPUQuota <= 0 || sandbox.CPUQuota > 4 {
+		return fmt.Errorf("contest.awd.checker_sandbox.cpu_quota must be between 0 and 4 cores")
+	}
+	if sandbox.MemoryBytes < 32*1024*1024 || sandbox.MemoryBytes > 2*1024*1024*1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.memory_bytes must be between 32MB and 2GB")
+	}
+	if sandbox.PidsLimit <= 0 || sandbox.PidsLimit > 1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.pids_limit must be between 1 and 1024")
+	}
+	if sandbox.NofileLimit <= 0 || sandbox.NofileLimit > 4096 {
+		return fmt.Errorf("contest.awd.checker_sandbox.nofile_limit must be between 1 and 4096")
+	}
+	if sandbox.OutputLimitBytes <= 0 || sandbox.OutputLimitBytes > 1024*1024 {
+		return fmt.Errorf("contest.awd.checker_sandbox.output_limit_bytes must be between 1 and 1MB")
 	}
 	return nil
 }

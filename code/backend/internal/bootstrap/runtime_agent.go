@@ -19,7 +19,7 @@ import (
 
 func RunRuntimeAgent() {
 	env := os.Getenv("APP_ENV")
-	cfg, err := config.Load(env)
+	cfg, err := config.LoadRuntimeAgent(env)
 	if err != nil {
 		panic(err)
 	}

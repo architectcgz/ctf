@@ -1,0 +1,21 @@
+[Unit]
+Description=CTF Runtime Agent
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/ctf/backend
+Environment=APP_ENV=prod
+EnvironmentFile=/etc/ctf/runtime-agent/runtime-agent.env
+ExecStart=/opt/ctf/backend/ctf-runtime-agent
+Restart=on-failure
+RestartSec=5s
+KillSignal=SIGTERM
+TimeoutStopSec=15s
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
