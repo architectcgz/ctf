@@ -19,7 +19,7 @@
 
 ## Plan Status
 
-- Status: `implemented` <!-- draft | ready-for-implementation | implemented | review-pending | review-passed | archived -->
+- Status: `archived` <!-- draft | ready-for-implementation | implemented | review-pending | review-passed | archived -->
 - Coding may start only after:
   - [x] Intake analysis gate completed
   - [x] Plan review / architecture-fit check completed
