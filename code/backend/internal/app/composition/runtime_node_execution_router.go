@@ -73,6 +73,8 @@ var buildRuntimeNodeClient = buildRuntimeNodeClientFromNode
 
 const defaultRuntimeNodeHealthStaleAfter = 30 * time.Second
 
+var errLocalRuntimeFallbackDisabled = errors.New("runtime_agent.allow_local_fallback must be true to use local://docker outside test; enable runtime_agent.enabled and run runtime-agent instead")
+
 func newNodeRuntimeClient(
 	cfg *config.Config,
 	logger *zap.Logger,
@@ -109,7 +111,7 @@ func buildRuntimeNodeClientFromNode(
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if cfg.App.Env == "test" {
+	if runtimeUsesTestEngine(cfg) {
 		executor := newTestRuntimeEngine(logger.Named("runtime_test_engine"))
 		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, nil, nil), nil
 	}
@@ -118,6 +120,9 @@ func buildRuntimeNodeClientFromNode(
 	}
 
 	if usesLocalRuntimeNode(node) {
+		if !runtimeAllowsLocalFallback(cfg) {
+			return nil, errLocalRuntimeFallbackDisabled
+		}
 		executor, err := newLocalRuntimeHostRunner(&cfg.Container)
 		if err != nil {
 			return nil, err
@@ -634,6 +639,24 @@ func usesLocalRuntimeNode(node *runtimeentity.RuntimeNode) bool {
 		return true
 	}
 	return strings.TrimSpace(node.Endpoint) == "" || strings.TrimSpace(node.Endpoint) == "local://docker"
+}
+
+func runtimeUsesTestEngine(cfg *config.Config) bool {
+	if cfg == nil {
+		return false
+	}
+	return strings.EqualFold(strings.TrimSpace(cfg.App.Env), "test")
+}
+
+func runtimeAllowsLocalFallback(cfg *config.Config) bool {
+	if runtimeUsesTestEngine(cfg) {
+		return true
+	}
+	if cfg == nil || !cfg.RuntimeAgent.AllowLocalFallback {
+		return false
+	}
+	env := strings.ToLower(strings.TrimSpace(cfg.App.Env))
+	return env != "prod" && env != "production"
 }
 
 func runtimeAgentConfigForNode(base config.RuntimeAgentConfig, node *runtimeentity.RuntimeNode) config.RuntimeAgentConfig {

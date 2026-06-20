@@ -18,10 +18,20 @@ CTF_BACKEND_LOG="${CTF_BACKEND_LOG:-/tmp/ctf-backend.log}"
 CTF_BACKEND_LOG_TAIL_LINES="${CTF_BACKEND_LOG_TAIL_LINES:-80}"
 CTF_BACKEND_SIGINT_GRACE_TICKS="${CTF_BACKEND_SIGINT_GRACE_TICKS:-120}"
 CTF_BACKEND_SIGTERM_GRACE_TICKS="${CTF_BACKEND_SIGTERM_GRACE_TICKS:-30}"
+CTF_DEV_RUNTIME_AGENT="${CTF_DEV_RUNTIME_AGENT:-true}"
+CTF_DEV_RUNTIME_AGENT_CERT_DIR="${CTF_DEV_RUNTIME_AGENT_CERT_DIR:-${REPO_ROOT}/docker/runtime/runtime-agent-certs}"
+CTF_DEV_RUNTIME_AGENT_LOG="${CTF_DEV_RUNTIME_AGENT_LOG:-/tmp/ctf-runtime-agent.log}"
+CTF_DEV_RUNTIME_AGENT_PID_FILE="${CTF_DEV_RUNTIME_AGENT_PID_FILE:-${REPO_ROOT}/docker/runtime/runtime-agent.pid}"
+CTF_DEV_RUNTIME_AGENT_SERVER_NAME="${CTF_DEV_RUNTIME_AGENT_SERVER_NAME:-runtime-agent.local}"
+CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT="${CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT:-19443}"
 REGISTRY_ENV_FILE_PATH=""
 FOREGROUND_BACKEND_PID=""
+FOREGROUND_RUNTIME_AGENT_PID=""
 FOREGROUND_STOP_REQUESTED=false
 LAUNCHED_BACKEND_PID=""
+LAUNCHED_RUNTIME_AGENT_PID=""
+LOCAL_RUNTIME_AGENT_STARTED=false
+LOCAL_RUNTIME_AGENT_PORT=""
 
 WITH_MIGRATE=false
 INFRA_MODE=""
@@ -48,6 +58,11 @@ usage() {
   AIR_CONFIG
   CTF_BACKEND_LOG
   CTF_BACKEND_LOG_TAIL_LINES
+  CTF_DEV_RUNTIME_AGENT=false                  # 不自动启动本机 runtime-agent
+  CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK=true  # 显式允许非生产本地 Docker fallback
+  CTF_DEV_RUNTIME_AGENT_CERT_DIR
+  CTF_DEV_RUNTIME_AGENT_LOG
+  CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT
 EOF
 }
 
@@ -324,6 +339,243 @@ process_exists() {
   [[ -n "${pid}" ]] && kill -0 "${pid}" 2>/dev/null
 }
 
+is_true_value() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|y|on)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_false_value() {
+  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
+    0|false|no|n|off)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+port_is_listening() {
+  local port="$1"
+  ss -ltn "sport = :${port}" | grep -q LISTEN
+}
+
+choose_local_runtime_agent_port() {
+  local port
+
+  if [[ -n "${CTF_RUNTIME_AGENT_SERVER_PORT:-}" ]]; then
+    printf '%s\n' "${CTF_RUNTIME_AGENT_SERVER_PORT}"
+    return 0
+  fi
+
+  port="${CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT}"
+  while port_is_listening "${port}"; do
+    port=$((port + 1))
+  done
+  printf '%s\n' "${port}"
+}
+
+run_runtime_agent_cert_command() {
+  local description="$1"
+  shift
+
+  local stderr_file
+  stderr_file="$(mktemp "${TMPDIR:-/tmp}/ctf-runtime-agent-cert.XXXXXX.log")"
+  if "$@" >/dev/null 2>"${stderr_file}"; then
+    rm -f "${stderr_file}"
+    return 0
+  fi
+
+  echo "runtime-agent: ${description} 失败，请检查 ${CTF_DEV_RUNTIME_AGENT_CERT_DIR} 权限和本机 openssl 兼容性。" >&2
+  if [[ -s "${stderr_file}" ]]; then
+    sed 's/^/  /' "${stderr_file}" >&2
+  fi
+  rm -f "${stderr_file}"
+  return 1
+}
+
+create_runtime_agent_leaf_cert() {
+  local name="$1"
+  local common_name="$2"
+  local usage="$3"
+  local san="$4"
+  local config_file="${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/${name}.cnf"
+  local csr_file="${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/${name}.csr"
+
+  cat >"${config_file}" <<EOF_CERT
+[req]
+distinguished_name = req_dn
+prompt = no
+req_extensions = v3_req
+
+[req_dn]
+CN = ${common_name}
+
+[v3_req]
+keyUsage = digitalSignature,keyEncipherment
+extendedKeyUsage = ${usage}
+subjectAltName = ${san}
+EOF_CERT
+
+  run_runtime_agent_cert_command "生成 ${name} CSR" \
+    openssl req -new -nodes -newkey rsa:2048 \
+    -keyout "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/${name}-key.pem" \
+    -out "${csr_file}" \
+    -config "${config_file}"
+
+  run_runtime_agent_cert_command "签发 ${name} 证书" \
+    openssl x509 -req \
+    -in "${csr_file}" \
+    -CA "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca.pem" \
+    -CAkey "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca-key.pem" \
+    -CAcreateserial \
+    -out "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/${name}.pem" \
+    -days 30 \
+    -sha256 \
+    -extensions v3_req \
+    -extfile "${config_file}"
+}
+
+ensure_local_runtime_agent_certs() {
+  if [[ -s "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca.pem" &&
+        -s "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/server.pem" &&
+        -s "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/server-key.pem" &&
+        -s "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/client.pem" &&
+        -s "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/client-key.pem" ]]; then
+    return 0
+  fi
+
+  if ! command -v openssl >/dev/null 2>&1; then
+    echo "openssl 未安装，无法生成本机 runtime-agent mTLS 证书。" >&2
+    exit 1
+  fi
+
+  mkdir -p "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}"
+  run_runtime_agent_cert_command "生成 CA 证书" \
+    openssl req -x509 -nodes -newkey rsa:2048 \
+    -keyout "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca-key.pem" \
+    -out "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca.pem" \
+    -days 30 \
+    -subj "/CN=ctf-runtime-agent-dev-ca"
+
+  create_runtime_agent_leaf_cert "server" "${CTF_DEV_RUNTIME_AGENT_SERVER_NAME}" "serverAuth" "DNS:${CTF_DEV_RUNTIME_AGENT_SERVER_NAME},IP:127.0.0.1"
+  create_runtime_agent_leaf_cert "client" "runtime-agent-client" "clientAuth" "DNS:runtime-agent-client"
+  chmod 600 "${CTF_DEV_RUNTIME_AGENT_CERT_DIR}"/*-key.pem
+}
+
+should_start_local_runtime_agent() {
+  if is_false_value "${CTF_DEV_RUNTIME_AGENT}"; then
+    return 1
+  fi
+  if is_true_value "${CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK:-}"; then
+    return 1
+  fi
+  if [[ -n "${CTF_RUNTIME_AGENT_ENDPOINT:-}" ]]; then
+    return 1
+  fi
+  return 0
+}
+
+export_local_runtime_agent_client_env() {
+  local port="$1"
+
+  export CTF_RUNTIME_AGENT_ENABLED="${CTF_RUNTIME_AGENT_ENABLED:-true}"
+  export CTF_RUNTIME_AGENT_ENDPOINT="${CTF_RUNTIME_AGENT_ENDPOINT:-127.0.0.1:${port}}"
+  export CTF_RUNTIME_AGENT_SERVER_NAME="${CTF_RUNTIME_AGENT_SERVER_NAME:-${CTF_DEV_RUNTIME_AGENT_SERVER_NAME}}"
+  export CTF_RUNTIME_AGENT_CA_FILE="${CTF_RUNTIME_AGENT_CA_FILE:-${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca.pem}"
+  export CTF_RUNTIME_AGENT_CERT_FILE="${CTF_RUNTIME_AGENT_CERT_FILE:-${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/client.pem}"
+  export CTF_RUNTIME_AGENT_KEY_FILE="${CTF_RUNTIME_AGENT_KEY_FILE:-${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/client-key.pem}"
+}
+
+launch_runtime_agent_session() {
+  local port="$1"
+  local docker_host="${CTF_DEV_RUNTIME_AGENT_DOCKER_HOST:-${DOCKER_HOST:-}}"
+
+  mkdir -p "$(dirname "${CTF_DEV_RUNTIME_AGENT_LOG}")" "$(dirname "${CTF_DEV_RUNTIME_AGENT_PID_FILE}")"
+  {
+    printf '\n===== ctf runtime-agent start %s port=%s =====\n' \
+      "$(date '+%Y-%m-%d %H:%M:%S %z')" "${port}"
+  } >>"${CTF_DEV_RUNTIME_AGENT_LOG}"
+
+  (
+    cd "${BACKEND_DIR}"
+    if [[ -n "${docker_host}" ]]; then
+      export DOCKER_HOST="${docker_host}"
+    fi
+    exec env \
+      APP_ENV="${APP_ENV}" \
+      CTF_RUNTIME_AGENT_SERVER_ENABLED=true \
+      CTF_RUNTIME_AGENT_SERVER_HOST=127.0.0.1 \
+      CTF_RUNTIME_AGENT_SERVER_PORT="${port}" \
+      CTF_RUNTIME_AGENT_SERVER_CERT_FILE="${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/server.pem" \
+      CTF_RUNTIME_AGENT_SERVER_KEY_FILE="${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/server-key.pem" \
+      CTF_RUNTIME_AGENT_SERVER_CLIENT_CA_FILE="${CTF_DEV_RUNTIME_AGENT_CERT_DIR}/ca.pem" \
+      CTF_RUNTIME_AGENT_SERVER_SHUTDOWN_TIMEOUT=5s \
+      go run ./cmd/runtime-agent
+  ) >>"${CTF_DEV_RUNTIME_AGENT_LOG}" 2>&1 &
+
+  LAUNCHED_RUNTIME_AGENT_PID="$!"
+  printf '%s\n' "${LAUNCHED_RUNTIME_AGENT_PID}" >"${CTF_DEV_RUNTIME_AGENT_PID_FILE}"
+}
+
+start_local_runtime_agent_if_needed() {
+  if ! should_start_local_runtime_agent; then
+    if is_true_value "${CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK:-}"; then
+      export CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK=true
+      echo "runtime-agent: 已启用显式本地 fallback，不自动启动本机 runtime-agent。"
+    elif [[ -n "${CTF_RUNTIME_AGENT_ENDPOINT:-}" ]]; then
+      echo "runtime-agent: 使用已配置 endpoint ${CTF_RUNTIME_AGENT_ENDPOINT}。"
+    else
+      echo "runtime-agent: CTF_DEV_RUNTIME_AGENT=false，跳过本机 runtime-agent 自动启动。"
+    fi
+    return 0
+  fi
+
+  ensure_local_runtime_agent_certs
+  LOCAL_RUNTIME_AGENT_PORT="$(choose_local_runtime_agent_port)"
+  if [[ -z "${CTF_RUNTIME_AGENT_SERVER_PORT:-}" &&
+        "${LOCAL_RUNTIME_AGENT_PORT}" != "${CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT}" ]]; then
+    echo "runtime-agent: 默认端口 ${CTF_DEV_RUNTIME_AGENT_DEFAULT_PORT} 被占用，已切换到 ${LOCAL_RUNTIME_AGENT_PORT}。"
+  fi
+  export_local_runtime_agent_client_env "${LOCAL_RUNTIME_AGENT_PORT}"
+  launch_runtime_agent_session "${LOCAL_RUNTIME_AGENT_PORT}"
+  LOCAL_RUNTIME_AGENT_STARTED=true
+  echo "runtime-agent 已启动，pid=${LAUNCHED_RUNTIME_AGENT_PID}, endpoint=${CTF_RUNTIME_AGENT_ENDPOINT}, log=${CTF_DEV_RUNTIME_AGENT_LOG}"
+}
+
+stop_runtime_agent_process() {
+  local pid="$1"
+  local delay
+
+  if [[ -z "${pid}" ]] || ! process_exists "${pid}"; then
+    return 0
+  fi
+
+  kill -INT "${pid}" 2>/dev/null || true
+  for delay in $(seq 1 "${CTF_BACKEND_SIGTERM_GRACE_TICKS}"); do
+    if ! process_exists "${pid}"; then
+      return 0
+    fi
+    sleep 0.1
+  done
+
+  kill -TERM "${pid}" 2>/dev/null || true
+  for delay in $(seq 1 "${CTF_BACKEND_SIGTERM_GRACE_TICKS}"); do
+    if ! process_exists "${pid}"; then
+      return 0
+    fi
+    sleep 0.1
+  done
+
+  kill -KILL "${pid}" 2>/dev/null || true
+}
+
 collect_backend_tree_snapshot() {
   local root_pid="$1"
   local descendant_pid
@@ -457,6 +709,10 @@ handle_foreground_stop_signal() {
     echo "收到停止信号，正在关闭后端及其子进程..."
     stop_backend_tree "${FOREGROUND_BACKEND_PID}"
   fi
+  if [[ -n "${FOREGROUND_RUNTIME_AGENT_PID}" ]]; then
+    echo "正在关闭本机 runtime-agent..."
+    stop_runtime_agent_process "${FOREGROUND_RUNTIME_AGENT_PID}"
+  fi
 }
 
 start_backend() {
@@ -484,17 +740,25 @@ start_backend() {
   tee_pid=$!
 
   FOREGROUND_BACKEND_PID=""
+  FOREGROUND_RUNTIME_AGENT_PID=""
   FOREGROUND_STOP_REQUESTED=false
   trap 'handle_foreground_stop_signal' INT TERM
 
   launch_backend_session "${log_pipe}"
   backend_pid="${LAUNCHED_BACKEND_PID}"
   FOREGROUND_BACKEND_PID="${backend_pid}"
+  if [[ "${LOCAL_RUNTIME_AGENT_STARTED}" == "true" ]]; then
+    FOREGROUND_RUNTIME_AGENT_PID="${LAUNCHED_RUNTIME_AGENT_PID}"
+  fi
 
   wait "${backend_pid}" || exit_code=$?
 
   trap - INT TERM
   FOREGROUND_BACKEND_PID=""
+  if [[ -n "${FOREGROUND_RUNTIME_AGENT_PID}" ]]; then
+    stop_runtime_agent_process "${FOREGROUND_RUNTIME_AGENT_PID}"
+    FOREGROUND_RUNTIME_AGENT_PID=""
+  fi
   cleanup_foreground_log_pipe "${log_pipe}" "${tee_pid}"
 
   return "${exit_code}"
@@ -552,6 +816,7 @@ if [[ "${WITH_MIGRATE}" == "true" ]]; then
 fi
 
 apply_runtime_defaults
+start_local_runtime_agent_if_needed
 
 echo "APP_ENV=${APP_ENV}"
 if [[ -n "${CTF_POSTGRES_PORT:-}" ]]; then
@@ -563,6 +828,12 @@ fi
 if [[ -n "${CTF_HTTP_PORT:-}" ]]; then
   echo "CTF_HTTP_PORT=${CTF_HTTP_PORT}"
 fi
+if [[ -n "${CTF_RUNTIME_AGENT_ENDPOINT:-}" ]]; then
+  echo "CTF_RUNTIME_AGENT_ENDPOINT=${CTF_RUNTIME_AGENT_ENDPOINT}"
+fi
+if [[ -n "${CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK:-}" ]]; then
+  echo "CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK=${CTF_RUNTIME_AGENT_ALLOW_LOCAL_FALLBACK}"
+fi
 if [[ -n "${REGISTRY_ENV_FILE_PATH}" ]]; then
   echo "CTF_CONTAINER_REGISTRY_ENV=${REGISTRY_ENV_FILE_PATH}"
 fi
@@ -573,6 +844,10 @@ if [[ -n "${CTF_CONTAINER_REGISTRY_SERVER:-}" ]]; then
   echo "CTF_CONTAINER_REGISTRY_SERVER=${CTF_CONTAINER_REGISTRY_SERVER}"
 fi
 echo "CTF_BACKEND_LOG=${CTF_BACKEND_LOG}"
+if [[ "${LOCAL_RUNTIME_AGENT_STARTED}" == "true" ]]; then
+  echo "CTF_DEV_RUNTIME_AGENT_LOG=${CTF_DEV_RUNTIME_AGENT_LOG}"
+  echo "CTF_DEV_RUNTIME_AGENT_PID_FILE=${CTF_DEV_RUNTIME_AGENT_PID_FILE}"
+fi
 echo "启动后端服务 (${RUN_MODE})..."
 
 start_backend

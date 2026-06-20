@@ -865,6 +865,30 @@ func TestValidateRejectsIncompleteRuntimeAgentClientConfig(t *testing.T) {
 	}
 }
 
+func TestRuntimeAgentLocalFallbackDefaultsFalse(t *testing.T) {
+	cfg := validConfigForValidationTests()
+
+	if cfg.RuntimeAgent.AllowLocalFallback {
+		t.Fatal("expected runtime_agent.allow_local_fallback to default false")
+	}
+}
+
+func TestValidateRejectsRuntimeAgentLocalFallbackInProduction(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.App.Env = "prod"
+	cfg.Postgres.Password = "prod-postgres-secret"
+	cfg.Redis.Password = "prod-redis-secret"
+	cfg.RuntimeAgent.AllowLocalFallback = true
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject runtime agent local fallback in production, got nil")
+	}
+	if !strings.Contains(err.Error(), "runtime_agent.allow_local_fallback must be false in prod") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
 	testCases := []struct {
 		name      string

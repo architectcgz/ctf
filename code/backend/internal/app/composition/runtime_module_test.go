@@ -203,6 +203,7 @@ func TestBuildContainerRuntimeModuleFailsWhenRemoteRuntimeAgentDialFails(t *test
 func TestBuildContainerRuntimeModuleFailsWhenLocalSandboxExecutorInitFails(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.App.Env = "dev"
+	cfg.RuntimeAgent.AllowLocalFallback = true
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -234,6 +235,124 @@ func TestBuildContainerRuntimeModuleFailsWhenLocalSandboxExecutorInitFails(t *te
 	}
 	if err.Error() != "sandbox init failed" {
 		t.Fatalf("error = %v, want sandbox init failed", err)
+	}
+}
+
+func TestBuildContainerRuntimeModuleRejectsLocalRuntimeWithoutExplicitFallback(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	localRunnerCalled := false
+	localSandboxCalled := false
+	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
+	originalNewLocalSandboxExecutor := newLocalSandboxExecutor
+	newLocalRuntimeHostRunner = func(*config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
+		localRunnerCalled = true
+		return &stubRuntimeNodeHostExecutor{}, nil
+	}
+	newLocalSandboxExecutor = func(config.CheckerSandboxConfig) (runtimeports.SandboxExecutor, error) {
+		localSandboxCalled = true
+		return stubSandboxExecutor{}, nil
+	}
+	t.Cleanup(func() {
+		newLocalRuntimeHostRunner = originalNewLocalRuntimeHostRunner
+		newLocalSandboxExecutor = originalNewLocalSandboxExecutor
+	})
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err == nil {
+		t.Fatal("expected BuildContainerRuntimeModule() to reject local runtime without explicit fallback")
+	}
+	if module != nil {
+		t.Fatalf("expected module to be nil on local runtime rejection, got %+v", module)
+	}
+	if !strings.Contains(err.Error(), "runtime_agent.allow_local_fallback") {
+		t.Fatalf("error = %v, want runtime_agent.allow_local_fallback guidance", err)
+	}
+	if localRunnerCalled {
+		t.Fatal("expected local runtime host runner not to be built")
+	}
+	if localSandboxCalled {
+		t.Fatal("expected local sandbox executor not to be built")
+	}
+}
+
+func TestBuildContainerRuntimeModuleAllowsExplicitLocalRuntimeFallback(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+	cfg.RuntimeAgent.AllowLocalFallback = true
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	localRunnerCalled := false
+	localSandboxCalled := false
+	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
+	originalNewLocalSandboxExecutor := newLocalSandboxExecutor
+	newLocalRuntimeHostRunner = func(*config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
+		localRunnerCalled = true
+		return &stubRuntimeNodeHostExecutor{}, nil
+	}
+	newLocalSandboxExecutor = func(config.CheckerSandboxConfig) (runtimeports.SandboxExecutor, error) {
+		localSandboxCalled = true
+		return stubSandboxExecutor{}, nil
+	}
+	t.Cleanup(func() {
+		newLocalRuntimeHostRunner = originalNewLocalRuntimeHostRunner
+		newLocalSandboxExecutor = originalNewLocalSandboxExecutor
+	})
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil {
+		t.Fatal("expected container runtime module")
+	}
+	if !localRunnerCalled {
+		t.Fatal("expected explicit fallback to build local runtime host runner")
+	}
+	if !localSandboxCalled {
+		t.Fatal("expected explicit fallback to build local sandbox executor")
+	}
+}
+
+func TestRuntimeNodeClientAllowsTestRuntimeEngineWithoutFallback(t *testing.T) {
+	cfg := &config.Config{App: config.AppConfig{Env: "test"}}
+	localRunnerCalled := false
+	originalNewLocalRuntimeHostRunner := newLocalRuntimeHostRunner
+	newLocalRuntimeHostRunner = func(*config.ContainerConfig) (runtimeports.RuntimeHostExecutor, error) {
+		localRunnerCalled = true
+		return &stubRuntimeNodeHostExecutor{}, nil
+	}
+	t.Cleanup(func() {
+		newLocalRuntimeHostRunner = originalNewLocalRuntimeHostRunner
+	})
+
+	client, err := buildRuntimeNodeClientFromNode(context.Background(), cfg, zap.NewNop(), nil, nil)
+	if err != nil {
+		t.Fatalf("buildRuntimeNodeClientFromNode() error = %v", err)
+	}
+	if client == nil {
+		t.Fatal("expected test runtime client")
+	}
+	if localRunnerCalled {
+		t.Fatal("expected test runtime client not to build local Docker runner")
 	}
 }
 
@@ -669,6 +788,12 @@ func (s stubRuntimeHTTPProxyTickets) ResolveAWDTargetAccessURL(context.Context, 
 
 func (s stubRuntimeHTTPProxyTickets) MaxAge() int {
 	return 900
+}
+
+type stubSandboxExecutor struct{}
+
+func (stubSandboxExecutor) RunSandboxExec(context.Context, runtimeports.SandboxExecJob) (runtimeports.SandboxExecResult, error) {
+	return runtimeports.SandboxExecResult{Status: runtimeports.SandboxExecStatusOK}, nil
 }
 
 func writeRemoteAgentClientTLSFiles(t *testing.T) (string, string, string) {

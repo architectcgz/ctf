@@ -702,7 +702,7 @@ flowchart LR
 | 网络要求 | API 主机与 runtime-agent 节点保持内网互通；节点探测由 `runtime_node_health` 后台任务按 `container.runtime_node_health.*` 覆盖所有 runtime node，只有 `ready / degraded` 且 `last_seen_at` 未过期的 schedulable node 才会被默认新调度选择 |
 | 端口暴露 | 用户仍通过 Nginx 访问主机 A；题目实例端口和 AWD SSH 网关按业务配置直接暴露在对应 runtime node 上 |
 | 节点 authority | 实例、AWD service、checker 执行都绑定 `node_id`；容器创建、清理、checker 和 AWD 文件写入均按 `node_id` 路由 |
-| 兼容边界 | `DOCKER_HOST` 仍可作为底层 Docker client 的连接参数，但不再是完整多机方案；正式多机边界以 `runtime_agent` 协议和 `runtime_nodes` 数据模型为准；节点 failover 复用 pending scheduler / AWD desired reconciler 重建，不承诺 live migration 或会话透明迁移 |
+| 兼容边界 | `DOCKER_HOST` 只属于 runtime-agent 所在执行节点的 Docker client 参数，不再是 API 控制面切换执行节点的方案；正式多机边界以 `runtime_agent` 协议和 `runtime_nodes` 数据模型为准；节点 failover 复用 pending scheduler / AWD desired reconciler 重建，不承诺 live migration 或会话透明迁移 |
 
 ### 7.3 Docker Compose 编排（平台基础设施）
 
@@ -837,10 +837,11 @@ flowchart TD
 | 方案 | 适用阶段 | 结论 | 说明 |
 |------|----------|------|------|
 | API / `awd-defense-ssh-gateway` 容器直接挂载宿主 `/var/run/docker.sock` | 仅限一次性本机开发排障 | 不推荐作为默认路径 | 任一容器失陷后都会直接继承宿主 Docker daemon 的控制权，不能作为共享开发、演示或正式环境边界 |
-| API 直接跑宿主机进程，Docker Engine 仍在本机 | 本地开发、小规模单机试运行 | 可作为过渡方案 | 能去掉“容器内通过 docker.sock 直接提权”的捷径，但 API 一旦失陷，攻击者仍可能利用 API 所在主机上的 Docker 控制能力继续扩大权限 |
+| API 直接跑宿主机进程，并由本机 `runtime-agent` 连接 Docker Engine | 本地开发、最小单机联调 | 默认推荐路径 | `dev-run.sh` 默认启动本机 runtime-agent，API/gateway 只持有 mTLS client 配置；宿主 Docker 副作用集中在 agent 进程 |
+| API 直接跑宿主机进程并启用本地 executor fallback | 非生产故障排查 | 显式例外 | 只有 `APP_ENV=test` 或非生产环境显式设置 `runtime_agent.allow_local_fallback=true` 时允许；生产环境校验拒绝该 fallback |
 | API 主机与靶机 Docker 主机分离，API 通过 `runtime-agent` + mTLS 调用执行面 | 共享开发、校内试运行、正式比赛 | 推荐的正式目标 | 把平台控制面与靶机宿主隔离开，并把 ACL、checker sandbox、容器文件写入、容器 exec 等宿主机副作用下沉到节点 agent；API 失陷后不会自动获得 API 所在主机的本地 Docker root，也不会再因为本地 bind mount 假设而误写远端宿主 |
 
-单机阶段的推荐动作是：默认让 `ctf-api` 以宿主机进程运行，`docker compose` 只承担 PostgreSQL / Redis 等开发依赖；不要把“容器内 API + 宿主 docker.sock 挂载”作为默认开发路径。正式对外提供多人使用、共享演示或比赛服务时，推荐拆成 API 主机与靶机 Docker 主机两台物理机或两组安全边界明确的运行节点。
+单机阶段的推荐动作是：默认让 `ctf-api` 以宿主机进程运行，并由本机 `runtime-agent` 承接 Docker / ACL / checker / 文件写入等执行面副作用；`docker compose` 只承担 PostgreSQL / Redis 等开发依赖，或在全容器联调时把 docker.sock 只交给 `ctf-runtime-agent`。不要把“容器内 API + 宿主 docker.sock 挂载”作为默认开发路径。正式对外提供多人使用、共享演示或比赛服务时，推荐拆成 API 主机与靶机 Docker 主机两台物理机或两组安全边界明确的运行节点。
 
 ### 7.6 runtime control plane 相关配置摘录
 
@@ -862,13 +863,14 @@ postgres:
   password: "${DB_PASSWORD}"
 
 runtime_agent:
-  enabled: false                     # 本地单机 fallback；API 直接复用本机 executor
-  endpoint: ""                       # 例如 "10.0.1.2:9443"
+  enabled: true                      # 默认通过 runtime-agent 执行；本机开发由 dev-run.sh 启动 local agent
+  allow_local_fallback: false        # 仅非生产排障可显式打开；prod 校验会拒绝 true
+  endpoint: "127.0.0.1:19443"        # 生产通常是 "10.0.1.2:9443"
   dial_timeout: 5s
-  server_name: ""                    # 目标 node 的 tls_identity
-  ca_file: ""
-  cert_file: ""
-  key_file: ""
+  server_name: "runtime-agent.local" # 目标 node 的 tls_identity
+  ca_file: "docker/runtime/runtime-agent-certs/ca.pem"
+  cert_file: "docker/runtime/runtime-agent-certs/client.pem"
+  key_file: "docker/runtime/runtime-agent-certs/client-key.pem"
   server:
     enabled: false                   # runtime-agent 进程所在节点打开
     host: 0.0.0.0
@@ -899,7 +901,7 @@ contest:
 
 补充说明：
 
-- 本地开发单机模式默认保持 `runtime_agent.enabled: false`，API 直接复用本机 executor，方便本地联调。
+- 本地开发单机模式默认由 `code/backend/scripts/dev-run.sh` 启动本机 `runtime-agent`，API/gateway 通过 mTLS client 调用 agent；`runtime_agent.allow_local_fallback: true` 只保留给非生产排障和极小 fallback。
 - API + 单 remote agent 模式由 API 侧开启 `runtime_agent.enabled: true`，并在默认 `runtime_nodes` 里注册 `agent-default`；实例 / checker / AWD service 仍按 `node_id` 路由。
 - 正式多 node 模式在同一份 `runtime_nodes` 表里登记多个 runtime node；当前已落地健康过滤与故障重建：默认新调度只选择 `schedulable + ready / degraded` 且心跳新鲜的节点，`schedulable=false` 只用于 cordon 新调度，不会阻断健康节点上的显式旧容器操作；节点离线后该节点上可恢复的 `creating / running` 实例会重新进入 `pending`，再由现有 scheduler / AWD desired reconciler 在健康节点上重建。容量智能分配仍未落地，`capacity_snapshot` 目前只作为可观测事实与后续调度输入。
 

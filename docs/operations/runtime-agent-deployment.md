@@ -13,9 +13,10 @@
 
 适用：本机开发、最小联调、排查后端与题目实例基础链路。
 
-- API 以宿主机进程运行，`runtime_agent.enabled: false`
-- `runtime_nodes` 默认写入 `local-default`
-- API 直接复用本机 executor；这是开发 fallback，不是正式多机边界
+- API 以宿主机进程运行，`code/backend/scripts/dev-run.sh` 默认同时启动本机 `runtime-agent`
+- API 侧 `runtime_agent.enabled: true`，endpoint 指向 `127.0.0.1:<本机 agent 端口>`
+- `runtime_nodes` 默认写入 `agent-default`
+- 本机 Docker executor 只允许在 `APP_ENV=test`，或非生产环境显式设置 `runtime_agent.allow_local_fallback: true` 时作为 fallback；生产环境会拒绝该 fallback 配置
 
 ### 2. API + 单 remote agent
 
@@ -99,7 +100,8 @@ APP_ENV=prod go run ./cmd/awd-defense-ssh-gateway
 要求：
 
 - gateway 节点需要访问与 API 相同的 PostgreSQL / Redis
-- 本地单机模式下，gateway 节点本机需要直接访问 Docker Engine
+- 默认本地单机模式下，gateway 与 API 一样通过本机 runtime-agent 路由进入目标工作区容器
+- 只有非生产环境显式设置 `runtime_agent.allow_local_fallback: true` 时，gateway 才会回到本机 Docker executor fallback
 - `runtime_agent.enabled: true` 时，gateway 与 API 一样通过 runtime node / agent 路由进入目标工作区容器
 - 多副本部署时，API 与 gateway 还必须共享同一份 `shared_storage.shared_fs.root` 挂载；当前至少会用到 `reports/*`、`challenge-attachments/*`、`runtime/flag-global-secret`、`runtime/awd-defense-ssh-host-key.pem`
 - `container.defense_ssh_host` 需要配置成学生客户端实际访问的地址，通常是 TCP LB / ingress 地址；gateway 进程本身仍监听 `:container.defense_ssh_port`
@@ -143,6 +145,7 @@ API 侧开启 client 配置：
 ```yaml
 runtime_agent:
   enabled: true
+  allow_local_fallback: false
   endpoint: 10.0.1.2:9443
   dial_timeout: 5s
   server_name: runtime-agent.internal
@@ -154,6 +157,7 @@ runtime_agent:
 要求：
 
 - `runtime_agent.enabled` 为 `true` 时，`endpoint`、`dial_timeout`、`server_name`、`ca_file`、`cert_file`、`key_file` 都必须存在
+- `runtime_agent.allow_local_fallback` 默认为 `false`；只有非生产故障排查时才允许临时打开，生产配置会拒绝该值为 `true`
 - `server_name` 要与目标 node 的 `tls_identity` 一致
 - API 主机不再依赖“切 `DOCKER_HOST` 就完成多机”的假设；完整执行 authority 来自 agent 协议和 `node_id`
 - API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
@@ -201,7 +205,7 @@ container:
 ## node 绑定说明
 
 - 默认节点由启动时的 `runtime_agent.enabled` 决定：
-  - `false` -> `local-default`
+  - `false` -> `local-default`，但非 test 环境只有 `runtime_agent.allow_local_fallback: true` 时才能实际构造本地 executor
   - `true` -> `agent-default`
 - 新实例启动时会把选中的 `node_id` 持久化到实例记录
 - checker job metadata、AWD service instance 和容器文件写入路径都会显式携带或反查 `node_id`

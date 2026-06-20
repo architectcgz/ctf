@@ -18,6 +18,142 @@ services:
     volumes:
       - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/app-storage:/app/storage
 
+  ctf-runtime-agent-certs:
+    container_name: ctf-runtime-agent-certs
+    image: alpine:3.22
+    command:
+      - /bin/sh
+      - -lc
+      - |
+        set -eu
+        apk add --no-cache openssl >/dev/null
+        mkdir -p /app/runtime-agent-certs
+        if [ -s /app/runtime-agent-certs/ca.pem ] &&
+           [ -s /app/runtime-agent-certs/server.pem ] &&
+           [ -s /app/runtime-agent-certs/server-key.pem ] &&
+           [ -s /app/runtime-agent-certs/client.pem ] &&
+           [ -s /app/runtime-agent-certs/client-key.pem ]; then
+          exit 0
+        fi
+        openssl req -x509 -nodes -newkey rsa:2048 \
+          -keyout /app/runtime-agent-certs/ca-key.pem \
+          -out /app/runtime-agent-certs/ca.pem \
+          -days 30 \
+          -subj /CN=ctf-runtime-agent-dev-ca >/dev/null 2>&1
+        printf '%s\n' \
+          '[req]' \
+          'distinguished_name = req_dn' \
+          'prompt = no' \
+          'req_extensions = v3_req' \
+          '' \
+          '[req_dn]' \
+          'CN = runtime-agent.local' \
+          '' \
+          '[v3_req]' \
+          'keyUsage = digitalSignature,keyEncipherment' \
+          'extendedKeyUsage = serverAuth' \
+          'subjectAltName = DNS:runtime-agent.local,DNS:ctf-runtime-agent,IP:127.0.0.1' \
+          >/app/runtime-agent-certs/server.cnf
+        openssl req -new -nodes -newkey rsa:2048 \
+          -keyout /app/runtime-agent-certs/server-key.pem \
+          -out /app/runtime-agent-certs/server.csr \
+          -config /app/runtime-agent-certs/server.cnf >/dev/null 2>&1
+        openssl x509 -req \
+          -in /app/runtime-agent-certs/server.csr \
+          -CA /app/runtime-agent-certs/ca.pem \
+          -CAkey /app/runtime-agent-certs/ca-key.pem \
+          -CAcreateserial \
+          -out /app/runtime-agent-certs/server.pem \
+          -days 30 \
+          -sha256 \
+          -extensions v3_req \
+          -extfile /app/runtime-agent-certs/server.cnf >/dev/null 2>&1
+        printf '%s\n' \
+          '[req]' \
+          'distinguished_name = req_dn' \
+          'prompt = no' \
+          'req_extensions = v3_req' \
+          '' \
+          '[req_dn]' \
+          'CN = runtime-agent-client' \
+          '' \
+          '[v3_req]' \
+          'keyUsage = digitalSignature,keyEncipherment' \
+          'extendedKeyUsage = clientAuth' \
+          'subjectAltName = DNS:runtime-agent-client' \
+          >/app/runtime-agent-certs/client.cnf
+        openssl req -new -nodes -newkey rsa:2048 \
+          -keyout /app/runtime-agent-certs/client-key.pem \
+          -out /app/runtime-agent-certs/client.csr \
+          -config /app/runtime-agent-certs/client.cnf >/dev/null 2>&1
+        openssl x509 -req \
+          -in /app/runtime-agent-certs/client.csr \
+          -CA /app/runtime-agent-certs/ca.pem \
+          -CAkey /app/runtime-agent-certs/ca-key.pem \
+          -CAcreateserial \
+          -out /app/runtime-agent-certs/client.pem \
+          -days 30 \
+          -sha256 \
+          -extensions v3_req \
+          -extfile /app/runtime-agent-certs/client.cnf >/dev/null 2>&1
+        chmod 600 /app/runtime-agent-certs/*-key.pem
+    volumes:
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/runtime-agent-certs:/app/runtime-agent-certs
+
+  ctf-runtime-agent:
+    container_name: ctf-runtime-agent
+    image: ctf-backend:local
+    build:
+      context: ../../code/backend
+      dockerfile: Dockerfile
+    command:
+      - /app/ctf-runtime-agent
+    environment:
+      APP_ENV: dev
+      DOCKER_HOST: unix:///var/run/docker.sock
+      AWD_CHECKER_ARTIFACT_DIR: ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/awd-checker-artifacts
+      CTF_SHARED_STORAGE_SHARED_FS_ROOT: /app/storage
+      CTF_CONTAINER_PUBLIC_HOST: 127.0.0.1
+      CTF_CONTAINER_ACCESS_HOST: host-gateway.internal
+      CTF_CONTEST_AWD_CHECKER_SANDBOX_HOST_WORK_ROOT: ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/checker-sandboxes
+      CTF_RUNTIME_AGENT_SERVER_ENABLED: "true"
+      CTF_RUNTIME_AGENT_SERVER_HOST: 0.0.0.0
+      CTF_RUNTIME_AGENT_SERVER_PORT: 9443
+      CTF_RUNTIME_AGENT_SERVER_CERT_FILE: /app/runtime-agent-certs/server.pem
+      CTF_RUNTIME_AGENT_SERVER_KEY_FILE: /app/runtime-agent-certs/server-key.pem
+      CTF_RUNTIME_AGENT_SERVER_CLIENT_CA_FILE: /app/runtime-agent-certs/ca.pem
+      CTF_RUNTIME_AGENT_SERVER_SHUTDOWN_TIMEOUT: 5s
+    depends_on:
+      ctf-runtime-agent-certs:
+        condition: service_completed_successfully
+    volumes:
+      - ${CTF_HOST_ROOT:-${PWD}}/docker:${CTF_HOST_ROOT:-${PWD}}/docker
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/app-storage:/app/storage
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/runtime-agent-certs:/app/runtime-agent-certs:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host-gateway.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          openssl s_client
+          -connect 127.0.0.1:9443
+          -servername runtime-agent.local
+          -verify_hostname runtime-agent.local
+          -verify_return_error
+          -CAfile /app/runtime-agent-certs/ca.pem
+          -cert /app/runtime-agent-certs/client.pem
+          -key /app/runtime-agent-certs/client-key.pem
+          </dev/null >/dev/null 2>&1
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - ctf-network
+
   ctf-frontend:
     container_name: ctf-frontend
     image: ctf-frontend:local
@@ -52,7 +188,6 @@ services:
         required: false
     environment:
       APP_ENV: dev
-      DOCKER_HOST: unix:///var/run/docker.sock
       AWD_CHECKER_ARTIFACT_DIR: ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/awd-checker-artifacts
       CTF_HTTP_HOST: 0.0.0.0
       CTF_HTTP_PORT: 8080
@@ -71,9 +206,17 @@ services:
       CTF_REDIS_DB: 2
       CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
       CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: runtime/flag-global-secret
+      CTF_RUNTIME_AGENT_ENABLED: "true"
+      CTF_RUNTIME_AGENT_ENDPOINT: ctf-runtime-agent:9443
+      CTF_RUNTIME_AGENT_SERVER_NAME: runtime-agent.local
+      CTF_RUNTIME_AGENT_CA_FILE: /app/runtime-agent-certs/ca.pem
+      CTF_RUNTIME_AGENT_CERT_FILE: /app/runtime-agent-certs/client.pem
+      CTF_RUNTIME_AGENT_KEY_FILE: /app/runtime-agent-certs/client-key.pem
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:
+      ctf-runtime-agent:
+        condition: service_healthy
       ctf-postgres:
         condition: service_healthy
       ctf-redis:
@@ -81,7 +224,7 @@ services:
     volumes:
       - ${CTF_HOST_ROOT:-${PWD}}/docker:${CTF_HOST_ROOT:-${PWD}}/docker
       - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/app-storage:/app/storage
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/runtime-agent-certs:/app/runtime-agent-certs:ro
     extra_hosts:
       - "host-gateway.internal:host-gateway"
     healthcheck:
@@ -109,7 +252,6 @@ services:
         required: false
     environment:
       APP_ENV: dev
-      DOCKER_HOST: unix:///var/run/docker.sock
       AWD_CHECKER_ARTIFACT_DIR: ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/awd-checker-artifacts
       CTF_HTTP_HOST: 0.0.0.0
       CTF_HTTP_PORT: 8080
@@ -128,11 +270,19 @@ services:
       CTF_REDIS_DB: 2
       CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
       CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: runtime/flag-global-secret
+      CTF_RUNTIME_AGENT_ENABLED: "true"
+      CTF_RUNTIME_AGENT_ENDPOINT: ctf-runtime-agent:9443
+      CTF_RUNTIME_AGENT_SERVER_NAME: runtime-agent.local
+      CTF_RUNTIME_AGENT_CA_FILE: /app/runtime-agent-certs/ca.pem
+      CTF_RUNTIME_AGENT_CERT_FILE: /app/runtime-agent-certs/client.pem
+      CTF_RUNTIME_AGENT_KEY_FILE: /app/runtime-agent-certs/client-key.pem
     ports:
       - "127.0.0.1:2222:2222"
     depends_on:
       ctf-awd-defense-ssh-host-key:
         condition: service_completed_successfully
+      ctf-runtime-agent:
+        condition: service_healthy
       ctf-postgres:
         condition: service_healthy
       ctf-redis:
@@ -140,7 +290,7 @@ services:
     volumes:
       - ${CTF_HOST_ROOT:-${PWD}}/docker:${CTF_HOST_ROOT:-${PWD}}/docker
       - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/app-storage:/app/storage
-      - /var/run/docker.sock:/var/run/docker.sock
+      - ${CTF_HOST_ROOT:-${PWD}}/docker/runtime/runtime-agent-certs:/app/runtime-agent-certs:ro
     extra_hosts:
       - "host-gateway.internal:host-gateway"
     restart: unless-stopped

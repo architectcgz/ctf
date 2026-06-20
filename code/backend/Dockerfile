@@ -32,7 +32,7 @@ FROM alpine:3.22
 
 WORKDIR /app
 
-RUN apk add --no-cache ca-certificates tzdata docker-cli
+RUN apk add --no-cache ca-certificates tzdata docker-cli openssl
 
 COPY --from=builder /out/ctf-api /app/ctf-api
 COPY --from=builder /out/ctf-runtime-agent /app/ctf-runtime-agent

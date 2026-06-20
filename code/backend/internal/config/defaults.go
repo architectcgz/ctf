@@ -161,6 +161,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("websocket.retry_initial_delay", time.Second)
 	v.SetDefault("websocket.retry_max_delay", 30*time.Second)
 	v.SetDefault("runtime_agent.enabled", false)
+	v.SetDefault("runtime_agent.allow_local_fallback", false)
 	v.SetDefault("runtime_agent.endpoint", "")
 	v.SetDefault("runtime_agent.dial_timeout", 5*time.Second)
 	v.SetDefault("runtime_agent.server_name", "")
