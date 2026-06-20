@@ -14,8 +14,15 @@ Read this file before closing any CTF UI refactor.
 - Keep structural labels and functional hints.
 - Remove design-presentation text that explains layout intent.
 - Preserve established bilingual structure when the page family already uses it.
+  Do not convert all labels to Chinese only when a bilingual structure is established.
 - Visible UI must contain only end-user product copy.
-- Do not render mock notes, option labels, developer guidance, or process narration in the page.
+- Do not render mock notes, option labels, developer guidance, or process narration in the page. This includes:
+  - mock/demo/prototype notes
+  - option-comparison labels such as `方案 A/B/C`
+  - layout-explanation text (for example: "顶部 tabs + 平铺列表 + 右侧信息轨道")
+  - process guidance text aimed at developers/reviewers
+- If explanation is needed, keep it in docs/PR/assistant response, not in page content.
+- Machine-value display policy (read/copy/debug/navigation) lives in `data-display.md`.
 
 ## Interaction and accessibility
 

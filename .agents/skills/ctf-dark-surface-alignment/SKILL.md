@@ -1,6 +1,12 @@
 ---
 name: ctf-dark-surface-alignment
-description: Use when aligning CTF frontend pages in this repo to the established dark surface system, especially when Vue pages still use hardcoded light colors, Element Plus defaults leak through, or a user asks to match pages like /teacher/dashboard, /teacher/instances, or /notifications.
+description: >
+  Use when aligning CTF frontend pages in this repo to the established
+  low-contrast dark surface system, especially when Vue pages still use
+  hardcoded light colors, Element Plus defaults leak through, or a user asks to
+  match the surface style of pages like /academy/instances, /academy/overview,
+  or /notifications. Activate on "这个页面暗色不对 / 还是亮的 / ElTable·ElDialog
+  漏白底 / 这个节点(XPath)颜色不对".
 ---
 
 # CTF Dark Surface Alignment
@@ -11,7 +17,7 @@ Apply the repo's established low-contrast dark surface system instead of inventi
 
 - A CTF page still looks light in dark theme
 - Element Plus wrappers leak default light backgrounds
-- A page only partially follows the established teacher or notification surface style
+- A page only partially follows the established academy or notification surface style
 - The user points to a specific DOM node or XPath that is still visually wrong
 
 ## Do Not Use
@@ -22,7 +28,7 @@ Apply the repo's established low-contrast dark surface system instead of inventi
 ## Workflow
 
 1. Read the route view first, then find the real rendering component under `frontend/src/components/...`.
-2. Compare against the nearest reference page such as `/teacher/dashboard`, `/teacher/instances`, or `/notifications`.
+2. Compare against the nearest reference page such as `/academy/instances`, `/academy/overview`, or `/notifications` (teacher backend routes live under `/academy/*`, not `/teacher/*`).
 3. Load only the reference files that match the problem.
 4. Fix shared tokens, shared selectors, or Element Plus wrappers before adding page-local overrides.
 5. If the user gave an exact selector or XPath, verify that exact leaking layer changed.
@@ -38,9 +44,9 @@ Apply the repo's established low-contrast dark surface system instead of inventi
 - `references/verification.md`
   Read before closing the task.
 
-## Output Expectations
+## Output Expectations (✓Check before closing)
 
-- No hardcoded light surfaces remain on the touched path.
-- Shared dark surfaces stay lower contrast than raw black-plus-white styling.
-- Shared selector boundaries remain intact.
-- Verification confirms the exact leaking node, not just its parent shell.
+- ✓Check：触达路径上是否还有 hardcoded light surface 残留？
+- ✓Check：共享暗色面是否比 raw black+white 更低对比，没有破坏既有节奏？
+- ✓Check：共享 selector 边界是否完好，没有误伤其它页面？
+- ✓Check：verification 是否确认了**确切**泄漏节点，而不仅是它的父壳？
