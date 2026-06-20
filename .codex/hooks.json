@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash harness/hooks/protect-core-files.sh",
+            "statusMessage": "Checking protected files"
+          }
+        ]
+      }
+    ]
+  }
+}

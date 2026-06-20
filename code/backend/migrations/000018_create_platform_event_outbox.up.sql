@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS platform_event_outbox (
+CREATE TABLE IF NOT EXISTS public.platform_event_outbox (
     id BIGSERIAL PRIMARY KEY,
     event_name TEXT NOT NULL,
     payload BYTEA NOT NULL,
@@ -19,20 +19,20 @@ CREATE TABLE IF NOT EXISTS platform_event_outbox (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_platform_event_outbox_dedupe_key
-    ON platform_event_outbox (dedupe_key)
+    ON public.platform_event_outbox (dedupe_key)
     WHERE dedupe_key <> '';
 
 CREATE INDEX IF NOT EXISTS idx_platform_event_outbox_pending_due
-    ON platform_event_outbox (status, next_attempt_at, id)
+    ON public.platform_event_outbox (status, next_attempt_at, id)
     WHERE status = 'pending';
 
 CREATE INDEX IF NOT EXISTS idx_platform_event_outbox_locked_until
-    ON platform_event_outbox (locked_until)
+    ON public.platform_event_outbox (locked_until)
     WHERE status = 'pending';
 
-ALTER TABLE notifications
+ALTER TABLE public.notifications
     ADD COLUMN IF NOT EXISTS source_event_key TEXT NOT NULL DEFAULT '';
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_source_event_key
-    ON notifications (source_event_key)
+    ON public.notifications (source_event_key)
     WHERE source_event_key <> '';

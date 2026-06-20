@@ -100,3 +100,23 @@ func TestAWDRuntimeConfigChallengeIDCleanupMigration(t *testing.T) {
 		t.Fatalf("AWD runtime config cleanup rollback should document why it is a no-op:\n%s", string(down))
 	}
 }
+
+func TestPlatformEventOutboxMigrationQualifiesPublicSchema(t *testing.T) {
+	t.Parallel()
+
+	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000018_create_platform_event_outbox.up.sql"))
+	if err != nil {
+		t.Fatalf("read platform event outbox migration: %v", err)
+	}
+	upSQL := string(up)
+	for _, required := range []string{
+		"CREATE TABLE IF NOT EXISTS public.platform_event_outbox",
+		"ON public.platform_event_outbox",
+		"ALTER TABLE public.notifications",
+		"ON public.notifications",
+	} {
+		if !strings.Contains(upSQL, required) {
+			t.Fatalf("platform event outbox migration must qualify public schema with %q:\n%s", required, upSQL)
+		}
+	}
+}

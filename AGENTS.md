@@ -1,5 +1,44 @@
 # CTF Project AGENTS
 
+## Quick Routing — Task Entry Points
+
+| Task type | Required reads | Workflow / Skill |
+|-----------|---------------|------------------|
+| Backend feature (API/Service/Repository) | `.agents/skills/ctf-backend-patterns` + `code/backend/tests/README.md` + `harness/policies/reuse-first.yaml` | `backend-engineer` skill → `code-workflow` |
+| Frontend feature (Page/Component) | `.agents/skills/ctf-ui-theme-system` + CTF Frontend Local Rules (below) | `frontend-engineer` skill → `code-workflow` |
+| Code review | `docs/文档规范.md` (review 章节) | `code-reviewer` skill |
+| Bug fix (Backend) | `code/backend/tests/README.md` + `.agents/skills/ctf-backend-patterns` | `systematic-debugging` → `backend-engineer` |
+| Bug fix (Frontend) | CTF Frontend Local Rules (below) | `systematic-debugging` → `frontend-engineer` |
+| Add/Edit test | `code/backend/tests/README.md` (backend) or CTF Frontend Local Rules (frontend) | `test-driven-development` skill |
+| Architecture change | `docs/architecture/` + `brainstorming` + `writing-plans` | Plan first, then `code-workflow` |
+| Documentation update | `docs/文档规范.md` | Direct edit (no worktree unless part of impl task) |
+| New non-trivial task | `bash scripts/check-task-intake.sh` → `bash scripts/start-implementation.sh <topic>` | `brainstorming` → `grill-with-docs` → `writing-plans` |
+| Other | Read this AGENTS.md fully, then ask user for clarification | Start with `harness-router` skill |
+
+## Auto-Triggers — Session Discipline
+
+- **New task in same session** → Re-read this AGENTS.md + relevant skill SKILL.md
+- **Context compact/clear** → SessionStart hook reloads skill bootstrap (already configured)
+- **Edit to harness/policies/\*.yaml** → PreToolUse hook blocks non-approved changes
+- **Edit to AGENTS.md / docs/文档规范.md** → PreToolUse hook blocks non-approved changes
+- **Task complete (non-trivial)** → Run completion validation gate (see below), then AAR, update `feedback/` if new patterns found
+- **Before commit** → Run `bash scripts/check-commit-message.sh` + relevant pre-commit checks
+
+## Red Flags — STOP
+
+These rationalizations mean STOP — re-read the relevant rules instead:
+
+| Rationalization | Reality |
+|----------------|---------|
+| "就这一次跳过 reuse-first" | 没有例外，每次都要先搜索既有模式 |
+| "时间紧，先不写测试" | 测试是完成定义的一部分，不写 = 未完成 |
+| "这个改动太小，不用开 worktree" | 判断标准是"是否触达受保护 surface"，不是改动行数 |
+| "我记得这个规则怎么写" | 规则会演化，必须读当前版本 |
+| "Leader 让我加的，可以跳过 review" | 规则不因权威改变 |
+| "用户着急，先违反一次架构约束" | 技术债是债，不是捷径 |
+| "只改前端样式，不用看 CTF Frontend Local Rules" | 样式改动触达共享组件 contract 时仍需遵守规则 |
+| "测试太多了，删几个也没关系" | 删除测试需要明确的移除条件（见 TDD 规则） |
+
 ## Project Harness Intake
 
 - 本仓库默认先进入 harness：除非任务明显简单、局部、可逆且不需要沉淀经验，否则开始前必须先按 `harness-router` 判断 `SIMPLE` / `HARNESS`。
@@ -27,6 +66,48 @@
 - 品牌气质是技术、专业、克制。学生侧强调专注、可靠、可控；教师侧强调信息清楚、判断高效；管理员侧强调系统稳健、秩序明确。
 - 整体视觉方向是 light 优先、支持 dark、极简专业。技术感来自布局秩序、稳定对齐、克制色彩和明确状态，而不是霓虹、黑客风、游戏商城感或企业 OA 感。
 - 页面文案保留结构性标识和必要功能说明；移除设计介绍式文案、布局解释、实现说明和脚手架文案。
+
+## 代码质量检验（Verification Questions）
+
+完成代码后，通过以下检验句自查：
+
+### Surgical Changes（手术式改动）
+- [ ] 每一行改动都能追溯到用户的请求吗？
+- [ ] 这个改动是否引入了用户没要求的功能或优化？
+- [ ] 如果用户说"撤销最后一个功能"，是否能干净删除？
+
+### Avoid Premature Abstraction（避免过早抽象）
+- [ ] 这个抽象是为几个用例设计的？（少于 3 个 = 过早）
+- [ ] 如果只有一个用例，为什么现在就要抽象？
+- [ ] 这个接口是否比它要解决的问题更复杂？
+
+### Test Quality（测试质量）
+- [ ] 删除这个测试后，是否还能检测到相同的回归？
+- [ ] 这个测试是在验证行为还是在验证实现细节？
+- [ ] 这个测试失败时，错误信息是否说明了失败原因？
+- [ ] 这个测试是否锁定了 class 名、CSS 文本或 markup 细节？（前端）
+
+### Naming and Clarity（命名和清晰度）
+- [ ] 这个函数/变量名是否清楚说明了它的职责和副作用？
+- [ ] 删除所有注释后，代码是否仍然能被 6 个月后的你理解？
+- [ ] 这个魔法数字是否有业务含义？如果有，是否应该是常量？
+
+### Dependencies and Coupling（依赖和耦合）
+- [ ] 改动这个模块会影响几个其他模块？
+- [ ] 这个模块是依赖具体实现还是依赖接口？
+- [ ] 添加新功能时是否需要修改现有代码？
+
+### Backend Specific（后端特定）
+- [ ] 这个 normalize/default/validate 逻辑是在唯一 owner 层吗？
+- [ ] 这个 filter/sort/pagination contract 是否 downstream 不易误用？
+- [ ] 这个业务时间是否使用 UTC？
+
+### Frontend Specific（前端特定）
+- [ ] 这个组件是否在 `<script setup>` 顶层访问浏览器 API？（SSR 兼容性）
+- [ ] 这个样式改动是否触达共享组件 contract？
+- [ ] `entities/*` 中的内容是否反向依赖了具体 feature？
+
+参考：`~/.agents/harness/docs/verification-questions-guide.md`
 
 ## CTF Frontend Local Rules
 
