@@ -62,7 +62,7 @@ func RunRuntimeAgent() {
 		_ = listener.Close()
 	}()
 
-	server := agentserver.NewGRPCServer(tlsConfig, agentserver.NewService(hostExecutor, sandboxExecutor))
+	server := agentserver.NewGRPCServer(tlsConfig, agentserver.NewService(hostExecutor, sandboxExecutor), cfg.RuntimeAgent.Server)
 	go func() {
 		log.Info("runtime_agent_starting",
 			zap.String("env", cfg.App.Env),

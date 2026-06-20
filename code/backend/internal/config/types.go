@@ -309,6 +309,8 @@ type RuntimeAgentConfig struct {
 	AllowLocalFallback bool                     `mapstructure:"allow_local_fallback"`
 	Endpoint           string                   `mapstructure:"endpoint"`
 	DialTimeout        time.Duration            `mapstructure:"dial_timeout"`
+	KeepaliveTime      time.Duration            `mapstructure:"keepalive_time"`
+	KeepaliveTimeout   time.Duration            `mapstructure:"keepalive_timeout"`
 	ServerName         string                   `mapstructure:"server_name"`
 	CAFile             string                   `mapstructure:"ca_file"`
 	CertFile           string                   `mapstructure:"cert_file"`
@@ -317,13 +319,14 @@ type RuntimeAgentConfig struct {
 }
 
 type RuntimeAgentServerConfig struct {
-	Enabled         bool          `mapstructure:"enabled"`
-	Host            string        `mapstructure:"host"`
-	Port            int           `mapstructure:"port"`
-	CertFile        string        `mapstructure:"cert_file"`
-	KeyFile         string        `mapstructure:"key_file"`
-	ClientCAFile    string        `mapstructure:"client_ca_file"`
-	ShutdownTimeout time.Duration `mapstructure:"shutdown_timeout"`
+	Enabled          bool          `mapstructure:"enabled"`
+	Host             string        `mapstructure:"host"`
+	Port             int           `mapstructure:"port"`
+	CertFile         string        `mapstructure:"cert_file"`
+	KeyFile          string        `mapstructure:"key_file"`
+	ClientCAFile     string        `mapstructure:"client_ca_file"`
+	KeepaliveMinTime time.Duration `mapstructure:"keepalive_min_time"`
+	ShutdownTimeout  time.Duration `mapstructure:"shutdown_timeout"`
 }
 
 type ContestConfig struct {

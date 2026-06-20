@@ -252,6 +252,8 @@ runtime_agent:
   allow_local_fallback: false
   endpoint: ""
   dial_timeout: 5s
+  keepalive_time: 30s
+  keepalive_timeout: 10s
   server_name: ""
   ca_file: ""
   cert_file: ""
@@ -263,6 +265,7 @@ runtime_agent:
     cert_file: ""
     key_file: ""
     client_ca_file: ""
+    keepalive_min_time: 30s
     shutdown_timeout: 10s
 
 contest:

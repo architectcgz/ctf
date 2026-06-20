@@ -240,6 +240,7 @@ func TestLoadRuntimeAgentDoesNotRequireAPIProductionSecrets(t *testing.T) {
 	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CERT_FILE", "/etc/ctf/runtime-agent/server.pem")
 	t.Setenv("CTF_RUNTIME_AGENT_SERVER_KEY_FILE", "/etc/ctf/runtime-agent/server-key.pem")
 	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CLIENT_CA_FILE", "/etc/ctf/runtime-agent/ca.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_KEEPALIVE_MIN_TIME", "45s")
 
 	cfg, err := LoadRuntimeAgent("prod")
 	if err != nil {
@@ -250,6 +251,28 @@ func TestLoadRuntimeAgentDoesNotRequireAPIProductionSecrets(t *testing.T) {
 	}
 	if cfg.RuntimeAgent.Server.Port != 9443 {
 		t.Fatalf("runtime agent server port = %d, want 9443", cfg.RuntimeAgent.Server.Port)
+	}
+	if cfg.RuntimeAgent.Server.KeepaliveMinTime != 45*time.Second {
+		t.Fatalf("runtime agent server keepalive min time = %s, want 45s", cfg.RuntimeAgent.Server.KeepaliveMinTime)
+	}
+}
+
+func TestLoadReadsRuntimeAgentClientKeepaliveFromEnv(t *testing.T) {
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
+	t.Setenv("CTF_RUNTIME_AGENT_KEEPALIVE_TIME", "45s")
+	t.Setenv("CTF_RUNTIME_AGENT_KEEPALIVE_TIMEOUT", "7s")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.RuntimeAgent.KeepaliveTime != 45*time.Second {
+		t.Fatalf("runtime agent keepalive time = %s, want 45s", cfg.RuntimeAgent.KeepaliveTime)
+	}
+	if cfg.RuntimeAgent.KeepaliveTimeout != 7*time.Second {
+		t.Fatalf("runtime agent keepalive timeout = %s, want 7s", cfg.RuntimeAgent.KeepaliveTimeout)
 	}
 }
 
@@ -847,6 +870,32 @@ func TestValidateRejectsIncompleteRuntimeAgentClientConfig(t *testing.T) {
 			},
 			wantError: "runtime_agent.dial_timeout must be greater than 0",
 		},
+		{
+			name: "keepalive time too small",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+				cfg.RuntimeAgent.CAFile = "/etc/ctf/ca.pem"
+				cfg.RuntimeAgent.CertFile = "/etc/ctf/client.pem"
+				cfg.RuntimeAgent.KeyFile = "/etc/ctf/client-key.pem"
+				cfg.RuntimeAgent.KeepaliveTime = 5 * time.Second
+			},
+			wantError: "runtime_agent.keepalive_time must be at least 10s",
+		},
+		{
+			name: "missing keepalive timeout",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Enabled = true
+				cfg.RuntimeAgent.Endpoint = "127.0.0.1:9443"
+				cfg.RuntimeAgent.ServerName = "runtime-agent.local"
+				cfg.RuntimeAgent.CAFile = "/etc/ctf/ca.pem"
+				cfg.RuntimeAgent.CertFile = "/etc/ctf/client.pem"
+				cfg.RuntimeAgent.KeyFile = "/etc/ctf/client-key.pem"
+				cfg.RuntimeAgent.KeepaliveTimeout = 0
+			},
+			wantError: "runtime_agent.keepalive_timeout must be greater than 0",
+		},
 	}
 
 	for _, tc := range testCases {
@@ -941,6 +990,18 @@ func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
 				cfg.RuntimeAgent.Server.ShutdownTimeout = 0
 			},
 			wantError: "runtime_agent.server.shutdown_timeout must be greater than 0",
+		},
+		{
+			name: "keepalive min time too small",
+			mutate: func(cfg *Config) {
+				cfg.RuntimeAgent.Server.Enabled = true
+				cfg.RuntimeAgent.Server.Port = 9443
+				cfg.RuntimeAgent.Server.CertFile = "/etc/ctf/runtime-agent/server.pem"
+				cfg.RuntimeAgent.Server.KeyFile = "/etc/ctf/runtime-agent/server-key.pem"
+				cfg.RuntimeAgent.Server.ClientCAFile = "/etc/ctf/runtime-agent/ca.pem"
+				cfg.RuntimeAgent.Server.KeepaliveMinTime = 5 * time.Second
+			},
+			wantError: "runtime_agent.server.keepalive_min_time must be at least 10s",
 		},
 	}
 
@@ -1064,10 +1125,13 @@ func validConfigForValidationTests() *Config {
 			},
 		},
 		RuntimeAgent: RuntimeAgentConfig{
-			DialTimeout: 5 * time.Second,
+			DialTimeout:      5 * time.Second,
+			KeepaliveTime:    30 * time.Second,
+			KeepaliveTimeout: 10 * time.Second,
 			Server: RuntimeAgentServerConfig{
-				Host:            "0.0.0.0",
-				ShutdownTimeout: 10 * time.Second,
+				Host:             "0.0.0.0",
+				KeepaliveMinTime: 30 * time.Second,
+				ShutdownTimeout:  10 * time.Second,
 			},
 		},
 	}

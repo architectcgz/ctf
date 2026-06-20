@@ -11,11 +11,13 @@ import (
 	"sync"
 	"time"
 
+	"ctf-platform/internal/config"
 	"ctf-platform/internal/module/container_runtime/agentcontracts"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 var (
@@ -53,9 +55,10 @@ func LoadServerTLSConfig(certFile, keyFile, clientCAFile string) (*tls.Config, e
 	}, nil
 }
 
-func NewGRPCServer(tlsConfig *tls.Config, service *Service) *grpc.Server {
+func NewGRPCServer(tlsConfig *tls.Config, service *Service, serverCfg config.RuntimeAgentServerConfig) *grpc.Server {
 	options := []grpc.ServerOption{
 		grpc.ForceServerCodec(agentcontracts.JSONCodec()),
+		grpc.KeepaliveEnforcementPolicy(runtimeAgentKeepaliveEnforcementPolicy(serverCfg)),
 	}
 	if tlsConfig != nil {
 		options = append(options, grpc.Creds(credentials.NewTLS(tlsConfig)))
@@ -63,6 +66,13 @@ func NewGRPCServer(tlsConfig *tls.Config, service *Service) *grpc.Server {
 	server := grpc.NewServer(options...)
 	agentcontracts.RegisterRuntimeAgentService(server, service)
 	return server
+}
+
+func runtimeAgentKeepaliveEnforcementPolicy(serverCfg config.RuntimeAgentServerConfig) keepalive.EnforcementPolicy {
+	return keepalive.EnforcementPolicy{
+		MinTime:             serverCfg.KeepaliveMinTime,
+		PermitWithoutStream: true,
+	}
 }
 
 func (s *Service) Health(context.Context, *agentcontracts.HealthRequest) (*agentcontracts.HealthResponse, error) {

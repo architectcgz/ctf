@@ -16,6 +16,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Bridge struct {
@@ -25,6 +26,14 @@ type Bridge struct {
 
 var _ runtimeports.RuntimeHostExecutor = (*Bridge)(nil)
 var _ runtimeports.SandboxExecutor = (*Bridge)(nil)
+
+func runtimeAgentClientKeepaliveParameters(cfg config.RuntimeAgentConfig) keepalive.ClientParameters {
+	return keepalive.ClientParameters{
+		Time:                cfg.KeepaliveTime,
+		Timeout:             cfg.KeepaliveTimeout,
+		PermitWithoutStream: true,
+	}
+}
 
 func New(conn *grpc.ClientConn) *Bridge {
 	if conn == nil {
@@ -53,6 +62,7 @@ func DialContext(ctx context.Context, cfg config.RuntimeAgentConfig) (*Bridge, e
 		cfg.Endpoint,
 		grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
 		grpc.WithBlock(),
+		grpc.WithKeepaliveParams(runtimeAgentClientKeepaliveParameters(cfg)),
 		grpc.WithDefaultCallOptions(grpc.ForceCodec(agentcontracts.JSONCodec())),
 	)
 	if err != nil {

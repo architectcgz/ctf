@@ -17,6 +17,8 @@ var containerStartupRecoveryMaxLockTTL = startuprecovery.MaxSafeLockTTL(
 	startuprecovery.DefaultLeaderRetry,
 )
 
+const runtimeAgentMinimumKeepaliveInterval = 10 * time.Second
+
 var runningInContainer = func() bool {
 	if _, err := os.Stat("/.dockerenv"); err == nil {
 		return true
@@ -239,6 +241,12 @@ func (c *Config) Validate() error {
 		if c.RuntimeAgent.DialTimeout <= 0 {
 			return fmt.Errorf("runtime_agent.dial_timeout must be greater than 0 when runtime_agent.enabled is true")
 		}
+		if c.RuntimeAgent.KeepaliveTime < runtimeAgentMinimumKeepaliveInterval {
+			return fmt.Errorf("runtime_agent.keepalive_time must be at least 10s when runtime_agent.enabled is true")
+		}
+		if c.RuntimeAgent.KeepaliveTimeout <= 0 {
+			return fmt.Errorf("runtime_agent.keepalive_timeout must be greater than 0 when runtime_agent.enabled is true")
+		}
 		if strings.TrimSpace(c.RuntimeAgent.ServerName) == "" {
 			return fmt.Errorf("runtime_agent.server_name must not be empty when runtime_agent.enabled is true")
 		}
@@ -368,6 +376,9 @@ func validateRuntimeAgentServerConfig(server RuntimeAgentServerConfig) error {
 	}
 	if server.ShutdownTimeout <= 0 {
 		return fmt.Errorf("runtime_agent.server.shutdown_timeout must be greater than 0 when runtime_agent.server.enabled is true")
+	}
+	if server.KeepaliveMinTime < runtimeAgentMinimumKeepaliveInterval {
+		return fmt.Errorf("runtime_agent.server.keepalive_min_time must be at least 10s when runtime_agent.server.enabled is true")
 	}
 	return nil
 }
