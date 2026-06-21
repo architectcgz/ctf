@@ -1,4 +1,4 @@
-package application
+package jobs
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 )
 
@@ -17,6 +18,8 @@ const (
 	defaultNodeHealthStaleAfter   = 30 * time.Second
 	defaultNodeHealthFailures     = 3
 )
+
+type ManagedContainerStat = runtimeapp.ManagedContainerStat
 
 type NodeHealthOptions struct {
 	PollInterval     time.Duration
@@ -83,7 +86,6 @@ func (s *NodeHealthService) SetOfflineHandler(handler NodeOfflineHandler) *NodeH
 }
 
 func (s *NodeHealthService) EvaluateOnce(ctx context.Context) error {
-	ctx = normalizeContext(ctx)
 	if s == nil || s.repo == nil {
 		return nil
 	}

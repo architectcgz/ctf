@@ -23,9 +23,9 @@ func TestRuntimeModuleUsesTypedDeps(t *testing.T) {
 		"provisioningService",
 		"*runtimecmd.ProvisioningService",
 		"containerStatsService",
-		"*runtimeapp.ContainerStatsService",
+		"*runtimeqry.ContainerStatsService",
 		"imageRuntime",
-		"*runtimeapp.ImageRuntimeService",
+		"*runtimecmd.ImageRuntimeService",
 		"containerFiles",
 		"runtimeports.ContainerFileWriter",
 	}
@@ -677,7 +677,7 @@ func TestRuntimeModuleUsesExternalPortsForCrossModuleDeps(t *testing.T) {
 
 	source := string(content)
 	expected := []string{
-		"*runtimeapp.ImageRuntimeService",
+		"*runtimecmd.ImageRuntimeService",
 		"runtimeports.ManagedContainerStatsReader",
 		"runtimeports.ContainerFileWriter",
 	}

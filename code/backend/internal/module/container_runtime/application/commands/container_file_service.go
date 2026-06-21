@@ -1,23 +1,25 @@
-package application
+package commands
 
 import (
 	"context"
 
 	"go.uber.org/zap"
+
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 )
 
 // ContainerFileService 收口容器文件写入能力。
 type ContainerFileService struct {
-	runtime ContainerFileWriter
+	runtime runtimeapp.ContainerFileWriter
 	logger  *zap.Logger
 }
 
 // NewContainerFileService 创建容器文件写入服务。
-func NewContainerFileService(runtime ContainerFileWriter, logger *zap.Logger) *ContainerFileService {
+func NewContainerFileService(runtime runtimeapp.ContainerFileWriter, logger *zap.Logger) *ContainerFileService {
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if isNilApplicationDependency(runtime) {
+	if isNilCommandDependency(runtime) {
 		runtime = nil
 	}
 	return &ContainerFileService{

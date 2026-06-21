@@ -1,6 +1,7 @@
 package container_runtime
 
 import (
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"path/filepath"
@@ -28,6 +29,40 @@ func TestContainerRuntimeOwnsCapabilityImplementationPackages(t *testing.T) {
 		}
 		if len(matches) == 0 {
 			t.Fatalf("container_runtime/%s must own runtime capability implementation files", filepath.ToSlash(dir))
+		}
+	}
+}
+
+func TestApplicationRootDoesNotOwnConcreteServices(t *testing.T) {
+	t.Parallel()
+
+	files, err := filepath.Glob(filepath.Join("application", "*.go"))
+	if err != nil {
+		t.Fatalf("glob container_runtime application files: %v", err)
+	}
+	for _, file := range files {
+		if strings.HasSuffix(file, "_test.go") {
+			continue
+		}
+		fset := token.NewFileSet()
+		fileNode, err := parser.ParseFile(fset, file, nil, 0)
+		if err != nil {
+			t.Fatalf("parse file %s: %v", file, err)
+		}
+		for _, decl := range fileNode.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok || genDecl.Tok != token.TYPE {
+				continue
+			}
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+				if strings.HasSuffix(typeSpec.Name.Name, "Service") {
+					t.Fatalf("%s declares %s; keep concrete services in application subpackages such as commands, queries, or jobs", file, typeSpec.Name.Name)
+				}
+			}
 		}
 	}
 }

@@ -9,6 +9,7 @@ import (
 	"ctf-platform/internal/config"
 	challengeports "ctf-platform/internal/module/challenge/ports"
 	runtimeapp "ctf-platform/internal/module/container_runtime/application"
+	runtimejobs "ctf-platform/internal/module/container_runtime/application/jobs"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
@@ -45,7 +46,7 @@ type ContainerRuntimeModule struct {
 
 	nodeRouter        *runtimeNodeExecutionRouter
 	runtime           *containerruntime.Module
-	runtimeNodeHealth *runtimeapp.NodeHealthService
+	runtimeNodeHealth *runtimejobs.NodeHealthService
 }
 
 func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
@@ -150,11 +151,11 @@ func (p *runtimeNodeStatsProbe) ListManagedContainerStats(ctx context.Context, n
 	return nil, runtimeports.ErrRuntimeNodeUnavailable
 }
 
-func registerRuntimeNodeHealthJob(root *Root, cfg *config.Config, repo *containerruntimeinfra.RuntimeNodeRepository, probe runtimeapp.NodeHealthProbe, logger *zap.Logger) *runtimeapp.NodeHealthService {
+func registerRuntimeNodeHealthJob(root *Root, cfg *config.Config, repo *containerruntimeinfra.RuntimeNodeRepository, probe runtimejobs.NodeHealthProbe, logger *zap.Logger) *runtimejobs.NodeHealthService {
 	if root == nil || cfg == nil || repo == nil || probe == nil || !cfg.Container.RuntimeNodeHealth.Enabled {
 		return nil
 	}
-	service := runtimeapp.NewNodeHealthService(repo, probe, runtimeapp.NodeHealthOptions{
+	service := runtimejobs.NewNodeHealthService(repo, probe, runtimejobs.NodeHealthOptions{
 		PollInterval:     cfg.Container.RuntimeNodeHealth.PollInterval,
 		ProbeTimeout:     cfg.Container.RuntimeNodeHealth.ProbeTimeout,
 		StaleAfter:       cfg.Container.RuntimeNodeHealth.StaleAfter,
@@ -164,7 +165,7 @@ func registerRuntimeNodeHealthJob(root *Root, cfg *config.Config, repo *containe
 	return service
 }
 
-func (m *ContainerRuntimeModule) SetRuntimeNodeOfflineHandler(handler runtimeapp.NodeOfflineHandler) {
+func (m *ContainerRuntimeModule) SetRuntimeNodeOfflineHandler(handler runtimejobs.NodeOfflineHandler) {
 	if m == nil || m.runtimeNodeHealth == nil {
 		return
 	}

@@ -100,27 +100,6 @@ func (a *HTTPService) IssueAWDDefenseSSHTicket(ctx context.Context, user authctx
 	}, nil
 }
 
-func (a *HTTPService) ReadAWDDefenseFile(context.Context, authctx.CurrentUser, int64, int64, string) (*instancecontracts.AWDDefenseFileResp, error) {
-	return &instancecontracts.AWDDefenseFileResp{}, nil
-}
-
-func (a *HTTPService) ListAWDDefenseDirectory(context.Context, authctx.CurrentUser, int64, int64, string) (*instancecontracts.AWDDefenseDirectoryResp, error) {
-	return &instancecontracts.AWDDefenseDirectoryResp{}, nil
-}
-
-func (a *HTTPService) SaveAWDDefenseFile(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req instancecontracts.AWDDefenseFileSaveReq) (*instancecontracts.AWDDefenseFileSaveResp, error) {
-	return &instancecontracts.AWDDefenseFileSaveResp{
-		Path: req.Path,
-		Size: len(req.Content),
-	}, nil
-}
-
-func (a *HTTPService) RunAWDDefenseCommand(_ context.Context, _ authctx.CurrentUser, _ int64, _ int64, req instancecontracts.AWDDefenseCommandReq) (*instancecontracts.AWDDefenseCommandResp, error) {
-	return &instancecontracts.AWDDefenseCommandResp{
-		Command: req.Command,
-	}, nil
-}
-
 func (a *HTTPService) ResolveProxyTicket(ctx context.Context, ticket string) (*instanceports.ProxyTicketClaims, error) {
 	return a.proxyTickets.ResolveTicket(ctx, ticket)
 }

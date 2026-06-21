@@ -1,18 +1,20 @@
-package application
+package queries
 
 import (
 	"context"
 	"testing"
+
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 )
 
 type stubManagedContainerStatsReader struct {
 	calls int
-	stats []ManagedContainerStat
+	stats []runtimeapp.ManagedContainerStat
 }
 
-func (s *stubManagedContainerStatsReader) ListManagedContainerStats(_ context.Context) ([]ManagedContainerStat, error) {
+func (s *stubManagedContainerStatsReader) ListManagedContainerStats(_ context.Context) ([]runtimeapp.ManagedContainerStat, error) {
 	s.calls++
-	return append([]ManagedContainerStat(nil), s.stats...), nil
+	return append([]runtimeapp.ManagedContainerStat(nil), s.stats...), nil
 }
 
 func TestContainerStatsServiceListManagedContainerStatsSkipsNilReader(t *testing.T) {
@@ -32,7 +34,7 @@ func TestContainerStatsServiceListManagedContainerStatsDelegatesToReader(t *test
 	t.Parallel()
 
 	reader := &stubManagedContainerStatsReader{
-		stats: []ManagedContainerStat{
+		stats: []runtimeapp.ManagedContainerStat{
 			{ContainerID: "abc", ContainerName: "ctf-instance", CPUPercent: 1.5},
 		},
 	}

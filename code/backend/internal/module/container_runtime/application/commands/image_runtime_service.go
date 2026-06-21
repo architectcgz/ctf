@@ -1,18 +1,20 @@
-package application
+package commands
 
 import (
 	"context"
 	"strings"
+
+	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 )
 
 // ImageRuntimeService 收口镜像检查与删除等运行时能力。
 type ImageRuntimeService struct {
-	runtime ContainerImageRuntime
+	runtime runtimeapp.ContainerImageRuntime
 }
 
 // NewImageRuntimeService 创建镜像运行时服务。
-func NewImageRuntimeService(runtime ContainerImageRuntime) *ImageRuntimeService {
-	if isNilApplicationDependency(runtime) {
+func NewImageRuntimeService(runtime runtimeapp.ContainerImageRuntime) *ImageRuntimeService {
+	if isNilCommandDependency(runtime) {
 		runtime = nil
 	}
 	return &ImageRuntimeService{runtime: runtime}

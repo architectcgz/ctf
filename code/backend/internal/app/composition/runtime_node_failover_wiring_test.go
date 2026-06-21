@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	runtimeapp "ctf-platform/internal/module/container_runtime/application"
+	runtimejobs "ctf-platform/internal/module/container_runtime/application/jobs"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 )
 
@@ -31,7 +32,7 @@ func TestWireRuntimeNodeFailoverRequeuesThenReconcilesDesiredAWD(t *testing.T) {
 			UpdatedAt:        now.Add(-time.Hour),
 		},
 	}
-	health := runtimeapp.NewNodeHealthService(repo, runtimeNodeFailoverProbe{err: errors.New("agent offline")}, runtimeapp.NodeHealthOptions{
+	health := runtimejobs.NewNodeHealthService(repo, runtimeNodeFailoverProbe{err: errors.New("agent offline")}, runtimejobs.NodeHealthOptions{
 		ProbeTimeout:     time.Second,
 		StaleAfter:       time.Minute,
 		FailureThreshold: 1,

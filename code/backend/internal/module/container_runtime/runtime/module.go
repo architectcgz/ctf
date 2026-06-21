@@ -6,8 +6,8 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/config"
-	runtimeapp "ctf-platform/internal/module/container_runtime/application"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
+	runtimeqry "ctf-platform/internal/module/container_runtime/application/queries"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 )
 
@@ -20,7 +20,7 @@ type BackgroundJob struct {
 type Module struct {
 	BackgroundJobs []BackgroundJob
 
-	ImageRuntime         *runtimeapp.ImageRuntimeService
+	ImageRuntime         *runtimecmd.ImageRuntimeService
 	RuntimeStatsProvider runtimeports.ManagedContainerStatsReader
 	ContainerFiles       runtimeports.ContainerFileWriter
 	ProvisioningService  *runtimecmd.ProvisioningService
@@ -51,8 +51,8 @@ type runtimeModuleDeps struct {
 	input                 Deps
 	cleanupService        *runtimecmd.RuntimeCleanupService
 	provisioningService   *runtimecmd.ProvisioningService
-	containerStatsService *runtimeapp.ContainerStatsService
-	imageRuntime          *runtimeapp.ImageRuntimeService
+	containerStatsService *runtimeqry.ContainerStatsService
+	imageRuntime          *runtimecmd.ImageRuntimeService
 	containerFiles        runtimeports.ContainerFileWriter
 }
 
@@ -86,9 +86,9 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 	}
 	cleanupService := runtimecmd.NewRuntimeCleanupService(deps.CleanupRuntime, deps.CleanupRepository, log.Named("container_runtime_cleanup_service"))
 	provisioningService := runtimecmd.NewProvisioningService(deps.ProvisioningRepository, deps.ProvisioningRuntime, &cfg.Container, log.Named("container_runtime_provisioning_service"))
-	var containerStatsService *runtimeapp.ContainerStatsService
+	var containerStatsService *runtimeqry.ContainerStatsService
 	if deps.ManagedContainerStats != nil {
-		containerStatsService = runtimeapp.NewContainerStatsService(deps.ManagedContainerStats)
+		containerStatsService = runtimeqry.NewContainerStatsService(deps.ManagedContainerStats)
 	}
 
 	return runtimeModuleDeps{
@@ -96,8 +96,8 @@ func buildRuntimeModuleDeps(deps Deps) runtimeModuleDeps {
 		cleanupService:        cleanupService,
 		provisioningService:   provisioningService,
 		containerStatsService: containerStatsService,
-		imageRuntime:          runtimeapp.NewImageRuntimeService(deps.ImageRuntime),
-		containerFiles:        runtimeapp.NewContainerFileService(deps.FileRuntime, log.Named("container_runtime_file_service")),
+		imageRuntime:          runtimecmd.NewImageRuntimeService(deps.ImageRuntime),
+		containerFiles:        runtimecmd.NewContainerFileService(deps.FileRuntime, log.Named("container_runtime_file_service")),
 	}
 }
 
