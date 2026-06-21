@@ -548,6 +548,44 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testi
 	}
 }
 
+func TestBuildContainerRuntimeModuleSelectsConfiguredRuntimeAgentNodeName(t *testing.T) {
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:    true,
+		NodeName:   "runtime-node-a",
+		Endpoint:   "runtime-agent.internal:7443",
+		ServerName: "runtime-agent.internal",
+	}
+
+	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil || module.RuntimeNodeSelector == nil {
+		t.Fatalf("expected runtime node selector, got %+v", module)
+	}
+
+	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
+	if err != nil {
+		t.Fatalf("SelectDefaultNode() error = %v", err)
+	}
+	if binding == nil {
+		t.Fatal("expected runtime node binding")
+	}
+	if binding.NodeName != "runtime-node-a" {
+		t.Fatalf("expected configured runtime agent node runtime-node-a, got %+v", binding)
+	}
+}
+
 func TestBuildContainerRuntimeModuleDefaultSelectorSkipsOfflineRuntimeNode(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.Container.RuntimeNodeHealth.Enabled = true

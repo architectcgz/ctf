@@ -18,6 +18,7 @@ var containerStartupRecoveryMaxLockTTL = startuprecovery.MaxSafeLockTTL(
 )
 
 const runtimeAgentMinimumKeepaliveInterval = 10 * time.Second
+const runtimeAgentNodeNameMaxLength = 128
 
 var runningInContainer = func() bool {
 	if _, err := os.Stat("/.dockerenv"); err == nil {
@@ -235,6 +236,9 @@ func (c *Config) Validate() error {
 		return fmt.Errorf("websocket.retry_max_delay must be greater than or equal to retry_initial_delay")
 	}
 	if c.RuntimeAgent.Enabled {
+		if err := validateRuntimeAgentNodeName("runtime_agent.node_name", c.RuntimeAgent.NodeName); err != nil {
+			return err
+		}
 		if strings.TrimSpace(c.RuntimeAgent.Endpoint) == "" {
 			return fmt.Errorf("runtime_agent.endpoint must not be empty when runtime_agent.enabled is true")
 		}
@@ -359,6 +363,9 @@ func (c *Config) ValidateRuntimeAgent() error {
 }
 
 func validateRuntimeAgentServerConfig(server RuntimeAgentServerConfig) error {
+	if err := validateRuntimeAgentNodeName("runtime_agent.server.node_name", server.NodeName); err != nil {
+		return err
+	}
 	if strings.TrimSpace(server.Host) == "" {
 		return fmt.Errorf("runtime_agent.server.host must not be empty when runtime_agent.server.enabled is true")
 	}
@@ -379,6 +386,22 @@ func validateRuntimeAgentServerConfig(server RuntimeAgentServerConfig) error {
 	}
 	if server.KeepaliveMinTime < runtimeAgentMinimumKeepaliveInterval {
 		return fmt.Errorf("runtime_agent.server.keepalive_min_time must be at least 10s when runtime_agent.server.enabled is true")
+	}
+	return nil
+}
+
+func validateRuntimeAgentNodeName(fieldName, value string) error {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	if len(trimmed) > runtimeAgentNodeNameMaxLength {
+		return fmt.Errorf("%s must be at most %d bytes", fieldName, runtimeAgentNodeNameMaxLength)
+	}
+	for _, r := range trimmed {
+		if r < 0x20 || r == 0x7f {
+			return fmt.Errorf("%s must not contain control characters", fieldName)
+		}
 	}
 	return nil
 }

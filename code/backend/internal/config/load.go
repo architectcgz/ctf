@@ -74,6 +74,8 @@ func normalizeLoadedConfig(cfg *Config, env string) {
 	if cfg.Container.DefenseSSHHostKeyPath != "" {
 		cfg.Container.DefenseSSHHostKeyPath = cfg.SharedStoragePath(cfg.Container.DefenseSSHHostKeyPath)
 	}
+	cfg.RuntimeAgent.NodeName = strings.TrimSpace(cfg.RuntimeAgent.NodeName)
+	cfg.RuntimeAgent.Server.NodeName = strings.TrimSpace(cfg.RuntimeAgent.Server.NodeName)
 }
 
 func (c *Config) resolveContainerFlagSecretForLoad() error {

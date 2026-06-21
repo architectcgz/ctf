@@ -3,6 +3,7 @@ package composition
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
@@ -15,6 +16,7 @@ import (
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	"ctf-platform/internal/module/container_runtime/infrastructure/agentclient"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
 	contestports "ctf-platform/internal/module/contest/ports"
@@ -138,7 +140,48 @@ func buildRuntimeNodeClientFromNode(
 	if err != nil {
 		return nil, err
 	}
+	if err := verifyRuntimeAgentNodeIdentity(ctx, node, bridge, strings.TrimSpace(cfg.RuntimeAgent.NodeName) != "", cfg.RuntimeAgent.DialTimeout); err != nil {
+		_ = bridge.Close(ctx)
+		return nil, err
+	}
 	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, contestinfra.NewSandboxCheckerRunner(bridge), bridge), nil
+}
+
+func verifyRuntimeAgentNodeIdentity(ctx context.Context, node *runtimeentity.RuntimeNode, bridge *agentclient.Bridge, strict bool, timeout time.Duration) error {
+	if node == nil {
+		return runtimeports.ErrRuntimeNodeUnavailable
+	}
+	if bridge == nil {
+		return runtimeports.ErrRuntimeNodeUnavailable
+	}
+	healthCtx := ctx
+	cancel := func() {}
+	if timeout > 0 {
+		healthCtx, cancel = context.WithTimeout(ctx, timeout)
+	}
+	defer cancel()
+
+	health, err := bridge.Health(healthCtx)
+	if err != nil {
+		return fmt.Errorf("check runtime agent node identity for expected node %q at endpoint %q: %w", node.Name, node.Endpoint, err)
+	}
+	reportedName := ""
+	hostname := ""
+	if health != nil {
+		reportedName = strings.TrimSpace(health.NodeName)
+		hostname = strings.TrimSpace(health.Hostname)
+	}
+	expectedName := strings.TrimSpace(node.Name)
+	if reportedName == "" {
+		if strict {
+			return fmt.Errorf("runtime agent node identity missing: expected node %q at endpoint %q hostname %q", expectedName, node.Endpoint, hostname)
+		}
+		return nil
+	}
+	if expectedName != "" && reportedName != expectedName {
+		return fmt.Errorf("runtime agent node identity mismatch: expected node %q at endpoint %q, reported node %q hostname %q", expectedName, node.Endpoint, reportedName, hostname)
+	}
+	return nil
 }
 
 func newRuntimeNodeExecutionRouter(

@@ -10,6 +10,8 @@ type HealthRequest struct{}
 type HealthResponse struct {
 	Ready        bool     `json:"ready"`
 	Capabilities []string `json:"capabilities,omitempty"`
+	NodeName     string   `json:"node_name,omitempty"`
+	Hostname     string   `json:"hostname,omitempty"`
 }
 
 type CreateNetworkRequest struct {

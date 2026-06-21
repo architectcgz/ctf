@@ -67,6 +67,26 @@ func TestServiceHealthReflectsAvailableDependencies(t *testing.T) {
 	}
 }
 
+func TestServiceHealthReportsNodeIdentity(t *testing.T) {
+	t.Parallel()
+
+	service := NewService(&healthTestRuntimeHostExecutor{}, healthTestSandboxExecutor{}, ServiceIdentity{
+		NodeName: "runtime-node-a",
+		Hostname: "agent-host-a",
+	})
+
+	resp, err := service.Health(context.Background(), nil)
+	if err != nil {
+		t.Fatalf("Health() error = %v", err)
+	}
+	if resp.NodeName != "runtime-node-a" {
+		t.Fatalf("Health().NodeName = %q, want runtime-node-a", resp.NodeName)
+	}
+	if resp.Hostname != "agent-host-a" {
+		t.Fatalf("Health().Hostname = %q, want agent-host-a", resp.Hostname)
+	}
+}
+
 type healthTestSandboxExecutor struct{}
 
 func (healthTestSandboxExecutor) RunSandboxExec(context.Context, runtimeports.SandboxExecJob) (runtimeports.SandboxExecResult, error) {

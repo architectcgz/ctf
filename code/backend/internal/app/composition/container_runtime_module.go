@@ -2,6 +2,7 @@ package composition
 
 import (
 	"context"
+	"strings"
 
 	"go.uber.org/zap"
 
@@ -245,6 +246,9 @@ func buildDefaultNodeRuntimeClient(root *Root, allocationRepo runtimeNodeAllocat
 
 func defaultRuntimeNodeName(cfg *config.Config) string {
 	if cfg != nil && cfg.RuntimeAgent.Enabled {
+		if nodeName := strings.TrimSpace(cfg.RuntimeAgent.NodeName); nodeName != "" {
+			return nodeName
+		}
 		return "agent-default"
 	}
 	return "local-default"

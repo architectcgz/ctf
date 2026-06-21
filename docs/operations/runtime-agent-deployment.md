@@ -15,7 +15,7 @@
 
 - API 以宿主机进程运行，`code/backend/scripts/dev-run.sh` 默认同时启动本机 `runtime-agent`
 - API 侧 `runtime_agent.enabled: true`，endpoint 指向 `127.0.0.1:<本机 agent 端口>`
-- `runtime_nodes` 默认写入 `agent-default`
+- 未配置 `runtime_agent.node_name` 时，`runtime_nodes` 默认写入 `agent-default`
 - 本机 Docker executor 只允许在 `APP_ENV=test`，或非生产环境显式设置 `runtime_agent.allow_local_fallback: true` 时作为 fallback；生产环境会拒绝该 fallback 配置
 
 ### 2. API + 单 remote agent
@@ -25,8 +25,9 @@
 - API 主机运行 `ctf-api`
 - 靶机宿主运行 `runtime-agent`
 - API 侧 `runtime_agent.enabled: true`
-- `runtime_nodes` 默认写入 `agent-default`
-- 实例创建、清理、checker、AWD 文件写入和容器 maintenance 都按 `node_id` 路由到 `agent-default`
+- 建议显式配置同一个稳定名称：API 侧 `runtime_agent.node_name`、agent 侧 `runtime_agent.server.node_name`、数据库 `runtime_nodes.name`
+- 未配置 `runtime_agent.node_name` 时，`runtime_nodes` 默认写入 `agent-default`
+- 实例创建、清理、checker、AWD 文件写入和容器 maintenance 都按 `node_id` 路由到对应 `runtime_nodes.name`
 
 ### 3. 正式多 node
 
@@ -34,6 +35,7 @@
 
 - 每台靶机宿主运行一个 `runtime-agent`
 - API 侧在 `runtime_nodes` 表中登记多个 schedulable node
+- 每个 `runtime_nodes.name` 必须对应一个 runtime-agent 的 `runtime_agent.server.node_name`
 - `runtime_node_health` 后台任务会探测每个 runtime node，默认新调度只选择 `schedulable + ready / degraded` 且心跳未过期的 node
 - node 离线后，该 node 上未过期的 `creating / running` 实例会重新进入 `pending`，由现有 scheduler / AWD desired reconciler 在健康节点上重建
 - 当前不声明容量智能分配、live migration 或已有 SSH/WebSocket 会话透明迁移已经落地
@@ -124,6 +126,7 @@ runtime-agent 所在宿主机需要打开 `runtime_agent.server.*`：
 runtime_agent:
   server:
     enabled: true
+    node_name: runtime-node-a
     host: 0.0.0.0
     port: 9443
     cert_file: /etc/ctf/runtime-agent/server.pem
@@ -135,6 +138,7 @@ runtime_agent:
 要求：
 
 - `runtime_agent.server.enabled` 为 `true`
+- `runtime_agent.server.node_name` 是该 Docker 宿主的稳定逻辑名称，应匹配 API 侧登记的 `runtime_nodes.name`
 - `cert_file` / `key_file` / `client_ca_file` 必须同时提供
 - runtime-agent 进程所在节点本机仍直接连接 Docker Engine，并在本机执行 checker sandbox、ACL 和容器文件 copy / exec
 
@@ -146,6 +150,7 @@ API 侧开启 client 配置：
 runtime_agent:
   enabled: true
   allow_local_fallback: false
+  node_name: runtime-node-a
   endpoint: 10.0.1.2:9443
   dial_timeout: 5s
   server_name: runtime-agent.internal
@@ -157,6 +162,7 @@ runtime_agent:
 要求：
 
 - `runtime_agent.enabled` 为 `true` 时，`endpoint`、`dial_timeout`、`server_name`、`ca_file`、`cert_file`、`key_file` 都必须存在
+- `runtime_agent.node_name` 是 API 启动时默认 bootstrap / selector 使用的 `runtime_nodes.name`；配置后，远端 agent 的 Health 自报 `node_name` 必须与该 node row 名称一致，否则 API 不会缓存或使用这个 remote client
 - `runtime_agent.allow_local_fallback` 默认为 `false`；只有非生产故障排查时才允许临时打开，生产配置会拒绝该值为 `true`
 - `server_name` 要与目标 node 的 `tls_identity` 一致
 - API 主机不再依赖“切 `DOCKER_HOST` 就完成多机”的假设；完整执行 authority 来自 agent 协议和 `node_id`
@@ -206,7 +212,10 @@ container:
 
 - 默认节点由启动时的 `runtime_agent.enabled` 决定：
   - `false` -> `local-default`，但非 test 环境只有 `runtime_agent.allow_local_fallback: true` 时才能实际构造本地 executor
-  - `true` -> `agent-default`
+  - `true` 且配置 `runtime_agent.node_name` -> 该配置值
+  - `true` 且未配置 `runtime_agent.node_name` -> `agent-default`
+- `runtime_nodes.name` 是部署期稳定节点身份；`runtime_nodes.id` 和各业务表里的 `node_id` 仍是数据库内部路由键，不应配置到 runtime-agent
+- runtime-agent 的 Health 会返回自报 `node_name` 和宿主 `hostname`。当远端 self-report 与 API 正在拨号的 `runtime_nodes.name` 不一致时，API 会在缓存 client 前失败，错误信息会包含 expected / reported node、endpoint 和 hostname
 - 新实例启动时会把选中的 `node_id` 持久化到实例记录
 - checker job metadata、AWD service instance 和容器文件写入路径都会显式携带或反查 `node_id`
 - 容器清理、checker 执行、AWD 防守工作区写入和 AWD defense SSH interactive exec 都不再以“当前 API 进程连着哪台宿主机”作为 authority

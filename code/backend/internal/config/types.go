@@ -307,6 +307,7 @@ type WebSocketConfig struct {
 type RuntimeAgentConfig struct {
 	Enabled            bool                     `mapstructure:"enabled"`
 	AllowLocalFallback bool                     `mapstructure:"allow_local_fallback"`
+	NodeName           string                   `mapstructure:"node_name"`
 	Endpoint           string                   `mapstructure:"endpoint"`
 	DialTimeout        time.Duration            `mapstructure:"dial_timeout"`
 	KeepaliveTime      time.Duration            `mapstructure:"keepalive_time"`
@@ -320,6 +321,7 @@ type RuntimeAgentConfig struct {
 
 type RuntimeAgentServerConfig struct {
 	Enabled          bool          `mapstructure:"enabled"`
+	NodeName         string        `mapstructure:"node_name"`
 	Host             string        `mapstructure:"host"`
 	Port             int           `mapstructure:"port"`
 	CertFile         string        `mapstructure:"cert_file"`

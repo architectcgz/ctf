@@ -4,17 +4,25 @@ import (
 	"context"
 	"errors"
 	"io"
+	"net"
+	"strings"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/test/bufconn"
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
+	"ctf-platform/internal/module/container_runtime/agentcontracts"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
 	runtimecontracts "ctf-platform/internal/module/container_runtime/contracts"
 	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	containerruntimeinfra "ctf-platform/internal/module/container_runtime/infrastructure"
+	"ctf-platform/internal/module/container_runtime/infrastructure/agentclient"
+	"ctf-platform/internal/module/container_runtime/infrastructure/agentserver"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	runtimeentity "ctf-platform/internal/module/contest/entity"
 	contestinfra "ctf-platform/internal/module/contest/infrastructure"
@@ -160,6 +168,116 @@ func TestRuntimeNodeExecutionRouterRoutesExplicitUnschedulableHealthyNodeWhenHea
 	}
 	if len(runnerB.jobs) != 1 {
 		t.Fatalf("expected node-b checker runner to receive explicit job only, got %d", len(runnerB.jobs))
+	}
+}
+
+func TestBuildRuntimeNodeClientRejectsRuntimeAgentNodeNameMismatch(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:          true,
+		NodeName:         "node-a",
+		Endpoint:         "runtime-agent-a:9443",
+		DialTimeout:      time.Second,
+		ServerName:       "runtime-agent-a",
+		CAFile:           "/etc/ctf/ca.pem",
+		CertFile:         "/etc/ctf/client.pem",
+		KeyFile:          "/etc/ctf/client-key.pem",
+		KeepaliveTime:    30 * time.Second,
+		KeepaliveTimeout: 10 * time.Second,
+	}
+	node := &containerruntimeentity.RuntimeNode{
+		ID:          101,
+		Name:        "node-a",
+		Endpoint:    "runtime-agent-a:9443",
+		TLSIdentity: "runtime-agent-a",
+	}
+	originalDial := dialRuntimeAgent
+	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Bridge, error) {
+		return newRuntimeAgentHealthBridge(t, ctx, agentserver.ServiceIdentity{
+			NodeName: "node-b",
+			Hostname: "agent-host-b",
+		}), nil
+	}
+	t.Cleanup(func() {
+		dialRuntimeAgent = originalDial
+	})
+
+	client, err := buildRuntimeNodeClientFromNode(
+		context.Background(),
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		node,
+	)
+	if err == nil {
+		if client != nil {
+			_ = client.Close(context.Background())
+		}
+		t.Fatal("expected runtime agent node identity mismatch error, got nil")
+	}
+	if !strings.Contains(err.Error(), "runtime agent node identity mismatch") ||
+		!strings.Contains(err.Error(), "node-a") ||
+		!strings.Contains(err.Error(), "node-b") ||
+		!strings.Contains(err.Error(), "agent-host-b") {
+		t.Fatalf("unexpected mismatch error: %v", err)
+	}
+}
+
+func TestBuildRuntimeNodeClientTimesOutRuntimeAgentIdentityCheck(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.App.Env = "dev"
+	cfg.RuntimeAgent = config.RuntimeAgentConfig{
+		Enabled:          true,
+		NodeName:         "node-a",
+		Endpoint:         "runtime-agent-a:9443",
+		DialTimeout:      20 * time.Millisecond,
+		ServerName:       "runtime-agent-a",
+		CAFile:           "/etc/ctf/ca.pem",
+		CertFile:         "/etc/ctf/client.pem",
+		KeyFile:          "/etc/ctf/client-key.pem",
+		KeepaliveTime:    30 * time.Second,
+		KeepaliveTimeout: 10 * time.Second,
+	}
+	node := &containerruntimeentity.RuntimeNode{
+		ID:          101,
+		Name:        "node-a",
+		Endpoint:    "runtime-agent-a:9443",
+		TLSIdentity: "runtime-agent-a",
+	}
+	originalDial := dialRuntimeAgent
+	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Bridge, error) {
+		return newRuntimeAgentBridge(t, ctx, blockingRuntimeAgentService{}), nil
+	}
+	t.Cleanup(func() {
+		dialRuntimeAgent = originalDial
+	})
+
+	done := make(chan error, 1)
+	go func() {
+		client, err := buildRuntimeNodeClientFromNode(
+			context.Background(),
+			cfg,
+			zap.NewNop(),
+			containerruntimeinfra.NewAllocationRepository(db),
+			node,
+		)
+		if client != nil {
+			_ = client.Close(context.Background())
+		}
+		done <- err
+	}()
+
+	select {
+	case err := <-done:
+		if err == nil {
+			t.Fatal("expected runtime agent identity timeout error, got nil")
+		}
+		if !strings.Contains(err.Error(), "check runtime agent node identity") {
+			t.Fatalf("unexpected timeout error: %v", err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("runtime agent identity check did not respect configured timeout")
 	}
 }
 
@@ -595,6 +713,52 @@ func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNod
 	t.Cleanup(func() {
 		buildRuntimeNodeClient = original
 	})
+}
+
+func newRuntimeAgentHealthBridge(t *testing.T, ctx context.Context, identity agentserver.ServiceIdentity) *agentclient.Bridge {
+	t.Helper()
+	return newRuntimeAgentBridge(t, ctx, agentserver.NewService(nil, nil, identity))
+}
+
+func newRuntimeAgentBridge(t *testing.T, ctx context.Context, service agentcontracts.RuntimeAgentService) *agentclient.Bridge {
+	t.Helper()
+
+	listener := bufconn.Listen(1024 * 1024)
+	server := grpc.NewServer(grpc.ForceServerCodec(agentcontracts.JSONCodec()))
+	agentcontracts.RegisterRuntimeAgentService(server, service)
+	go func() {
+		if err := server.Serve(listener); err != nil {
+			t.Logf("runtime agent health bufconn stopped: %v", err)
+		}
+	}()
+
+	conn, err := grpc.DialContext(
+		ctx,
+		"bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return listener.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.ForceCodec(agentcontracts.JSONCodec())),
+	)
+	if err != nil {
+		t.Fatalf("dial runtime agent health bufconn: %v", err)
+	}
+	t.Cleanup(func() {
+		_ = conn.Close()
+		server.Stop()
+		_ = listener.Close()
+	})
+	return agentclient.New(conn)
+}
+
+type blockingRuntimeAgentService struct {
+	agentcontracts.RuntimeAgentService
+}
+
+func (blockingRuntimeAgentService) Health(ctx context.Context, _ *agentcontracts.HealthRequest) (*agentcontracts.HealthResponse, error) {
+	<-ctx.Done()
+	return nil, ctx.Err()
 }
 
 func newStubNodeRuntimeClient(executor runtimeports.RuntimeHostExecutor, runner contestports.CheckerRunner) *nodeRuntimeClient {

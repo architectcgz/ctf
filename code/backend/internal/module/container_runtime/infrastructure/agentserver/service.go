@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,10 +29,26 @@ var (
 type Service struct {
 	hostExecutor    runtimeports.RuntimeHostExecutor
 	sandboxExecutor runtimeports.SandboxExecutor
+	identity        ServiceIdentity
 }
 
-func NewService(hostExecutor runtimeports.RuntimeHostExecutor, sandboxExecutor runtimeports.SandboxExecutor) *Service {
-	return &Service{hostExecutor: hostExecutor, sandboxExecutor: sandboxExecutor}
+type ServiceIdentity struct {
+	NodeName string
+	Hostname string
+}
+
+func NewService(hostExecutor runtimeports.RuntimeHostExecutor, sandboxExecutor runtimeports.SandboxExecutor, identity ...ServiceIdentity) *Service {
+	resolvedIdentity := ServiceIdentity{}
+	if len(identity) > 0 {
+		resolvedIdentity = identity[0]
+	}
+	resolvedIdentity.NodeName = strings.TrimSpace(resolvedIdentity.NodeName)
+	resolvedIdentity.Hostname = strings.TrimSpace(resolvedIdentity.Hostname)
+	return &Service{
+		hostExecutor:    hostExecutor,
+		sandboxExecutor: sandboxExecutor,
+		identity:        resolvedIdentity,
+	}
 }
 
 func LoadServerTLSConfig(certFile, keyFile, clientCAFile string) (*tls.Config, error) {
@@ -86,9 +103,15 @@ func (s *Service) Health(context.Context, *agentcontracts.HealthRequest) (*agent
 	if s != nil && s.hostExecutor != nil {
 		capabilities = append(capabilities, "interactive_exec")
 	}
+	identity := ServiceIdentity{}
+	if s != nil {
+		identity = s.identity
+	}
 	return &agentcontracts.HealthResponse{
 		Ready:        s != nil && s.hostExecutor != nil && s.sandboxExecutor != nil,
 		Capabilities: capabilities,
+		NodeName:     identity.NodeName,
+		Hostname:     identity.Hostname,
 	}, nil
 }
 

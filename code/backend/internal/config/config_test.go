@@ -276,6 +276,39 @@ func TestLoadReadsRuntimeAgentClientKeepaliveFromEnv(t *testing.T) {
 	}
 }
 
+func TestLoadReadsRuntimeAgentNodeNameFromEnv(t *testing.T) {
+	chdirToBackendRoot(t)
+	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")
+	t.Setenv("CTF_RUNTIME_AGENT_NODE_NAME", "runtime-node-a")
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.RuntimeAgent.NodeName != "runtime-node-a" {
+		t.Fatalf("runtime agent node name = %q, want runtime-node-a", cfg.RuntimeAgent.NodeName)
+	}
+}
+
+func TestLoadRuntimeAgentReadsServerNodeNameFromEnv(t *testing.T) {
+	chdirToBackendRoot(t)
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_ENABLED", "true")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CERT_FILE", "/etc/ctf/runtime-agent/server.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_KEY_FILE", "/etc/ctf/runtime-agent/server-key.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_CLIENT_CA_FILE", "/etc/ctf/runtime-agent/ca.pem")
+	t.Setenv("CTF_RUNTIME_AGENT_SERVER_NODE_NAME", "runtime-node-a")
+
+	cfg, err := LoadRuntimeAgent("dev")
+	if err != nil {
+		t.Fatalf("LoadRuntimeAgent() error = %v", err)
+	}
+
+	if cfg.RuntimeAgent.Server.NodeName != "runtime-node-a" {
+		t.Fatalf("runtime agent server node name = %q, want runtime-node-a", cfg.RuntimeAgent.Server.NodeName)
+	}
+}
+
 func TestLoadDevConfigDoesNotShipDefaultPasswords(t *testing.T) {
 	chdirToBackendRoot(t)
 	setContainerFlagSecretEnv(t, "integration-secret-123456789012345")

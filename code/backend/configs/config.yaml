@@ -250,6 +250,7 @@ websocket:
 runtime_agent:
   enabled: false
   allow_local_fallback: false
+  node_name: "" # 可选；API 默认 remote runtime node 名称，应匹配 runtime_nodes.name 和 agent server node_name
   endpoint: ""
   dial_timeout: 5s
   keepalive_time: 30s
@@ -260,6 +261,7 @@ runtime_agent:
   key_file: ""
   server:
     enabled: false
+    node_name: "" # 可选；runtime-agent 自报的稳定节点名称，用于 health 与错节点校验
     host: 0.0.0.0
     port: 9443
     cert_file: ""
