@@ -45,8 +45,8 @@ func TestContestEndedRuntimeCleanerCleanupDefenseWorkspaceUsesContainerAuthority
 	if payload.ID != 1001 {
 		t.Fatalf("expected cleanup payload to preserve instance id, got %+v", payload)
 	}
-	if payload.NodeID != nil {
-		t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got node_id=%d", *payload.NodeID)
+	if payload.RuntimeNodeID != nil {
+		t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got runtime_node_id=%d", *payload.RuntimeNodeID)
 	}
 	if payload.ContainerID != "workspace-ended-ctr" {
 		t.Fatalf("expected workspace cleanup payload to carry container id, got %+v", payload)

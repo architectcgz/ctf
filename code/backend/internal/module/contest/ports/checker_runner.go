@@ -39,11 +39,11 @@ type CheckerRunLimits struct {
 }
 
 type CheckerRunMetadata struct {
-	ContestID   int64
-	ServiceID   int64
-	TeamID      int64
-	RoundNumber int
-	NodeID      int64
+	ContestID     int64
+	ServiceID     int64
+	TeamID        int64
+	RoundNumber   int
+	RuntimeNodeID int64
 }
 
 type CheckerRunResult struct {

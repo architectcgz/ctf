@@ -261,7 +261,7 @@ func (r *runtimeNodeExecutionRouter) CreateTopology(ctx context.Context, req *pr
 	if r == nil || req == nil {
 		return nil, nil
 	}
-	client, _, err := r.clientForNodeID(ctx, req.NodeID)
+	client, _, err := r.clientForNodeID(ctx, req.RuntimeNodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +432,7 @@ func (r *runtimeNodeExecutionRouter) RunChecker(ctx context.Context, job contest
 	if r == nil {
 		return contestports.CheckerRunResult{}, nil
 	}
-	client, _, err := r.clientForNodeID(ctx, job.Metadata.NodeID)
+	client, _, err := r.clientForNodeID(ctx, job.Metadata.RuntimeNodeID)
 	if err != nil {
 		return contestports.CheckerRunResult{}, err
 	}
@@ -486,14 +486,14 @@ func (r *runtimeNodeExecutionRouter) clientForInstance(ctx context.Context, inst
 	if instance == nil {
 		return nil, 0, nil
 	}
-	return r.clientForNodeID(ctx, runtimeNodeIDValue(instance.NodeID))
+	return r.clientForNodeID(ctx, runtimeNodeIDValue(instance.RuntimeNodeID))
 }
 
 func (r *runtimeNodeExecutionRouter) clientForCleanupRuntime(ctx context.Context, target runtimecontracts.RuntimeCleanupTarget) (runtimeNodeClient, int64, error) {
 	if target == (runtimecontracts.RuntimeCleanupTarget{}) {
 		return nil, 0, nil
 	}
-	if nodeID := runtimeNodeIDValue(target.NodeID); nodeID > 0 {
+	if nodeID := runtimeNodeIDValue(target.RuntimeNodeID); nodeID > 0 {
 		return r.clientForNodeID(ctx, nodeID)
 	}
 	for _, containerID := range cleanupRuntimeContainerIDs(target) {

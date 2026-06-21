@@ -142,7 +142,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 	}
 
 	if awdHTTPCheckerActionEnabled(config.PutFlag) {
-		putResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, config.PutFlag, templateData, nil, instance.NodeID)
+		putResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, config.PutFlag, templateData, nil, instance.RuntimeNodeID)
 		target.PutFlag = putResult.summary
 		if !putResult.summary.Healthy {
 			target.ErrorCode = putResult.summary.ErrorCode
@@ -162,7 +162,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 	}
 
 	expectedSubstrings := renderAWDHTTPCheckerExpectedSubstrings(getAction.ExpectedSubstring, templateData, acceptedFlags)
-	getResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, getAction, templateData, expectedSubstrings, instance.NodeID)
+	getResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, getAction, templateData, expectedSubstrings, instance.RuntimeNodeID)
 	target.GetFlag = getResult.summary
 	if !getResult.summary.Healthy {
 		target.ErrorCode = getResult.summary.ErrorCode
@@ -180,7 +180,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerPreviewTarget(
 	}
 
 	if awdHTTPCheckerActionEnabled(config.Havoc) {
-		havocResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, config.Havoc, templateData, nil, instance.NodeID)
+		havocResult := u.runAWDHTTPCheckerAction(ctx, instance.AccessURL, instance.RuntimeDetails, config.Havoc, templateData, nil, instance.RuntimeNodeID)
 		target.Havoc = havocResult.summary
 		if !havocResult.summary.Healthy {
 			target.ErrorCode = havocResult.summary.ErrorCode

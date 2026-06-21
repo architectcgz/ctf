@@ -45,6 +45,7 @@ type ContainerRuntimeModule struct {
 	LifecycleCloser         runtimeLifecycleCloser
 
 	nodeRouter        *runtimeNodeExecutionRouter
+	nodeRepo          *containerruntimeinfra.RuntimeNodeRepository
 	runtime           *containerruntime.Module
 	runtimeNodeHealth *runtimejobs.NodeHealthService
 }
@@ -124,6 +125,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		RuntimeNodeSelector:     nodeSelector,
 		LifecycleCloser:         lifecycleCloser,
 		nodeRouter:              nodeRouter,
+		nodeRepo:                nodeRepo,
 		runtime:                 module,
 		runtimeNodeHealth:       runtimeNodeHealth,
 	}, nil

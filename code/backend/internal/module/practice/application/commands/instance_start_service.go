@@ -510,19 +510,19 @@ func (s *serviceCore) startChallengeWithScope(ctx context.Context, userID, chall
 		}
 
 		instance = &instancecontracts.Instance{
-			UserID:      userID,
-			ContestID:   scope.ContestID,
-			TeamID:      scope.TeamID,
-			ChallengeID: challengeID,
-			ServiceID:   scope.ServiceID,
-			NodeID:      runtimeNodeIDFromBinding(nodeBinding),
-			HostPort:    hostPort,
-			ShareScope:  scope.ShareScope,
-			Status:      initialStatus,
-			Nonce:       nonce,
-			FlagKeyID:   flagKeyID,
-			ExpiresAt:   expiresAt,
-			MaxExtends:  s.config.Container.MaxExtends,
+			UserID:        userID,
+			ContestID:     scope.ContestID,
+			TeamID:        scope.TeamID,
+			ChallengeID:   challengeID,
+			ServiceID:     scope.ServiceID,
+			RuntimeNodeID: runtimeNodeIDFromBinding(nodeBinding),
+			HostPort:      hostPort,
+			ShareScope:    scope.ShareScope,
+			Status:        initialStatus,
+			Nonce:         nonce,
+			FlagKeyID:     flagKeyID,
+			ExpiresAt:     expiresAt,
+			MaxExtends:    s.config.Container.MaxExtends,
 		}
 		if err := txRepo.CreateInstance(ctx, instance); err != nil {
 			return apperror.ErrInternal.WithCause(err)
@@ -561,10 +561,10 @@ func (s *serviceCore) selectRuntimeNode(ctx context.Context, scope practiceports
 }
 
 func runtimeNodeIDFromBinding(binding *practiceports.RuntimeNodeBinding) *int64 {
-	if binding == nil || binding.NodeID <= 0 {
+	if binding == nil || binding.RuntimeNodeID <= 0 {
 		return nil
 	}
-	nodeID := binding.NodeID
+	nodeID := binding.RuntimeNodeID
 	return &nodeID
 }
 

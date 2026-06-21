@@ -127,11 +127,11 @@ func (u *AWDRoundUpdater) runAWDTCPCheckerTarget(
 	}
 	auditJob := contestports.CheckerRunJob{
 		Metadata: contestports.CheckerRunMetadata{
-			ContestID:   contestID,
-			ServiceID:   definition.ServiceID,
-			TeamID:      teamID,
-			RoundNumber: awdScriptRoundNumber(round),
-			NodeID:      instance.NodeID,
+			ContestID:     contestID,
+			ServiceID:     definition.ServiceID,
+			TeamID:        teamID,
+			RoundNumber:   awdScriptRoundNumber(round),
+			RuntimeNodeID: instance.RuntimeNodeID,
 		},
 	}
 	timeout := config.timeout(u.cfg.CheckerTimeout)

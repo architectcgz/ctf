@@ -140,9 +140,13 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
-		PracticeInstanceRepository:  newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo),
-		PracticeRuntimeService:      practiceRuntimeService,
-		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(runtime.RuntimeNodeSelector),
+		PracticeInstanceRepository: newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo),
+		PracticeRuntimeService:     practiceRuntimeService,
+		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(
+			runtime.RuntimeNodeSelector,
+			newContestRuntimePlacementStoreAdapter(contestinfra.NewContestRuntimePlacementRepository(root.DB())),
+			newRuntimeNodeHealthLookupAdapter(runtime.nodeRepo, runtimeNodeHealthStaleThreshold(cfg)),
+		),
 		service: newRuntimeHTTPServiceAdapter(
 			commandService,
 			queryService,

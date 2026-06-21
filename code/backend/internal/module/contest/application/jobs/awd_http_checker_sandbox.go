@@ -71,7 +71,7 @@ func (u *AWDRoundUpdater) runAWDHTTPCheckerActionInSandbox(
 			OutputLimitBytes: u.cfg.CheckerSandbox.OutputLimitBytes,
 		},
 		Metadata: contestports.CheckerRunMetadata{
-			NodeID: nodeID,
+			RuntimeNodeID: nodeID,
 		},
 	}
 

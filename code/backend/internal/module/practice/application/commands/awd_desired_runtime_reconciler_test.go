@@ -30,6 +30,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 	teamID := int64(4201)
 	serviceID := int64(5201)
 	challengeID := int64(6201)
+	runtimeNodeID := int64(9201)
 	contestEnd := time.Date(2027, 5, 16, 14, 0, 0, 0, time.UTC)
 	contest := &contestentity.Contest{
 		ID:      contestID,
@@ -48,6 +49,7 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 
 	var createdInstance *instanceentity.Instance
 	var operation *runtimeentity.AWDServiceOperation
+	var selectedScopes []practiceports.InstanceScope
 	findTeamCalled := false
 	findServiceCalled := false
 	findExistingCalled := false
@@ -138,7 +140,13 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 				},
 			},
 		},
-		nil),
+		nil).
+		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
+			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+				selectedScopes = append(selectedScopes, scope)
+				return &practiceports.RuntimeNodeBinding{RuntimeNodeID: runtimeNodeID, NodeName: "node-9201"}, nil
+			},
+		}),
 
 		repo, nil)
 
@@ -156,6 +164,21 @@ func TestReconcileDesiredAWDInstancesCreatesMissingInstance(t *testing.T) {
 	}
 	if createdInstance.Status != instanceentity.InstanceStatusPending {
 		t.Fatalf("expected pending instance status, got %+v", createdInstance)
+	}
+	if createdInstance.RuntimeNodeID == nil || *createdInstance.RuntimeNodeID != runtimeNodeID {
+		t.Fatalf("expected desired awd instance to persist runtime node %d, got %+v", runtimeNodeID, createdInstance.RuntimeNodeID)
+	}
+	if len(selectedScopes) != 1 {
+		t.Fatalf("expected one runtime node selection, got %d", len(selectedScopes))
+	}
+	selectedScope := selectedScopes[0]
+	if selectedScope.ContestMode != practiceports.ContestModeAWD ||
+		selectedScope.ContestID == nil || *selectedScope.ContestID != contestID ||
+		selectedScope.TeamID == nil || *selectedScope.TeamID != teamID ||
+		selectedScope.ServiceID == nil || *selectedScope.ServiceID != serviceID ||
+		selectedScope.ShareScope != instanceentity.ShareScopePerTeam ||
+		selectedScope.FlagSubjectID != teamID {
+		t.Fatalf("unexpected desired awd placement scope: %+v", selectedScope)
 	}
 	if !createdInstance.ExpiresAt.Equal(contestEnd) {
 		t.Fatalf("expected created instance expiry %s, got %+v", contestEnd, createdInstance)

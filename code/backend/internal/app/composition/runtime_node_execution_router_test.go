@@ -52,7 +52,7 @@ func TestRuntimeNodeExecutionRouterRoutesCheckerByNodeID(t *testing.T) {
 	)
 
 	result, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{
-		Metadata: contestports.CheckerRunMetadata{NodeID: nodeB.ID},
+		Metadata: contestports.CheckerRunMetadata{RuntimeNodeID: nodeB.ID},
 	})
 	if err != nil {
 		t.Fatalf("RunChecker() error = %v", err)
@@ -98,7 +98,7 @@ func TestRuntimeNodeExecutionRouterRejectsExplicitOfflineNodeWhenHealthCheckEnab
 	)
 
 	_, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{
-		Metadata: contestports.CheckerRunMetadata{NodeID: nodeB.ID},
+		Metadata: contestports.CheckerRunMetadata{RuntimeNodeID: nodeB.ID},
 	})
 	if !errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) {
 		t.Fatalf("RunChecker() error = %v, want ErrRuntimeNodeUnavailable", err)
@@ -155,7 +155,7 @@ func TestRuntimeNodeExecutionRouterRoutesExplicitUnschedulableHealthyNodeWhenHea
 	}
 
 	explicitResult, err := router.RunChecker(context.Background(), contestports.CheckerRunJob{
-		Metadata: contestports.CheckerRunMetadata{NodeID: nodeB.ID},
+		Metadata: contestports.CheckerRunMetadata{RuntimeNodeID: nodeB.ID},
 	})
 	if err != nil {
 		t.Fatalf("explicit RunChecker() error = %v", err)
@@ -291,17 +291,17 @@ func TestRuntimeNodeExecutionRouterRoutesContainerFileWritesByWorkspaceContainer
 
 	nodeBID := nodeB.ID
 	instance := instanceentity.Instance{
-		ID:          2001,
-		UserID:      3001,
-		ContestID:   int64PtrForRouterTest(41),
-		TeamID:      int64PtrForRouterTest(51),
-		ChallengeID: 61,
-		ServiceID:   int64PtrForRouterTest(71),
-		NodeID:      &nodeBID,
-		ContainerID: "primary-ctr",
-		ShareScope:  instanceentity.ShareScopePerUser,
-		Status:      instanceentity.InstanceStatusRunning,
-		ExpiresAt:   time.Now().UTC().Add(time.Hour),
+		ID:            2001,
+		UserID:        3001,
+		ContestID:     int64PtrForRouterTest(41),
+		TeamID:        int64PtrForRouterTest(51),
+		ChallengeID:   61,
+		ServiceID:     int64PtrForRouterTest(71),
+		RuntimeNodeID: &nodeBID,
+		ContainerID:   "primary-ctr",
+		ShareScope:    instanceentity.ShareScopePerUser,
+		Status:        instanceentity.InstanceStatusRunning,
+		ExpiresAt:     time.Now().UTC().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -363,17 +363,17 @@ func TestRuntimeNodeExecutionRouterRoutesInteractiveExecByWorkspaceContainerNode
 
 	nodeBID := nodeB.ID
 	instance := instanceentity.Instance{
-		ID:          2051,
-		UserID:      3051,
-		ContestID:   int64PtrForRouterTest(43),
-		TeamID:      int64PtrForRouterTest(53),
-		ChallengeID: 63,
-		ServiceID:   int64PtrForRouterTest(73),
-		NodeID:      &nodeBID,
-		ContainerID: "primary-ctr",
-		ShareScope:  instanceentity.ShareScopePerUser,
-		Status:      instanceentity.InstanceStatusRunning,
-		ExpiresAt:   time.Now().UTC().Add(time.Hour),
+		ID:            2051,
+		UserID:        3051,
+		ContestID:     int64PtrForRouterTest(43),
+		TeamID:        int64PtrForRouterTest(53),
+		ChallengeID:   63,
+		ServiceID:     int64PtrForRouterTest(73),
+		RuntimeNodeID: &nodeBID,
+		ContainerID:   "primary-ctr",
+		ShareScope:    instanceentity.ShareScopePerUser,
+		Status:        instanceentity.InstanceStatusRunning,
+		ExpiresAt:     time.Now().UTC().Add(time.Hour),
 	}
 	if err := db.Create(&instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -449,7 +449,7 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByRuntimeDetailsContainerNodeID(
 		ID:             2101,
 		UserID:         3101,
 		ChallengeID:    4101,
-		NodeID:         &nodeBID,
+		RuntimeNodeID:  &nodeBID,
 		RuntimeDetails: storedRuntimeDetails,
 		ShareScope:     instanceentity.ShareScopePerUser,
 		Status:         instanceentity.InstanceStatusRunning,
@@ -505,17 +505,17 @@ func TestRuntimeNodeExecutionRouterRoutesCleanupByWorkspaceContainerIDWithoutNod
 
 	nodeBID := nodeB.ID
 	storedInstance := instanceentity.Instance{
-		ID:          2201,
-		UserID:      3201,
-		ContestID:   int64PtrForRouterTest(42),
-		TeamID:      int64PtrForRouterTest(52),
-		ServiceID:   int64PtrForRouterTest(72),
-		ChallengeID: 62,
-		NodeID:      &nodeBID,
-		ContainerID: "primary-ctr",
-		ShareScope:  instanceentity.ShareScopePerUser,
-		Status:      instanceentity.InstanceStatusRunning,
-		ExpiresAt:   time.Now().UTC().Add(time.Hour),
+		ID:            2201,
+		UserID:        3201,
+		ContestID:     int64PtrForRouterTest(42),
+		TeamID:        int64PtrForRouterTest(52),
+		ServiceID:     int64PtrForRouterTest(72),
+		ChallengeID:   62,
+		RuntimeNodeID: &nodeBID,
+		ContainerID:   "primary-ctr",
+		ShareScope:    instanceentity.ShareScopePerUser,
+		Status:        instanceentity.InstanceStatusRunning,
+		ExpiresAt:     time.Now().UTC().Add(time.Hour),
 	}
 	if err := db.Create(&storedInstance).Error; err != nil {
 		t.Fatalf("create stored instance: %v", err)

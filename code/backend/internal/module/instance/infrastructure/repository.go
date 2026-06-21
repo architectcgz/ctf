@@ -376,8 +376,8 @@ func (r *Repository) BindRuntimeNode(ctx context.Context, id int64, nodeID *int6
 	result := r.dbWithContext(ctx).Model(&instancecontracts.Instance{}).
 		Where("id = ? AND status = ?", id, instancecontracts.InstanceStatusCreating).
 		Updates(map[string]any{
-			"node_id":    nodeID,
-			"updated_at": time.Now().UTC(),
+			"runtime_node_id": nodeID,
+			"updated_at":      time.Now().UTC(),
 		})
 	if result.Error != nil {
 		return false, result.Error
@@ -408,7 +408,7 @@ func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *in
 		Updates(map[string]any{
 			"contest_id":      instance.ContestID,
 			"team_id":         instance.TeamID,
-			"node_id":         instance.NodeID,
+			"runtime_node_id": instance.RuntimeNodeID,
 			"host_port":       instance.HostPort,
 			"container_id":    instance.ContainerID,
 			"network_id":      instance.NetworkID,
@@ -564,7 +564,7 @@ func (r *Repository) RequeueLostRuntime(ctx context.Context, id int64) (bool, er
 		).
 		Updates(map[string]any{
 			"status":          instancecontracts.InstanceStatusPending,
-			"node_id":         nil,
+			"runtime_node_id": nil,
 			"container_id":    "",
 			"network_id":      "",
 			"runtime_details": "",
@@ -585,7 +585,7 @@ func (r *Repository) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64
 	now := time.Now().UTC()
 	instances := make([]*instancecontracts.Instance, 0)
 	if err := r.dbWithContext(ctx).
-		Where("node_id = ? AND status IN ? AND expires_at > ?",
+		Where("runtime_node_id = ? AND status IN ? AND expires_at > ?",
 			nodeID,
 			[]string{
 				instancecontracts.InstanceStatusCreating,
@@ -616,7 +616,7 @@ func (r *Repository) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64
 	requeueQuery := r.dbWithContext(ctx).Model(&requeued).
 		Clauses(clause.Returning{}).
 		Where("id IN ?", ids).
-		Where("node_id = ? AND status IN ? AND expires_at > ?",
+		Where("runtime_node_id = ? AND status IN ? AND expires_at > ?",
 			nodeID,
 			[]string{
 				instancecontracts.InstanceStatusCreating,
@@ -627,7 +627,7 @@ func (r *Repository) RequeueLostRuntimesByNode(ctx context.Context, nodeID int64
 	if err := requeueQuery.
 		Updates(map[string]any{
 			"status":          instancecontracts.InstanceStatusPending,
-			"node_id":         nil,
+			"runtime_node_id": nil,
 			"container_id":    "",
 			"network_id":      "",
 			"runtime_details": "",

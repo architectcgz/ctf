@@ -116,7 +116,7 @@ func (s *stubPracticeRuntimeService) CreateTopology(ctx context.Context, req *pr
 		if !node.IsEntryPoint {
 			return nil, errors.New("unexpected CreateTopology call")
 		}
-		containerID, networkID, hostPort, servicePort, err := s.createContainerFn(ctx, node.Image, node.Env, req.ReservedHostPort, req.NodeID)
+		containerID, networkID, hostPort, servicePort, err := s.createContainerFn(ctx, node.Image, node.Env, req.ReservedHostPort, req.RuntimeNodeID)
 		if err != nil {
 			return nil, err
 		}
@@ -532,8 +532,8 @@ func TestCleanupAWDDefenseWorkspaceCompanionUsesContainerAuthorityPayload(t *tes
 				if instance == nil {
 					t.Fatal("expected cleanup instance payload")
 				}
-				if instance.NodeID != nil {
-					t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got node_id=%d", *instance.NodeID)
+				if instance.RuntimeNodeID != nil {
+					t.Fatalf("expected workspace cleanup payload to leave node resolution to router, got runtime_node_id=%d", *instance.RuntimeNodeID)
 				}
 				if strings.TrimSpace(instance.ContainerID) != "" {
 					t.Fatalf("expected workspace cleanup payload to use runtime_details only, got container_id=%q", instance.ContainerID)
@@ -846,11 +846,11 @@ func TestPracticeCommandDBMigratesRuntimeNodeSchema(t *testing.T) {
 		t.Fatalf("query instances table info: %v", err)
 	}
 	for _, column := range columns {
-		if column.Name == "node_id" {
+		if column.Name == "runtime_node_id" {
 			return
 		}
 	}
-	t.Fatalf("expected instances table to contain node_id column, got %+v", columns)
+	t.Fatalf("expected instances table to contain runtime_node_id column, got %+v", columns)
 }
 
 func reserveClosedLoopbackPort(t *testing.T) int {

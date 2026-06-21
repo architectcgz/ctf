@@ -67,20 +67,20 @@ func (r *AWDContainerInventoryRepository) FindRuntimeNodeIDByContainerID(ctx con
 	}
 
 	var workspace struct {
-		NodeID *int64 `gorm:"column:node_id"`
+		RuntimeNodeID *int64 `gorm:"column:runtime_node_id"`
 	}
 	if err := r.dbWithContext(ctx).
 		Table("awd_defense_workspaces AS ws").
 		Joins("JOIN instances AS inst ON inst.id = ws.instance_id").
 		Where("ws.container_id = ?", containerID).
-		Select("inst.node_id").
+		Select("inst.runtime_node_id").
 		Take(&workspace).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) || isMissingAWDContainerInventoryTable(err) {
 			return nil, nil
 		}
 		return nil, err
 	}
-	return workspace.NodeID, nil
+	return workspace.RuntimeNodeID, nil
 }
 
 func isMissingAWDContainerInventoryTable(err error) bool {

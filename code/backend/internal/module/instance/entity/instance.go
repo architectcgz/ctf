@@ -17,7 +17,7 @@ type Instance struct {
 	TeamID         *int64     `gorm:"column:team_id;index"`
 	ChallengeID    int64      `gorm:"not null;index"`
 	ServiceID      *int64     `gorm:"column:service_id;index"`
-	NodeID         *int64     `gorm:"column:node_id;index"`
+	RuntimeNodeID  *int64     `gorm:"column:runtime_node_id;index"`
 	HostPort       int        `gorm:"column:host_port;index"`
 	ContainerID    string     `gorm:"size:64;not null"`
 	NetworkID      string     `gorm:"size:64"`

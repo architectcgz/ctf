@@ -29,7 +29,7 @@ func (r *ContainerInventoryRepository) ListActiveContainerInventory(ctx context.
 			instancecontracts.InstanceStatusRunning,
 			instancecontracts.InstanceStatusStopping,
 		}).
-		Select("id, node_id, container_id, runtime_details").
+		Select("id, runtime_node_id, container_id, runtime_details").
 		Scan(&items).Error; err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (r *ContainerInventoryRepository) ListContainerNodeLookupCandidates(ctx con
 	likePattern := "%" + containerID + "%"
 	if err := r.dbWithContext(ctx).
 		Model(&instancecontracts.Instance{}).
-		Select("id, node_id, container_id, runtime_details").
+		Select("id, runtime_node_id, container_id, runtime_details").
 		Where("container_id = ? OR runtime_details LIKE ?", containerID, likePattern).
 		Scan(&rows).Error; err != nil {
 		return nil, err

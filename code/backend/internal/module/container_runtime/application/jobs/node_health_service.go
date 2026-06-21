@@ -104,7 +104,7 @@ func (s *NodeHealthService) EvaluateOnce(ctx context.Context) error {
 		}
 		if err := s.evaluateNode(ctx, node, now); err != nil && !errors.Is(err, context.Canceled) {
 			s.logger.Warn("runtime_node_health_evaluate_failed",
-				zap.Int64("node_id", node.ID),
+				zap.Int64("runtime_node_id", node.ID),
 				zap.String("node_name", node.Name),
 				zap.Error(err))
 		}

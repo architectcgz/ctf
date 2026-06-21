@@ -130,7 +130,7 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesRuntimeDetailsContainerNode(t *
 		ID:             5001,
 		UserID:         6001,
 		ChallengeID:    7001,
-		NodeID:         &nodeBID,
+		RuntimeNodeID:  &nodeBID,
 		RuntimeDetails: runtimeDetails,
 		HostPort:       hostPort,
 		Status:         instanceentity.InstanceStatusRunning,
@@ -212,19 +212,19 @@ func TestRuntimeNodeExecutionRouterE2ECleanupUsesWorkspaceContainerNode(t *testi
 
 	nodeBID := nodeB.ID
 	storedInstance := instanceentity.Instance{
-		ID:          5101,
-		UserID:      6101,
-		ContestID:   int64PtrForRouterTest(8101),
-		TeamID:      int64PtrForRouterTest(8201),
-		ServiceID:   int64PtrForRouterTest(8301),
-		ChallengeID: 7101,
-		NodeID:      &nodeBID,
-		ContainerID: "primary-node-b",
-		Status:      instanceentity.InstanceStatusRunning,
-		ShareScope:  instanceentity.ShareScopePerUser,
-		ExpiresAt:   time.Now().UTC().Add(time.Hour),
-		CreatedAt:   time.Now().UTC(),
-		UpdatedAt:   time.Now().UTC(),
+		ID:            5101,
+		UserID:        6101,
+		ContestID:     int64PtrForRouterTest(8101),
+		TeamID:        int64PtrForRouterTest(8201),
+		ServiceID:     int64PtrForRouterTest(8301),
+		ChallengeID:   7101,
+		RuntimeNodeID: &nodeBID,
+		ContainerID:   "primary-node-b",
+		Status:        instanceentity.InstanceStatusRunning,
+		ShareScope:    instanceentity.ShareScopePerUser,
+		ExpiresAt:     time.Now().UTC().Add(time.Hour),
+		CreatedAt:     time.Now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
 	}
 	if err := db.Create(&storedInstance).Error; err != nil {
 		t.Fatalf("create workspace owner instance: %v", err)

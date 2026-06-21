@@ -25,7 +25,7 @@ func (r *ACLMigrationStateRepository) dbWithContext(ctx context.Context) *gorm.D
 func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx context.Context) ([]instancecontracts.Instance, error) {
 	type instanceACLMigrationRow struct {
 		ID             int64  `gorm:"column:id"`
-		NodeID         *int64 `gorm:"column:node_id"`
+		RuntimeNodeID  *int64 `gorm:"column:runtime_node_id"`
 		RuntimeDetails string `gorm:"column:runtime_details"`
 	}
 
@@ -34,7 +34,7 @@ func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx
 		Model(&instancecontracts.Instance{}).
 		Where("destroyed_at IS NULL").
 		Where("runtime_details <> ''").
-		Select("id, node_id, runtime_details").
+		Select("id, runtime_node_id, runtime_details").
 		Scan(&rows).Error; err != nil {
 		lowerErr := strings.ToLower(err.Error())
 		if strings.Contains(lowerErr, "no such table") || strings.Contains(lowerErr, "does not exist") {
@@ -47,7 +47,7 @@ func (r *ACLMigrationStateRepository) ListInstancesNeedingACLHandleMigration(ctx
 	for _, row := range rows {
 		result = append(result, instancecontracts.Instance{
 			ID:             row.ID,
-			NodeID:         row.NodeID,
+			RuntimeNodeID:  row.RuntimeNodeID,
 			RuntimeDetails: row.RuntimeDetails,
 		})
 	}

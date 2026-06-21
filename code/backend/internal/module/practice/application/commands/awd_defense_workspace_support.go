@@ -336,7 +336,7 @@ func (s *serviceCore) createAWDDefenseWorkspaceCompanion(ctx context.Context, in
 		return "", fmt.Errorf("awd defense workspace runtime is not configured")
 	}
 	result, err := s.runtimeService.CreateTopology(ctx, &practiceports.TopologyCreateRequest{
-		NodeID:                     runtimeNodeIDValue(instance.NodeID),
+		RuntimeNodeID:              runtimeNodeIDValue(instance.RuntimeNodeID),
 		DisableEntryPortPublishing: true,
 		ContainerName:              plan.workspaceContainerName,
 		Networks: []practiceports.TopologyCreateNetwork{

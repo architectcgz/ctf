@@ -161,8 +161,8 @@ func (s *serviceCore) processPendingInstance(ctx context.Context, instanceID int
 		s.markInstanceFailed(ctx, instance)
 		return
 	}
-	instance.NodeID = runtimeNodeIDFromBinding(nodeBinding)
-	bound, err := s.instanceRepo.BindRuntimeNode(ctx, instance.ID, instance.NodeID)
+	instance.RuntimeNodeID = runtimeNodeIDFromBinding(nodeBinding)
+	bound, err := s.instanceRepo.BindRuntimeNode(ctx, instance.ID, instance.RuntimeNodeID)
 	if err != nil {
 		s.logger.Warn("待启动实例绑定运行节点失败", zap.Int64("instance_id", instanceID), zap.Error(err))
 		s.markInstanceFailed(ctx, instance)

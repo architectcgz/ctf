@@ -80,7 +80,7 @@ func (p *instanceRuntimeInventoryProvider) FindRuntimeNodeIDByContainerID(ctx co
 
 	for _, row := range rows {
 		if strings.TrimSpace(row.ContainerID) == containerID {
-			return row.NodeID, nil
+			return row.RuntimeNodeID, nil
 		}
 		details, err := runtimecontracts.DecodeInstanceRuntimeDetails(row.RuntimeDetails)
 		if err != nil {
@@ -88,7 +88,7 @@ func (p *instanceRuntimeInventoryProvider) FindRuntimeNodeIDByContainerID(ctx co
 		}
 		for _, item := range details.Containers {
 			if strings.TrimSpace(item.ContainerID) == containerID {
-				return row.NodeID, nil
+				return row.RuntimeNodeID, nil
 			}
 		}
 	}

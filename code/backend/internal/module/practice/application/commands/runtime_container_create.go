@@ -43,7 +43,7 @@ func (s *serviceCore) createContainer(ctx context.Context, instance *instancecon
 	if err != nil {
 		return err
 	}
-	request.NodeID = runtimeNodeIDValue(instance.NodeID)
+	request.RuntimeNodeID = runtimeNodeIDValue(instance.RuntimeNodeID)
 	request.OwnerInstanceID = instance.ID
 	applyAWDStableNetworkToTopologyRequest(instance, chal, request)
 	if awdWorkspacePlan != nil {
@@ -138,7 +138,7 @@ func (s *serviceCore) createSingleContainer(ctx context.Context, instance *insta
 		}
 		request := &practiceports.TopologyCreateRequest{
 			SubnetPool:                 runtimecontracts.SubnetPoolSingleContainer,
-			NodeID:                     runtimeNodeIDValue(instance.NodeID),
+			RuntimeNodeID:              runtimeNodeIDValue(instance.RuntimeNodeID),
 			OwnerInstanceID:            instance.ID,
 			ReservedHostPort:           instance.HostPort,
 			DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),
@@ -201,7 +201,7 @@ func (s *serviceCore) createSingleContainer(ctx context.Context, instance *insta
 
 	request := &practiceports.TopologyCreateRequest{
 		SubnetPool:                 runtimecontracts.SubnetPoolSingleContainer,
-		NodeID:                     runtimeNodeIDValue(instance.NodeID),
+		RuntimeNodeID:              runtimeNodeIDValue(instance.RuntimeNodeID),
 		OwnerInstanceID:            instance.ID,
 		ReservedHostPort:           instance.HostPort,
 		DisableEntryPortPublishing: shouldDisableEntryPortPublishing(instance, s.config.Container.AccessHost),

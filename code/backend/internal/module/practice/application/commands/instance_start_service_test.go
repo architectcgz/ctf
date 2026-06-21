@@ -168,7 +168,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 		nil).
 		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
 			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
-				return &practiceports.RuntimeNodeBinding{NodeID: 901, NodeName: "node-901"}, nil
+				return &practiceports.RuntimeNodeBinding{RuntimeNodeID: 901, NodeName: "node-901"}, nil
 			},
 		}),
 		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
@@ -182,8 +182,8 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 	if err := db.First(&stored, resp.ID).Error; err != nil {
 		t.Fatalf("load pending instance: %v", err)
 	}
-	if stored.NodeID == nil || *stored.NodeID != 901 {
-		t.Fatalf("expected persisted runtime node id 901, got %+v", stored.NodeID)
+	if stored.RuntimeNodeID == nil || *stored.RuntimeNodeID != 901 {
+		t.Fatalf("expected persisted runtime node id 901, got %+v", stored.RuntimeNodeID)
 	}
 }
 
@@ -266,8 +266,8 @@ func TestStartChallengeQueuesPendingWhenRuntimeNodeUnavailable(t *testing.T) {
 	if err := db.First(&stored, resp.ID).Error; err != nil {
 		t.Fatalf("load pending instance: %v", err)
 	}
-	if stored.NodeID != nil {
-		t.Fatalf("expected pending instance to wait without node binding, got %+v", stored.NodeID)
+	if stored.RuntimeNodeID != nil {
+		t.Fatalf("expected pending instance to wait without node binding, got %+v", stored.RuntimeNodeID)
 	}
 }
 

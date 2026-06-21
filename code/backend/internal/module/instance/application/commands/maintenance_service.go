@@ -201,7 +201,7 @@ func (s *InstanceMaintenanceService) HandleRuntimeNodeOffline(ctx context.Contex
 		}
 		s.recordSystemAWDOperation(ctx, instance, instanceports.AWDServiceOperationTypeRecreate, instanceports.AWDServiceOperationStatusProvisioning, "runtime_node_offline", "")
 		logctx.Warn(ctx, s.logger, "runtime node offline; instance requeued",
-			zap.Int64("node_id", nodeID),
+			zap.Int64("runtime_node_id", nodeID),
 			zap.Int64("instance_id", instance.ID),
 			zap.String("status", instance.Status))
 	}

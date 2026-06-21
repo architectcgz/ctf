@@ -11,7 +11,7 @@ func runtimeCleanupTargetFromInstance(instance *instancecontracts.Instance) runt
 	}
 	return runtimecontracts.RuntimeCleanupTarget{
 		InstanceID:     instance.ID,
-		NodeID:         instance.NodeID,
+		RuntimeNodeID:  instance.RuntimeNodeID,
 		ContainerID:    instance.ContainerID,
 		NetworkID:      instance.NetworkID,
 		HostPort:       instance.HostPort,

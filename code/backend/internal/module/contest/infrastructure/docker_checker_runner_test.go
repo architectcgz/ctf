@@ -35,11 +35,11 @@ func TestSandboxCheckerRunnerMapsCheckerJobToSandboxExecutor(t *testing.T) {
 		Timeout:         3 * time.Second,
 		Limits:          contestports.CheckerRunLimits{CPUQuota: 0.25, MemoryBytes: 64},
 		Metadata: contestports.CheckerRunMetadata{
-			ContestID:   7,
-			ServiceID:   9,
-			TeamID:      11,
-			RoundNumber: 3,
-			NodeID:      13,
+			ContestID:     7,
+			ServiceID:     9,
+			TeamID:        11,
+			RoundNumber:   3,
+			RuntimeNodeID: 13,
 		},
 	})
 	if err != nil {
@@ -48,7 +48,7 @@ func TestSandboxCheckerRunnerMapsCheckerJobToSandboxExecutor(t *testing.T) {
 	if result.Status != contestports.CheckerRunStatusOK || result.Reason != contestports.CheckerReasonPassed || result.Stdout != "checker-ok" {
 		t.Fatalf("unexpected checker result: %+v", result)
 	}
-	if executor.lastJob.Labels[checkerLabelContestID] != "7" || executor.lastJob.Labels[checkerLabelTeamID] != "11" || executor.lastJob.Labels[checkerLabelNodeID] != "13" {
+	if executor.lastJob.Labels[checkerLabelContestID] != "7" || executor.lastJob.Labels[checkerLabelTeamID] != "11" || executor.lastJob.Labels[checkerLabelRuntimeNodeID] != "13" {
 		t.Fatalf("sandbox labels = %+v", executor.lastJob.Labels)
 	}
 	if len(executor.lastJob.Files) != 1 || string(executor.lastJob.Files[0].Content) != "print(1)" {

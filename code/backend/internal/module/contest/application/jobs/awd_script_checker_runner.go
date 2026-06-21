@@ -130,11 +130,11 @@ func (u *AWDRoundUpdater) runAWDScriptCheckerTarget(
 			OutputLimitBytes: u.cfg.CheckerSandbox.OutputLimitBytes,
 		},
 		Metadata: contestports.CheckerRunMetadata{
-			ContestID:   contestID,
-			ServiceID:   definition.ServiceID,
-			TeamID:      teamID,
-			RoundNumber: awdScriptRoundNumber(round),
-			NodeID:      instance.NodeID,
+			ContestID:     contestID,
+			ServiceID:     definition.ServiceID,
+			TeamID:        teamID,
+			RoundNumber:   awdScriptRoundNumber(round),
+			RuntimeNodeID: instance.RuntimeNodeID,
 		},
 	}
 	if files, ok, err := loadAWDScriptCheckerArtifacts(cfg); err != nil {

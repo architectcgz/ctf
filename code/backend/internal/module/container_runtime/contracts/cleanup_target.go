@@ -4,7 +4,7 @@ package contracts
 // networks, ACL state, and reserved allocations for one instance runtime.
 type RuntimeCleanupTarget struct {
 	InstanceID     int64
-	NodeID         *int64
+	RuntimeNodeID  *int64
 	ContainerID    string
 	NetworkID      string
 	HostPort       int

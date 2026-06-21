@@ -12,11 +12,11 @@ import (
 )
 
 const (
-	checkerLabelContestID   = "ctf.checker.contest"
-	checkerLabelServiceID   = "ctf.checker.service"
-	checkerLabelTeamID      = "ctf.checker.team"
-	checkerLabelRoundNumber = "ctf.checker.round"
-	checkerLabelNodeID      = "ctf.checker.node"
+	checkerLabelContestID     = "ctf.checker.contest"
+	checkerLabelServiceID     = "ctf.checker.service"
+	checkerLabelTeamID        = "ctf.checker.team"
+	checkerLabelRoundNumber   = "ctf.checker.round"
+	checkerLabelRuntimeNodeID = "ctf.checker.runtime_node"
 )
 
 var (
@@ -144,21 +144,21 @@ func checkerRunFilesFromSandboxExecFiles(files []runtimeports.SandboxExecFile) [
 
 func checkerRunMetadataLabels(metadata contestports.CheckerRunMetadata) map[string]string {
 	return map[string]string{
-		checkerLabelContestID:   fmt.Sprintf("%d", metadata.ContestID),
-		checkerLabelServiceID:   fmt.Sprintf("%d", metadata.ServiceID),
-		checkerLabelTeamID:      fmt.Sprintf("%d", metadata.TeamID),
-		checkerLabelRoundNumber: fmt.Sprintf("%d", metadata.RoundNumber),
-		checkerLabelNodeID:      fmt.Sprintf("%d", metadata.NodeID),
+		checkerLabelContestID:     fmt.Sprintf("%d", metadata.ContestID),
+		checkerLabelServiceID:     fmt.Sprintf("%d", metadata.ServiceID),
+		checkerLabelTeamID:        fmt.Sprintf("%d", metadata.TeamID),
+		checkerLabelRoundNumber:   fmt.Sprintf("%d", metadata.RoundNumber),
+		checkerLabelRuntimeNodeID: fmt.Sprintf("%d", metadata.RuntimeNodeID),
 	}
 }
 
 func checkerRunMetadataFromLabels(labels map[string]string) contestports.CheckerRunMetadata {
 	return contestports.CheckerRunMetadata{
-		ContestID:   parseInt64Label(labels, checkerLabelContestID),
-		ServiceID:   parseInt64Label(labels, checkerLabelServiceID),
-		TeamID:      parseInt64Label(labels, checkerLabelTeamID),
-		RoundNumber: int(parseInt64Label(labels, checkerLabelRoundNumber)),
-		NodeID:      parseInt64Label(labels, checkerLabelNodeID),
+		ContestID:     parseInt64Label(labels, checkerLabelContestID),
+		ServiceID:     parseInt64Label(labels, checkerLabelServiceID),
+		TeamID:        parseInt64Label(labels, checkerLabelTeamID),
+		RoundNumber:   int(parseInt64Label(labels, checkerLabelRoundNumber)),
+		RuntimeNodeID: parseInt64Label(labels, checkerLabelRuntimeNodeID),
 	}
 }
 

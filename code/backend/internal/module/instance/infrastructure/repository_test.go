@@ -41,6 +41,61 @@ func newInstanceRepositoryTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
+func TestRepositoryUsesRuntimeNodeIDColumnForBindingAndRequeue(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceRepositoryTestDB(t)
+	repo := NewRepository(db)
+	originalNodeID := int64(6101)
+	nextNodeID := int64(6102)
+	now := time.Now().UTC()
+	instance := instancecontracts.Instance{
+		ID:            61001,
+		UserID:        7,
+		ChallengeID:   41,
+		RuntimeNodeID: &originalNodeID,
+		Status:        instancecontracts.InstanceStatusCreating,
+		ContainerID:   "ctr-runtime-node",
+		NetworkID:     "net-runtime-node",
+		ExpiresAt:     now.Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+
+	bound, err := repo.BindRuntimeNode(context.Background(), instance.ID, &nextNodeID)
+	if err != nil {
+		t.Fatalf("BindRuntimeNode() error = %v", err)
+	}
+	if !bound {
+		t.Fatal("expected creating instance to bind runtime node")
+	}
+
+	var afterBind instancecontracts.Instance
+	if err := db.First(&afterBind, instance.ID).Error; err != nil {
+		t.Fatalf("load bound instance: %v", err)
+	}
+	if afterBind.RuntimeNodeID == nil || *afterBind.RuntimeNodeID != nextNodeID {
+		t.Fatalf("runtime node id after bind = %v, want %d", afterBind.RuntimeNodeID, nextNodeID)
+	}
+
+	requeued, err := repo.RequeueLostRuntime(context.Background(), instance.ID)
+	if err != nil {
+		t.Fatalf("RequeueLostRuntime() error = %v", err)
+	}
+	if !requeued {
+		t.Fatal("expected runtime-bound instance to be requeued")
+	}
+
+	var afterRequeue instancecontracts.Instance
+	if err := db.First(&afterRequeue, instance.ID).Error; err != nil {
+		t.Fatalf("load requeued instance: %v", err)
+	}
+	if afterRequeue.RuntimeNodeID != nil {
+		t.Fatalf("runtime node id after requeue = %v, want nil", afterRequeue.RuntimeNodeID)
+	}
+}
+
 func TestCountRunningInstancesCountsOnlyRunningInstances(t *testing.T) {
 	t.Parallel()
 
@@ -391,11 +446,11 @@ func TestRequeueLostRuntimesByNodeOnlyRequeuesRecoverableActiveRows(t *testing.T
 	nodeBID := int64(7002)
 
 	instances := []instancecontracts.Instance{
-		{ID: 101, UserID: 7, ChallengeID: 41, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusCreating, HostPort: 30001, ContainerID: "ctr-101", NetworkID: "net-101", RuntimeDetails: "detail-101", AccessURL: "http://runtime-101", ExpiresAt: now.Add(time.Hour)},
-		{ID: 102, UserID: 7, ChallengeID: 42, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30002, ContainerID: "ctr-102", NetworkID: "net-102", RuntimeDetails: "detail-102", AccessURL: "http://runtime-102", ExpiresAt: now.Add(time.Hour)},
-		{ID: 103, UserID: 7, ChallengeID: 43, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusStopping, HostPort: 30003, ContainerID: "ctr-103", NetworkID: "net-103", RuntimeDetails: "detail-103", AccessURL: "http://runtime-103", ExpiresAt: now.Add(time.Hour)},
-		{ID: 104, UserID: 7, ChallengeID: 44, NodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30004, ContainerID: "ctr-104", NetworkID: "net-104", RuntimeDetails: "detail-104", AccessURL: "http://runtime-104", ExpiresAt: now.Add(-time.Minute)},
-		{ID: 105, UserID: 7, ChallengeID: 45, NodeID: &nodeBID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30005, ContainerID: "ctr-105", NetworkID: "net-105", RuntimeDetails: "detail-105", AccessURL: "http://runtime-105", ExpiresAt: now.Add(time.Hour)},
+		{ID: 101, UserID: 7, ChallengeID: 41, RuntimeNodeID: &nodeAID, Status: instancecontracts.InstanceStatusCreating, HostPort: 30001, ContainerID: "ctr-101", NetworkID: "net-101", RuntimeDetails: "detail-101", AccessURL: "http://runtime-101", ExpiresAt: now.Add(time.Hour)},
+		{ID: 102, UserID: 7, ChallengeID: 42, RuntimeNodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30002, ContainerID: "ctr-102", NetworkID: "net-102", RuntimeDetails: "detail-102", AccessURL: "http://runtime-102", ExpiresAt: now.Add(time.Hour)},
+		{ID: 103, UserID: 7, ChallengeID: 43, RuntimeNodeID: &nodeAID, Status: instancecontracts.InstanceStatusStopping, HostPort: 30003, ContainerID: "ctr-103", NetworkID: "net-103", RuntimeDetails: "detail-103", AccessURL: "http://runtime-103", ExpiresAt: now.Add(time.Hour)},
+		{ID: 104, UserID: 7, ChallengeID: 44, RuntimeNodeID: &nodeAID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30004, ContainerID: "ctr-104", NetworkID: "net-104", RuntimeDetails: "detail-104", AccessURL: "http://runtime-104", ExpiresAt: now.Add(-time.Minute)},
+		{ID: 105, UserID: 7, ChallengeID: 45, RuntimeNodeID: &nodeBID, Status: instancecontracts.InstanceStatusRunning, HostPort: 30005, ContainerID: "ctr-105", NetworkID: "net-105", RuntimeDetails: "detail-105", AccessURL: "http://runtime-105", ExpiresAt: now.Add(time.Hour)},
 		{ID: 106, UserID: 7, ChallengeID: 46, Status: instancecontracts.InstanceStatusRunning, HostPort: 30006, ContainerID: "ctr-106", NetworkID: "net-106", RuntimeDetails: "detail-106", AccessURL: "http://runtime-106", ExpiresAt: now.Add(time.Hour)},
 	}
 	if err := db.Create(&instances).Error; err != nil {
@@ -420,7 +475,7 @@ func TestRequeueLostRuntimesByNodeOnlyRequeuesRecoverableActiveRows(t *testing.T
 	}
 	for _, id := range []int64{101, 102} {
 		row := byID[id]
-		if row.Status != instancecontracts.InstanceStatusPending || row.NodeID != nil || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
+		if row.Status != instancecontracts.InstanceStatusPending || row.RuntimeNodeID != nil || row.ContainerID != "" || row.NetworkID != "" || row.RuntimeDetails != "" || row.AccessURL != "" {
 			t.Fatalf("expected instance %d to be pending with runtime identity cleared, got %+v", id, row)
 		}
 	}
@@ -441,8 +496,8 @@ func TestRequeueLostRuntimesByNodeReturnsOnlyRowsStillRequeued(t *testing.T) {
 	otherNodeID := int64(7102)
 
 	instances := []instancecontracts.Instance{
-		{ID: 201, UserID: 7, ChallengeID: 51, NodeID: &nodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-201", NetworkID: "net-201", RuntimeDetails: "detail-201", AccessURL: "http://runtime-201", ExpiresAt: now.Add(time.Hour)},
-		{ID: 203, UserID: 7, ChallengeID: 53, NodeID: &otherNodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-203", NetworkID: "net-203", RuntimeDetails: "detail-203", AccessURL: "http://runtime-203", ExpiresAt: now.Add(time.Hour)},
+		{ID: 201, UserID: 7, ChallengeID: 51, RuntimeNodeID: &nodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-201", NetworkID: "net-201", RuntimeDetails: "detail-201", AccessURL: "http://runtime-201", ExpiresAt: now.Add(time.Hour)},
+		{ID: 203, UserID: 7, ChallengeID: 53, RuntimeNodeID: &otherNodeID, Status: instancecontracts.InstanceStatusRunning, ContainerID: "ctr-203", NetworkID: "net-203", RuntimeDetails: "detail-203", AccessURL: "http://runtime-203", ExpiresAt: now.Add(time.Hour)},
 	}
 	if err := db.Create(&instances).Error; err != nil {
 		t.Fatalf("seed instances: %v", err)
@@ -478,7 +533,7 @@ func TestRequeueLostRuntimesByNodeReturnsOnlyRowsStillRequeued(t *testing.T) {
 	if err := db.First(&stopping, 201).Error; err != nil {
 		t.Fatalf("load stopping instance: %v", err)
 	}
-	if stopping.Status != instancecontracts.InstanceStatusStopping || stopping.NodeID == nil || *stopping.NodeID != nodeID || stopping.ContainerID != "ctr-201" {
+	if stopping.Status != instancecontracts.InstanceStatusStopping || stopping.RuntimeNodeID == nil || *stopping.RuntimeNodeID != nodeID || stopping.ContainerID != "ctr-201" {
 		t.Fatalf("stopping instance should stay untouched, got %+v", stopping)
 	}
 }

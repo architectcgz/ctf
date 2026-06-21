@@ -21,10 +21,10 @@
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
 - `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/module/practice/application/commands/runtime_container_create.go`、`code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
-  - 负责：把“一个运行时实例 / 一个网络拓扑”作为最小调度单元。实例启动时先选择一个 `runtime_nodes.id` 并写入 `instances.node_id`；拓扑创建请求只携带一个 `TopologyCreateRequest.NodeID`，`runtimeNodeExecutionRouter.CreateTopology()` 按该 node 构造一个 runtime client，随后 `ProvisioningService.CreateTopology()` 在这个 client 背后的同一个 Docker Engine 上创建该拓扑的全部 Docker network、container、network alias 与 ACL
-  - 负责：用多 `runtime_agent` 承载“多个拓扑实例分布到多个宿主机”的横向扩容模型；不同实例可以调度到不同 runtime node，但同一实例的 `runtime_details.containers[]` 不记录容器级 `node_id`，也不表达拓扑内部跨 node 放置
-  - 负责：把 `runtime_nodes.name` 作为部署期稳定节点身份，`runtime_nodes.id` 继续作为数据库内部主键和 `node_id` 路由键。API 侧 `runtime_agent.node_name` 只决定默认 remote node bootstrap / selector 名称；runtime-agent 侧 `runtime_agent.server.node_name` 只用于 Health 自报。`buildRuntimeNodeClientFromNode()` 在缓存 remote client 前会校验 agent 自报 `node_name` 与正在拨号的 `runtime_nodes.name`，不一致时失败并关闭该 bridge
-  - 负责：在 node 离线后按实例级别重建。`WireRuntimeNodeFailover` 会把离线 node 上未过期的 `creating / running` 实例清空旧 `node_id / container_id / network_id / runtime_details / access_url` 后放回 `pending`，由 scheduler 在健康 node 上重新创建整个拓扑，而不是把拓扑中的单个容器迁到其他 node
+  - 负责：把“一个运行时实例 / 一个网络拓扑”作为最小调度单元。实例启动时先选择一个平台 `runtime_nodes.id` 并写入 `instances.runtime_node_id`；practice 层 `TopologyCreateRequest.RuntimeNodeID` 只表达这个平台主键，`runtimeNodeExecutionRouter.CreateTopology()` 按该 node 构造一个 runtime client，随后 `ProvisioningService.CreateTopology()` 在这个 client 背后的同一个 Docker Engine 上创建该拓扑的全部 Docker network、container、network alias 与 ACL
+  - 负责：用多 `runtime_agent` 承载“多个拓扑实例分布到多个宿主机”的横向扩容模型；不同实例可以调度到不同 runtime node，但同一实例的 `runtime_details.containers[]` 不记录容器级 `runtime_node_id`，也不表达拓扑内部跨 node 放置
+  - 负责：把 `runtime_nodes.name` 作为部署期稳定节点身份，`runtime_nodes.id` 继续作为数据库内部主键和 `runtime_node_id` 路由键。API 侧 `runtime_agent.node_name` 只决定默认 remote node bootstrap / selector 名称；runtime-agent 侧 `runtime_agent.server.node_name` 只用于 Health 自报。`buildRuntimeNodeClientFromNode()` 在缓存 remote client 前会校验 agent 自报 `node_name` 与正在拨号的 `runtime_nodes.name`，不一致时失败并关闭该 bridge
+  - 负责：在 node 离线后按实例级别重建。`WireRuntimeNodeFailover` 会把离线 node 上未过期的 `creating / running` 实例清空旧 `runtime_node_id / container_id / network_id / runtime_details / access_url` 后放回 `pending`，普通 scope 由 scheduler 在健康 node 上重新创建整个拓扑；AWD scope 只能复用 contest runtime placement 的 active `runtime_node_id`，绑定 node 不可用时等待 / backoff，而不是静默改绑到其他 node；两者都不把拓扑中的单个容器迁到其他 node
   - 不负责：在同一个 topology 内把不同节点容器拆到不同 Docker 宿主机；当前不提供 overlay / VXLAN / CNI、跨 node Docker network、跨宿主机 network alias、跨 node ACL 下发、跨 node 容器 IP 连通或会话迁移语义
   - 不负责：把数据库数字 `runtime_nodes.id` 暴露给 runtime-agent 配置，或让 agent 决定 API 侧节点注册 / 调度身份
   - AWD 边界：`applyAWDStableNetworkToTopologyRequest()` 会把 AWD 入口网络命名为 `ctf-awd-contest-<contest_id>` 并标记 `shared=true`，但这是当前 runtime node 本地 Docker network 语义。同名 network 出现在不同 Docker 宿主机时不是同一个二层网络；如果 AWD 攻击链路依赖同一 contest 的 Docker shared network / service alias 互通，则该 contest 的所有队伍服务实例和对应 defense workspace companion 必须固定到同一个 runtime node。当前未实现跨 node overlay / 攻击代理来替代这条二层互通语义，因此不能把同一 contest 的 AWD 服务实例随意分散到多个 runtime node
@@ -72,11 +72,11 @@
 
 - `code/backend/internal/module/instance/application/{commands/instance_service.go,commands/maintenance_service.go,queries/instance_service.go,queries/proxy_ticket_service.go}`、`code/backend/internal/app/composition/{runtime_http_service_adapter.go,awd_defense_ssh_gateway.go,runtime_node_failover.go}`
   - 负责：签发实例访问、AWD 攻击访问和 AWD 防守 SSH 的 proxy ticket，并把实例访问入口与 SSH 防守入口收敛到 ticket + scope 校验链路；当前 runtime HTTP facade 只覆盖仍然开放的实例访问 / proxy / AWD defense SSH 票据签发入口
-  - 负责：`WireRuntimeNodeFailover` 只做 app composition callback wiring：runtime node 转为 offline 后先调用 `InstanceModule.HandleRuntimeNodeOffline`，把该 node 上未过期的 `creating / running` 实例重新置为 `pending` 并清空 `container_id / network_id / runtime_details / access_url / node_id`，随后调用 practice 的 `ReconcileDesiredAWDInstances` 让 `team × visible service` 期望态继续由 practice owner 补齐
+  - 负责：`WireRuntimeNodeFailover` 只做 app composition callback wiring：runtime node 转为 offline 后先调用 `InstanceModule.HandleRuntimeNodeOffline`，把该 node 上未过期的 `creating / running` 实例重新置为 `pending` 并清空 `container_id / network_id / runtime_details / access_url / runtime_node_id`，随后调用 practice 的 `ReconcileDesiredAWDInstances` 让 `team × visible service` 期望态继续由 practice owner 按 contest placement 补齐
   - 不负责：持有 `2222` listener 生命周期、让调用方直接持有容器 IP/端口、绕过平台鉴权访问，或回退到浏览器文件工作台方案
 
 - `code/backend/internal/app/composition/awd_defense_ssh_gateway_builder.go`、`code/backend/internal/bootstrap/awd_defense_ssh_gateway.go`
-  - 负责：把 AWD defense SSH ingress 装配成独立进程，监听 `container.defense_ssh_port`，校验 ticket 后进入目标工作区容器；多 node 场景下通过 `runtimeNodeExecutionRouter` 按 `container_id -> node_id` 路由 interactive exec
+  - 负责：把 AWD defense SSH ingress 装配成独立进程，监听 `container.defense_ssh_port`，校验 ticket 后进入目标工作区容器；多 node 场景下通过 `runtimeNodeExecutionRouter` 按 `runtime_node_id + container_id` 路由 interactive exec
   - 负责：把 `container.defense_ssh_host` 解释成客户端访问的对外地址或 TCP LB 地址，而不是本进程 bind host；gateway 自身继续监听 `:container.defense_ssh_port`
   - 负责：gateway 生命周期内的 `ready -> draining -> stopped` 状态切换；`Drain(ctx)` 只负责停止接收新 SSH 连接并等待 accept loop 收敛，不承诺会话透明迁移，`Stop(ctx)` 仍保留 hard-stop 语义
   - 负责：对外摘流可观测性直接体现在 TCP listener 上。`Drain(ctx)` 会关闭 `container.defense_ssh_port` 的监听，让 TCP health check / LB 停止把新连接导向该副本，而不是额外暴露 HTTP `/ready`
@@ -85,9 +85,10 @@
 
 ## 接口或数据影响
 
-- 当前运行态核心数据在 `instances`、`runtime_nodes`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id`、`node_id` 等字段约束。
-- `runtime_nodes.name` 是跨 API / runtime-agent / 运维排障使用的稳定逻辑身份，`runtime_nodes.id` 是内部主键并通过 `instances.node_id`、checker metadata、AWD service routing 和 router cache 参与执行路由。runtime-agent Health 响应包含 `node_name` 与 `hostname`；API 显式配置 `runtime_agent.node_name` 后，缺失或不匹配的 remote agent identity 会阻止 remote client 缓存和使用。
-- `runtime_nodes` 持久化 `health_status`、`capacity_snapshot` 和 `last_seen_at`。`ready / degraded` 且 `last_seen_at >= now - container.runtime_node_health.stale_after` 的 schedulable node 可用于默认新调度；`schedulable=false` 只表示不接收新调度，健康探测仍会继续更新该 node，显式 `node_id` 绑定的旧容器操作在 node 健康且心跳新鲜时仍按原 node 执行。`unknown / offline`、未见过心跳或心跳过期的 node 不会进入健康 selector，显式绑定到这类 node 的旧容器操作也会返回不可用。`capacity_snapshot` 由 managed container stats 汇总，目前不参与容量打分。异步 scheduler 在领取 `pending` 后重新选择健康 node，并在 runtime create 前把新 `node_id` 写入 `creating` 行；如果没有健康 node，实例保持或回到 `pending`。
+- 当前运行态核心数据在 `instances`、`runtime_nodes`、`contest_runtime_placements`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id`、`runtime_node_id` 等字段约束。
+- `runtime_nodes.name` 是跨 API / runtime-agent / 运维排障使用的稳定逻辑身份，`runtime_nodes.id` 是内部主键并通过 `instances.runtime_node_id`、checker metadata、AWD service routing、`contest_runtime_placements.runtime_node_id` 和 router cache 参与执行路由。runtime-agent Health 响应包含 `node_name` 与 `hostname`；API 显式配置 `runtime_agent.node_name` 后，缺失或不匹配的 remote agent identity 会阻止 remote client 缓存和使用。
+- `instances(runtime_node_id, container_id)` 与 `instances(runtime_node_id, network_id)` 是执行面辅助身份；`container_id` / `network_id` 离开所属平台 runtime node 不具备全局唯一语义。Docker / daemon / Swarm 内部节点身份如需建模必须使用 `docker_node_id` 或 `engine_node_id`，不得复用平台 `runtime_node_id`。
+- `runtime_nodes` 持久化 `health_status`、`capacity_snapshot` 和 `last_seen_at`。`ready / degraded` 且 `last_seen_at >= now - container.runtime_node_health.stale_after` 的 schedulable node 可用于默认新调度；`schedulable=false` 只表示不接收新调度，健康探测仍会继续更新该 node，显式 `runtime_node_id` 绑定的旧容器操作在 node 健康且心跳新鲜时仍按原 node 执行。`unknown / offline`、未见过心跳或心跳过期的 node 不会进入健康 selector，显式绑定到这类 node 的旧容器操作也会返回不可用。`capacity_snapshot` 由 managed container stats 汇总，目前不参与容量打分。异步 scheduler 在领取 `pending` 后重新选择健康 node，并在 runtime create 前把新 `runtime_node_id` 写入 `creating` 行；如果没有健康 node，实例保持或回到 `pending`。AWD scope 的选择先读 `contest_runtime_placements` active row，绑定 node 不健康时直接等待 / backoff，不回退到默认 selector。
 - 动态网络预留事实持久化在 `network_allocations`；内部 `TopologyCreateRequest.SubnetPool` 只区分 `single_container` 与 `topology` 两类动态子网池，不向 HTTP 契约直接暴露 Docker 子网选择细节。
 - AWD 比赛时间暂停事实持久化在 `contests.paused_seconds`，同一次宿主机 outage 的幂等账本持久化在 `contests.runtime_recovery_key` 与 `contests.runtime_recovery_applied_seconds`，宿主机恢复检测状态持久化在 Redis `platform_runtime_state`；后端内部不新增比赛暂停枚举，而是统一基于 `effectiveNow / effectiveEnd` 解释活跃 AWD 比赛时间窗。
 - AWD desired reconcile 的 scope 级降噪状态持久化在 Redis `ctf:awd:desired_reconcile:state:<contest_id>:<team_id>:<service_id>`，字段包括 `failure_count`、`last_failure_at`、`next_attempt_at`、`suppressed_until` 和 `last_error`；scope 恢复 active 后由 reconcile 主动清除。
@@ -1305,7 +1306,7 @@ func (cm *containerManager) PrePullImages(ctx context.Context, gameID uint64) er
 - 开题请求先写入 `instances(status=pending)`；
 - 后台 `practice_instance_scheduler` 周期性领取最早的 `pending` 实例；
 - 调度器受 `max_concurrent_starts` 和 `max_active_instances` 双阈值保护；
-- 真正的容器创建发生在 `pending -> creating -> running` 的后台推进阶段，且 `creating` 行会先绑定本轮选中的健康 `node_id`。
+- 真正的容器创建发生在 `pending -> creating -> running` 的后台推进阶段，且 `creating` 行会先绑定本轮选中的健康 `runtime_node_id`；AWD scope 已有 contest placement 时只绑定该 `runtime_node_id`。
 
 在此基础上，后续如果需要排队位置、超时取消、消息确认和重投递，再演进到 Redis Stream / MQ。
 

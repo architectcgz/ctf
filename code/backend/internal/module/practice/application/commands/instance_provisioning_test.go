@@ -224,18 +224,18 @@ func TestProcessPendingInstanceReselectsRuntimeNodeBeforeProvisioning(t *testing
 		t.Fatalf("create challenge: %v", err)
 	}
 	instance := &instanceentity.Instance{
-		ID:          322,
-		UserID:      44,
-		ChallengeID: 222,
-		NodeID:      &oldNodeID,
-		HostPort:    hostPort,
-		Status:      instanceentity.InstanceStatusCreating,
-		Nonce:       "nonce-reselect",
-		FlagKeyID:   "active",
-		ExpiresAt:   now.Add(time.Hour),
-		MaxExtends:  2,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:            322,
+		UserID:        44,
+		ChallengeID:   222,
+		RuntimeNodeID: &oldNodeID,
+		HostPort:      hostPort,
+		Status:        instanceentity.InstanceStatusCreating,
+		Nonce:         "nonce-reselect",
+		FlagKeyID:     "active",
+		ExpiresAt:     now.Add(time.Hour),
+		MaxExtends:    2,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -277,7 +277,7 @@ func TestProcessPendingInstanceReselectsRuntimeNodeBeforeProvisioning(t *testing
 		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
 			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
 				selectedScopes = append(selectedScopes, scope)
-				return &practiceports.RuntimeNodeBinding{NodeID: newNodeID, NodeName: "node-8102"}, nil
+				return &practiceports.RuntimeNodeBinding{RuntimeNodeID: newNodeID, NodeName: "node-8102"}, nil
 			},
 		}),
 		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db)).
@@ -295,7 +295,7 @@ func TestProcessPendingInstanceReselectsRuntimeNodeBeforeProvisioning(t *testing
 	if err := db.First(&stored, instance.ID).Error; err != nil {
 		t.Fatalf("load provisioned instance: %v", err)
 	}
-	if stored.NodeID == nil || *stored.NodeID != newNodeID || stored.Status != instanceentity.InstanceStatusRunning {
+	if stored.RuntimeNodeID == nil || *stored.RuntimeNodeID != newNodeID || stored.Status != instanceentity.InstanceStatusRunning {
 		t.Fatalf("expected provisioned instance to persist reselected node %d, got %+v", newNodeID, stored)
 	}
 }
@@ -340,18 +340,18 @@ func TestProcessPendingInstancePersistsReselectedRuntimeNodeBeforeCreate(t *test
 		t.Fatalf("create challenge: %v", err)
 	}
 	instance := &instanceentity.Instance{
-		ID:          324,
-		UserID:      46,
-		ChallengeID: 224,
-		NodeID:      &oldNodeID,
-		HostPort:    hostPort,
-		Status:      instanceentity.InstanceStatusCreating,
-		Nonce:       "nonce-persist-node",
-		FlagKeyID:   "active",
-		ExpiresAt:   now.Add(time.Hour),
-		MaxExtends:  2,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:            324,
+		UserID:        46,
+		ChallengeID:   224,
+		RuntimeNodeID: &oldNodeID,
+		HostPort:      hostPort,
+		Status:        instanceentity.InstanceStatusCreating,
+		Nonce:         "nonce-persist-node",
+		FlagKeyID:     "active",
+		ExpiresAt:     now.Add(time.Hour),
+		MaxExtends:    2,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -367,8 +367,8 @@ func TestProcessPendingInstancePersistsReselectedRuntimeNodeBeforeCreate(t *test
 				if err := db.First(&creating, instance.ID).Error; err != nil {
 					t.Fatalf("load creating instance before runtime create: %v", err)
 				}
-				if creating.NodeID == nil || *creating.NodeID != newNodeID {
-					t.Fatalf("expected selected node %d persisted before runtime create, got %+v", newNodeID, creating.NodeID)
+				if creating.RuntimeNodeID == nil || *creating.RuntimeNodeID != newNodeID {
+					t.Fatalf("expected selected node %d persisted before runtime create, got %+v", newNodeID, creating.RuntimeNodeID)
 				}
 				return "container-node-persist", "network-node-persist", hostPort, 8080, nil
 			},
@@ -396,7 +396,7 @@ func TestProcessPendingInstancePersistsReselectedRuntimeNodeBeforeCreate(t *test
 		nil).
 		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
 			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
-				return &practiceports.RuntimeNodeBinding{NodeID: newNodeID, NodeName: "node-8302"}, nil
+				return &practiceports.RuntimeNodeBinding{RuntimeNodeID: newNodeID, NodeName: "node-8302"}, nil
 			},
 		}),
 		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db)).
@@ -437,17 +437,17 @@ func TestProcessPendingInstanceReturnsToPendingWhenNoRuntimeNodeAvailable(t *tes
 		t.Fatalf("create challenge: %v", err)
 	}
 	instance := &instanceentity.Instance{
-		ID:          323,
-		UserID:      45,
-		ChallengeID: 223,
-		NodeID:      &oldNodeID,
-		Status:      instanceentity.InstanceStatusCreating,
-		Nonce:       "nonce-unavailable",
-		FlagKeyID:   "active",
-		ExpiresAt:   now.Add(time.Hour),
-		MaxExtends:  2,
-		CreatedAt:   now,
-		UpdatedAt:   now,
+		ID:            323,
+		UserID:        45,
+		ChallengeID:   223,
+		RuntimeNodeID: &oldNodeID,
+		Status:        instanceentity.InstanceStatusCreating,
+		Nonce:         "nonce-unavailable",
+		FlagKeyID:     "active",
+		ExpiresAt:     now.Add(time.Hour),
+		MaxExtends:    2,
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 	if err := db.Create(instance).Error; err != nil {
 		t.Fatalf("create instance: %v", err)
@@ -498,8 +498,144 @@ func TestProcessPendingInstanceReturnsToPendingWhenNoRuntimeNodeAvailable(t *tes
 	if err := db.First(&stored, instance.ID).Error; err != nil {
 		t.Fatalf("load instance: %v", err)
 	}
-	if stored.Status != instanceentity.InstanceStatusPending || stored.NodeID != nil || stored.ContainerID != "" {
+	if stored.Status != instanceentity.InstanceStatusPending || stored.RuntimeNodeID != nil || stored.ContainerID != "" {
 		t.Fatalf("expected instance to return to pending with node cleared, got %+v", stored)
+	}
+}
+
+func TestProcessPendingAWDInstancePassesPlacementScopeWhenRuntimeNodeUnavailable(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now().UTC()
+	contestID := int64(8401)
+	teamID := int64(8402)
+	serviceID := int64(8403)
+	challengeID := int64(8404)
+	oldNodeID := int64(8405)
+
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        125,
+		Name:      "ctf/awd-web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         challengeID,
+		Title:      "Queued AWD Node Unavailable",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyMedium,
+		Points:     100,
+		ImageID:    int64Ptr(125),
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	instance := &instanceentity.Instance{
+		ID:            325,
+		UserID:        47,
+		ContestID:     &contestID,
+		TeamID:        &teamID,
+		ChallengeID:   challengeID,
+		ServiceID:     &serviceID,
+		RuntimeNodeID: &oldNodeID,
+		ShareScope:    instanceentity.ShareScopePerTeam,
+		Status:        instanceentity.InstanceStatusCreating,
+		Nonce:         "nonce-awd-unavailable",
+		FlagKeyID:     "active",
+		ExpiresAt:     now.Add(time.Hour),
+		MaxExtends:    2,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	createCalls := 0
+	var selectedScopes []practiceports.InstanceScope
+	contestScope := &stubPracticeRepository{
+		findContestAWDServiceRuntimeSubjectFn: func(ctx context.Context, gotContestID, gotServiceID int64) (*practiceports.ContestAWDServiceRuntimeSubject, error) {
+			if gotContestID != contestID || gotServiceID != serviceID {
+				t.Fatalf("unexpected awd runtime subject lookup contest=%d service=%d", gotContestID, gotServiceID)
+			}
+			return stubContestAWDServiceRuntimeSubject(&practiceports.ContestAWDServiceRecord{
+				ID:              serviceID,
+				ContestID:       contestID,
+				AWDChallengeID:  challengeID,
+				IsVisible:       true,
+				ServiceSnapshot: `{"name":"queued-awd","category":"web","difficulty":"medium","runtime_config":{"image_id":125,"instance_sharing":"per_team"},"flag_config":{"flag_type":"static","flag_prefix":"flag"}}`,
+			})
+		},
+	}
+	service := wirePracticeScopeAdapters(newServiceCore(
+		newPracticeRepositoryWithRuntimePortOwner(db),
+		challengeinfra.NewImageRepository(db),
+		newPracticeTestInstanceRepository(db),
+		&stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, nodeID int64) (string, string, int, int, error) {
+				createCalls++
+				return "container-awd-unavailable", "network-awd-unavailable", reservedHostPort, 8080, nil
+			},
+		},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PublicHost:    "127.0.0.1",
+				DefaultTTL:    time.Hour,
+				CreateTimeout: time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil).
+		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
+			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+				selectedScopes = append(selectedScopes, scope)
+				return nil, runtimeports.ErrRuntimeNodeUnavailable
+			},
+		}),
+		contestScope, challengeinfra.NewRepository(db)).
+		SetInstanceReadinessProbe(practiceinfra.NewInstanceReadinessProbe())
+
+	service.processPendingInstance(context.Background(), instance.ID)
+
+	if createCalls != 0 {
+		t.Fatalf("expected no runtime create without bound awd runtime node, got %d calls", createCalls)
+	}
+	if len(selectedScopes) != 1 {
+		t.Fatalf("expected one runtime node selection, got %d", len(selectedScopes))
+	}
+	scope := selectedScopes[0]
+	if scope.ContestMode != practiceports.ContestModeAWD ||
+		scope.ContestID == nil || *scope.ContestID != contestID ||
+		scope.TeamID == nil || *scope.TeamID != teamID ||
+		scope.ServiceID == nil || *scope.ServiceID != serviceID ||
+		scope.ShareScope != instanceentity.ShareScopePerTeam ||
+		scope.FlagSubjectID != teamID {
+		t.Fatalf("unexpected awd placement scope: %+v", scope)
+	}
+
+	var stored instanceentity.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if stored.Status != instanceentity.InstanceStatusPending || stored.RuntimeNodeID != nil || stored.ContainerID != "" {
+		t.Fatalf("expected awd instance to wait pending with node cleared, got %+v", stored)
 	}
 }
 

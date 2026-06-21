@@ -637,7 +637,7 @@ func (a systemRuntimeCleanerAdapter) CleanupRuntime(ctx context.Context, instanc
 	}
 	return a.cleaner.CleanupRuntime(ctx, runtimecontracts.RuntimeCleanupTarget{
 		InstanceID:     instance.ID,
-		NodeID:         instance.NodeID,
+		RuntimeNodeID:  instance.RuntimeNodeID,
 		ContainerID:    instance.ContainerID,
 		NetworkID:      instance.NetworkID,
 		HostPort:       instance.HostPort,

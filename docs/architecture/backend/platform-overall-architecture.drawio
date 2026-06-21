@@ -73,7 +73,7 @@
         <mxCell id="registry" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=13;" value="Registry&lt;br&gt;题目镜像仓库" vertex="1">
           <mxGeometry height="80" width="185" x="930" y="412" as="geometry" />
         </mxCell>
-        <mxCell id="router" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="runtime node execution router&lt;br&gt;按 instances.node_id / container_id 路由" vertex="1">
+        <mxCell id="router" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="runtime node execution router&lt;br&gt;按 runtime_node_id / container_id 路由" vertex="1">
           <mxGeometry height="76" width="300" x="250" y="540" as="geometry" />
         </mxCell>
         <mxCell id="agentproto" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" value="runtime-agent 协议&lt;br&gt;mTLS / stats / create / cleanup / exec" vertex="1">

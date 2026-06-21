@@ -112,12 +112,21 @@ type InstanceScope struct {
 }
 
 type RuntimeNodeBinding struct {
-	NodeID   int64
-	NodeName string
+	RuntimeNodeID int64
+	NodeName      string
 }
 
 type RuntimeNodeSelector interface {
 	SelectRuntimeNode(ctx context.Context, scope InstanceScope) (*RuntimeNodeBinding, error)
+}
+
+type AWDRuntimePlacementStore interface {
+	FindActiveContestRuntimePlacement(ctx context.Context, contestID int64) (*RuntimeNodeBinding, bool, error)
+	EnsureActiveContestRuntimePlacement(ctx context.Context, contestID, runtimeNodeID int64) (*RuntimeNodeBinding, error)
+}
+
+type RuntimeNodeHealthLookup interface {
+	FindHealthyRuntimeNodeByID(ctx context.Context, runtimeNodeID int64) (*RuntimeNodeBinding, error)
 }
 
 type TopologyCreateNode struct {
@@ -148,7 +157,7 @@ type TopologyCreateRequest struct {
 	Nodes                      []TopologyCreateNode
 	Policies                   []runtimecontracts.TopologyTrafficPolicy
 	SubnetPool                 runtimecontracts.SubnetPoolKind
-	NodeID                     int64
+	RuntimeNodeID              int64
 	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool
