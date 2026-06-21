@@ -56,8 +56,8 @@
   <text class="titleText" x="345" y="315" text-anchor="middle">Go API Server</text>
   <text class="bodyText" x="345" y="337" text-anchor="middle">Gin / HTTP API / WebSocket</text>
 
-  <rect class="box purple" x="520" y="283" width="330" height="82" />
-  <text class="titleText" x="685" y="306" text-anchor="middle">模块化单体</text>
+  <rect class="box purple" x="500" y="283" width="370" height="82" />
+  <text class="titleText" x="685" y="306" text-anchor="middle">模块化单体 Go API（可多副本部署）</text>
   <text class="bodyText" x="685" y="328" text-anchor="middle">auth · identity · challenge · practice · contest</text>
   <text class="bodyText" x="685" y="348" text-anchor="middle">instance · container_runtime · assessment · ops</text>
 
@@ -95,16 +95,16 @@
   <rect class="box red" x="250" y="670" width="300" height="92" />
   <text class="titleText" x="400" y="696" text-anchor="middle">Runtime Node A</text>
   <text class="bodyText" x="400" y="718" text-anchor="middle">runtime-agent + Docker Engine</text>
-  <text class="bodyText" x="400" y="740" text-anchor="middle">拓扑实例 A1 / A2（拓扑内 co-location）</text>
+  <text class="bodyText" x="400" y="740" text-anchor="middle">普通拓扑实例 A1 / A2；AWD contest X</text>
 
   <rect class="box red" x="700" y="670" width="300" height="92" />
   <text class="titleText" x="850" y="696" text-anchor="middle">Runtime Node B</text>
   <text class="bodyText" x="850" y="718" text-anchor="middle">runtime-agent + Docker Engine</text>
-  <text class="bodyText" x="850" y="740" text-anchor="middle">拓扑实例 B1 / B2（拓扑间分布）</text>
+  <text class="bodyText" x="850" y="740" text-anchor="middle">普通拓扑实例 B1 / B2；AWD contest Y</text>
 
-  <rect class="box note" x="680" y="805" width="470" height="52" />
-  <text class="smallText" x="700" y="827">边界：一个实例 / 一个网络拓扑只绑定一个 runtime node；</text>
-  <text class="smallText" x="700" y="847">当前不做拓扑内跨宿主机拆分、overlay 网络或 live migration。</text>
+  <rect class="box note" x="640" y="805" width="570" height="52" />
+  <text class="smallText" x="660" y="827">边界：一个实例 / 一个网络拓扑只绑定一个 runtime node；依赖 shared Docker network 的</text>
+  <text class="smallText" x="660" y="847">同一 AWD contest 也必须固定到同一 node。当前不做跨宿主机 overlay 或 live migration。</text>
 
   <path class="edge" d="M 435 83 H 585" />
   <text class="edgeLabel" x="510" y="74" text-anchor="middle">访问平台</text>
@@ -112,8 +112,8 @@
   <text class="edgeLabel" x="575" y="148" text-anchor="middle">HTTPS / WSS</text>
   <path class="edge" d="M 475 234 V 288 H 345" />
   <text class="edgeLabel" x="405" y="274" text-anchor="middle">API / WS 转发</text>
-  <path class="edge" d="M 460 324 H 520" />
-  <text class="edgeLabel" x="490" y="316" text-anchor="middle">用例编排</text>
+  <path class="edge" d="M 460 324 H 500" />
+  <text class="edgeLabel" x="482" y="316" text-anchor="middle">用例编排</text>
   <path class="edge" d="M 345 360 V 400 H 292 V 412" />
   <path class="edge" d="M 380 360 V 400 H 512 V 412" />
   <path class="edge" d="M 415 360 V 400 H 758 V 412" />

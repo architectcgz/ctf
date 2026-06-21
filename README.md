@@ -12,7 +12,7 @@
 
 ![CTF 平台总体架构](docs/architecture/backend/platform-overall-architecture.png)
 
-当前平台按“应用控制面 + runtime-agent 执行面”拆分：Go API 负责业务编排、鉴权、调度、实例状态和访问入口；runtime-agent 运行在靶机 Docker 宿主机上，负责容器、网络、ACL、文件写入、checker sandbox 和 interactive exec。多 runtime node 用于承载多个实例 / 拓扑的横向扩容；同一个网络拓扑实例仍绑定一个 runtime node，不做拓扑内跨宿主机容器拆分。
+当前平台按“应用控制面 + runtime-agent 执行面”拆分：模块化单体 Go API（可多副本部署）负责业务编排、鉴权、调度、实例状态和访问入口；runtime-agent 运行在靶机 Docker 宿主机上，负责容器、网络、ACL、文件写入、checker sandbox 和 interactive exec。多 runtime node 用于承载普通实例 / 独立拓扑的横向扩容；同一个网络拓扑实例仍绑定一个 runtime node。AWD 如果依赖同一 contest 的 Docker shared network 实现跨队攻击链路，则该 contest 的相关服务实例必须固定到同一个 runtime node，当前不做拓扑内或 AWD contest 内的跨宿主机网络互通。
 
 图表源文件见 `docs/architecture/backend/platform-overall-architecture.drawio`，运行时边界细节见 `docs/architecture/backend/03-container-architecture.md`。
 
