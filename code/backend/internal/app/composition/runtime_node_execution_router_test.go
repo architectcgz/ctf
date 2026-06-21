@@ -193,8 +193,8 @@ func TestBuildRuntimeNodeClientRejectsRuntimeAgentNodeNameMismatch(t *testing.T)
 		TLSIdentity: "runtime-agent-a",
 	}
 	originalDial := dialRuntimeAgent
-	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Bridge, error) {
-		return newRuntimeAgentHealthBridge(t, ctx, agentserver.ServiceIdentity{
+	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Client, error) {
+		return newRuntimeAgentHealthClient(t, ctx, agentserver.ServiceIdentity{
 			NodeName: "node-b",
 			Hostname: "agent-host-b",
 		}), nil
@@ -246,8 +246,8 @@ func TestBuildRuntimeNodeClientTimesOutRuntimeAgentIdentityCheck(t *testing.T) {
 		TLSIdentity: "runtime-agent-a",
 	}
 	originalDial := dialRuntimeAgent
-	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Bridge, error) {
-		return newRuntimeAgentBridge(t, ctx, blockingRuntimeAgentService{}), nil
+	dialRuntimeAgent = func(ctx context.Context, _ config.RuntimeAgentConfig) (*agentclient.Client, error) {
+		return newRuntimeAgentClient(t, ctx, blockingRuntimeAgentService{}), nil
 	}
 	t.Cleanup(func() {
 		dialRuntimeAgent = originalDial
@@ -715,12 +715,12 @@ func overrideRuntimeNodeClientBuilder(t *testing.T, clients map[int64]runtimeNod
 	})
 }
 
-func newRuntimeAgentHealthBridge(t *testing.T, ctx context.Context, identity agentserver.ServiceIdentity) *agentclient.Bridge {
+func newRuntimeAgentHealthClient(t *testing.T, ctx context.Context, identity agentserver.ServiceIdentity) *agentclient.Client {
 	t.Helper()
-	return newRuntimeAgentBridge(t, ctx, agentserver.NewService(nil, nil, identity))
+	return newRuntimeAgentClient(t, ctx, agentserver.NewService(nil, nil, identity))
 }
 
-func newRuntimeAgentBridge(t *testing.T, ctx context.Context, service agentcontracts.RuntimeAgentService) *agentclient.Bridge {
+func newRuntimeAgentClient(t *testing.T, ctx context.Context, service agentcontracts.RuntimeAgentService) *agentclient.Client {
 	t.Helper()
 
 	listener := bufconn.Listen(1024 * 1024)
