@@ -14,6 +14,7 @@
 
 - 文件名：`{日期}-{简述}.md`
 - 结构：问题描述 → 原因分析 → 解决方案 → 收获 → 沉淀状态
+- 写正文时先透过现象抽象问题类别，再把本次事故作为反例或示例；不要把一次 review 现象直接写成只适用于本次的规则。
 - `沉淀状态` 必须说明状态、owner 和链接，避免 feedback 只积累、不归位。
 - 如果反馈导致 `harness/prompts/`、concepts、脚本、AGENTS 或 skill 更新，必须交叉链接。
 - 新增或修改的 `feedback/*.md` 会被 `scripts/check-workflow-governance.sh` 检查是否包含 `## 沉淀状态`。
@@ -55,5 +56,6 @@
 - `2026-05-10-error-pages-use-ui-btn.md`：错误页、空状态和恢复动作按钮默认使用通用 `ui-btn`，页面不再私有实现按钮 hover / dark mode。
 - `2026-05-23-frontend-review-snapshots-can-be-pruned-after-audit-absorption.md`：前端 review 单轮快照在主索引吸收后应及时清理，避免旧“未修复”状态继续污染活动目录。
 - `2026-06-04-frontend-state-surface-owner-and-ui-test-layering.md`：前端 loading / empty / loaded 状态 surface owner 应收口到同一视觉区域，同时 UI 测试需要从大量源码字符串断言转向分层覆盖。
+- `2026-06-21-constructors-should-not-hide-external-effects.md`：构造函数不隐藏 hostname / env / file / network / time / random / client dial 这类外部依赖读取或副作用，外部事实由 bootstrap / composition / 显式 factory owner 读取并处理错误。
 
 已沉淀到全局 skill、全局 AGENTS 或项目机械检查中的旧反馈，不应继续以活动状态停留在本目录；默认切到 `archived` 状态保留上下文，需要追溯更早版本时再使用 Git 历史。

@@ -6,10 +6,11 @@ description: >
   reviewing background workers / dispatchers / pollers / retry-backoff loops,
   outbox / inbox / durable-journal state transitions, idempotency under multiple
   instances or stale retries, auth / session / security-path correctness,
-  runtime node health vs schedulable semantics, completion-timestamp closures,
-  or backend test layering and assertion ownership. Activate even when the user
-  only says "重构这个文件 / 拆一下 / 这个 worker 有并发问题 / 改密后没登出 /
-  测试一直挂" without naming a pattern.
+  runtime node health vs schedulable semantics, constructors or factories that
+  touch external runtime state, completion-timestamp closures, or backend test
+  layering and assertion ownership. Activate even when the user only says
+  "重构这个文件 / 拆一下 / 这个 worker 有并发问题 / 改密后没登出 / 测试一直挂"
+  without naming a pattern.
 ---
 
 # CTF Backend Patterns
@@ -22,6 +23,7 @@ description: >
 - 写或 review 后台 worker / dispatcher / poller / reconcile / retry 循环。
 - outbox / inbox / saga 等 durable journal 的状态迁移、多实例并发、stale 重试。
 - 认证 / 会话 / 权限这类安全路径的正确性。
+- service / bootstrap / composition 中构造对象时读取 OS、环境、文件、网络、时间、随机数或真实 client。
 - runtime 节点健康、调度、清理生命周期语义。
 - 后端测试分层与断言归属。
 
@@ -36,6 +38,7 @@ description: >
 - 拆分大文件 → 读 Refactoring §，按 `feedback/2026-06-12-package-split-by-responsibility-template.md`。
 - 改后台循环 / 重试 → 读 Concurrency & Durable State §，逐条过 ✓Check。
 - 改 goroutine / panic recovery / SafeGo 风格包装 → 读 Concurrency & Durable State §（panic owner 边界）。
+- 改 service 构造、factory、bootstrap 接线，或 hostname / env / file / network / time / random lookup → 读 Construction & External Effects §。
 - 改 outbox / 状态机 → 读 Concurrency & Durable State §（CAS 迁移）。
 - 改 auth / session → 读 Security Path §。
 - 改 runtime / 实例生命周期 → 读 Runtime Semantics §。
@@ -51,6 +54,15 @@ description: >
   用一个 `finish()` 闭包集中写；对外时间戳归一 UTC，Duration 保留原始 monotonic 配对。
   ✓Check：新增分支只需调 `finish()` 吗？Duration 是否误用 `time.Now().UTC()` 做差（应保留原始配对）？
   → `feedback/2026-06-08-go-finish-closure-for-result-timestamps.md`
+
+## Construction & External Effects
+- **构造函数不隐藏外部依赖读取和副作用**：普通 `NewService` / `New...` 只接收已解析依赖、
+  配置和 identity；不在内部读取 hostname、env、文件、证书、网络、时间、随机数或真实 client。
+  这些外部事实由 bootstrap、composition、显式 factory，或名称已表达副作用的 `Load*` / `Dial*` / `Open*`
+  owner 读取并处理错误后传入。
+  ✓Check：这个构造函数是否调用了 `os.*`、`net.*`、文件/env 读取、`time.Now`、随机数或真实 dial/open？
+  如果是，函数名和 owner 是否明确表达副作用，失败是否可观察？
+  → `feedback/2026-06-21-constructors-should-not-hide-external-effects.md`
 
 ## Concurrency & Durable State
 - **发布幂等 ≠ 状态迁移幂等**：DB outbox/journal 的 `sent/failed` 迁移必须是
@@ -155,6 +167,7 @@ description: >
 - 多实例 worker 的状态迁移不是 CAS → 状态复活、重复广播。见 Concurrency & Durable State §。
 - backoff / retry 绑在 logger 存在性上 → logger 为 nil 时退化成热循环。见 Concurrency & Durable State §。
 - 共享 SafeGo 默认吞 panic → 关键后台任务可能静默死亡，业务失败状态也可能丢失。见 Concurrency & Durable State §。
+- 构造函数里偷偷读取外部世界并忽略错误 → 测试和运维都看不到失败 owner。见 Construction & External Effects §。
 - 安全撤销建立在 best-effort 清理上 → 其他设备旧 session 仍有效。见 Security Path §。
 
 ## 添加新 Pattern
