@@ -20,6 +20,13 @@
   - 负责：`NodeHealthService` 通过 `runtime_node_health` 后台任务探测每个 runtime node，把成功探测写入 `runtime_nodes.health_status=ready`、`last_seen_at` 和 `capacity_snapshot`；探测失败达到 `failure_threshold` 或已超过 `stale_after` 时，把节点标记为 `offline`，后续默认选择不再把新实例调度到该 node
   - 不负责：拥有实例命令、实例查询、proxy ticket 或 maintenance 业务 owner；这些已收口到 `instance` 模块和 app composition
 
+- `code/backend/internal/app/composition/runtime_node_execution_router.go`、`code/backend/internal/module/practice/application/commands/runtime_container_create.go`、`code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
+  - 负责：把“一个运行时实例 / 一个网络拓扑”作为最小调度单元。实例启动时先选择一个 `runtime_nodes.id` 并写入 `instances.node_id`；拓扑创建请求只携带一个 `TopologyCreateRequest.NodeID`，`runtimeNodeExecutionRouter.CreateTopology()` 按该 node 构造一个 runtime client，随后 `ProvisioningService.CreateTopology()` 在这个 client 背后的同一个 Docker Engine 上创建该拓扑的全部 Docker network、container、network alias 与 ACL
+  - 负责：用多 `runtime_agent` 承载“多个拓扑实例分布到多个宿主机”的横向扩容模型；不同实例可以调度到不同 runtime node，但同一实例的 `runtime_details.containers[]` 不记录容器级 `node_id`，也不表达拓扑内部跨 node 放置
+  - 负责：在 node 离线后按实例级别重建。`WireRuntimeNodeFailover` 会把离线 node 上未过期的 `creating / running` 实例清空旧 `node_id / container_id / network_id / runtime_details / access_url` 后放回 `pending`，由 scheduler 在健康 node 上重新创建整个拓扑，而不是把拓扑中的单个容器迁到其他 node
+  - 不负责：在同一个 topology 内把不同节点容器拆到不同 Docker 宿主机；当前不提供 overlay / VXLAN / CNI、跨 node Docker network、跨宿主机 network alias、跨 node ACL 下发、跨 node 容器 IP 连通或会话迁移语义
+  - AWD 边界：`applyAWDStableNetworkToTopologyRequest()` 会把 AWD 入口网络命名为 `ctf-awd-contest-<contest_id>` 并标记 `shared=true`，但这是当前 runtime node 本地 Docker network 语义。同名 network 出现在不同 Docker 宿主机时不是同一个二层网络；如果某个 AWD 赛制要求同一 contest 的所有队伍服务处于同一个私有网络内，则调度策略必须把该 contest 的相关实例固定到同一个 runtime node。当前已落地事实只保证“单个 AWD service 实例及其 defense workspace companion 使用同一个 `instances.node_id` 创建”
+
 - `code/backend/internal/module/practice/application/commands/instance_start_service.go`、`instance_provisioning_scheduler.go`、`runtime_container_create.go`、`awd_desired_runtime_reconciler.go`
   - 负责：用两段式编排推进 `pending -> creating -> running`，完成作用域加锁、端口预留、容器创建、失败补偿与 `container.scheduler.*` 并发控制；普通实例继续使用 `container.default_ttl` 计算 `expires_at`，AWD 队伍服务实例则统一跟随 `contestdomain.ContestEffectiveEndTime(contest)`，也就是比赛 `end_time + paused_seconds`
   - 负责：在多 API 副本部署下，通过 Redis `ctf:practice:instance:scheduler:lock` 把 provisioning scheduler 收口成单 owner；只有拿到 `container.scheduler.lock_ttl` 租约并持续续租的实例才会执行 desired reconcile 和 `pending -> creating` 领取

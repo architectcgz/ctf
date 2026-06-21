@@ -8,6 +8,14 @@
 - 接口与题包契约：`docs/contracts/`
 - 题目与题包：`challenges/`
 
+## 项目架构
+
+![CTF 平台总体架构](docs/architecture/backend/platform-overall-architecture.png)
+
+当前平台按“应用控制面 + runtime-agent 执行面”拆分：Go API 负责业务编排、鉴权、调度、实例状态和访问入口；runtime-agent 运行在靶机 Docker 宿主机上，负责容器、网络、ACL、文件写入、checker sandbox 和 interactive exec。多 runtime node 用于承载多个实例 / 拓扑的横向扩容；同一个网络拓扑实例仍绑定一个 runtime node，不做拓扑内跨宿主机容器拆分。
+
+图表源文件见 `docs/architecture/backend/platform-overall-architecture.drawio`，运行时边界细节见 `docs/architecture/backend/03-container-architecture.md`。
+
 ## 当前技术栈
 
 - 后端：Go 1.24、Gin、GORM、pgx、Viper、PostgreSQL、Redis、Zap

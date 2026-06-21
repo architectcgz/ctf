@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="880" viewBox="0 0 1320 880" role="img" aria-labelledby="title desc">
+  <title id="title">CTF 平台总体架构</title>
+  <desc id="desc">展示用户访问层、接入层、Go API 控制面、数据支撑、runtime-agent 执行面路由和多 runtime node 靶机运行层。</desc>
+  <defs>
+    <style>
+      .band { fill: #ffffff; stroke: #b7c0cc; stroke-width: 1; }
+      .label { fill: #111827; font: 700 16px "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+      .box { stroke-width: 1.2; rx: 8; ry: 8; }
+      .blue { fill: #dae8fc; stroke: #6c8ebf; }
+      .green { fill: #d5e8d4; stroke: #82b366; }
+      .purple { fill: #e1d5e7; stroke: #9673a6; }
+      .yellow { fill: #fff2cc; stroke: #d6b656; }
+      .red { fill: #f8cecc; stroke: #b85450; }
+      .note { fill: #f5f5f5; stroke: #6b7280; }
+      .titleText { fill: #0f172a; font: 700 15px "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+      .bodyText { fill: #0f172a; font: 13px "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+      .smallText { fill: #334155; font: 12px "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+      .edge { fill: none; stroke: #334155; stroke-width: 1.4; marker-end: url(#arrow); }
+      .edgeLabel { fill: #334155; font: 12px "Noto Sans CJK SC", "Microsoft YaHei", Arial, sans-serif; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#334155" />
+    </marker>
+  </defs>
+
+  <rect class="band" x="40" y="30" width="1200" height="105" />
+  <rect class="band" x="40" y="135" width="1200" height="125" />
+  <rect class="band" x="40" y="260" width="1200" height="130" />
+  <rect class="band" x="40" y="390" width="1200" height="125" />
+  <rect class="band" x="40" y="515" width="1200" height="125" />
+  <rect class="band" x="40" y="640" width="1200" height="150" />
+
+  <text class="label" x="112" y="88" text-anchor="middle">用户访问层</text>
+  <text class="label" x="112" y="203" text-anchor="middle">接入层</text>
+  <text class="label" x="112" y="331" text-anchor="middle">应用控制面</text>
+  <text class="label" x="112" y="458" text-anchor="middle">数据与共享支撑</text>
+  <text class="label" x="112" y="584" text-anchor="middle">执行面路由</text>
+  <text class="label" x="112" y="723" text-anchor="middle">靶机运行层</text>
+
+  <rect class="box blue" x="245" y="52" width="190" height="62" />
+  <text class="titleText" x="340" y="87" text-anchor="middle">学生 / 教师 / 管理员</text>
+
+  <rect class="box blue" x="585" y="52" width="190" height="62" />
+  <text class="titleText" x="680" y="78" text-anchor="middle">Web 前端</text>
+  <text class="bodyText" x="680" y="99" text-anchor="middle">Vue 3 SPA</text>
+
+  <rect class="box green" x="365" y="162" width="220" height="72" />
+  <text class="titleText" x="475" y="190" text-anchor="middle">Nginx / 入口代理</text>
+  <text class="bodyText" x="475" y="212" text-anchor="middle">静态资源 / API / WebSocket</text>
+
+  <rect class="box green" x="715" y="162" width="250" height="72" />
+  <text class="titleText" x="840" y="190" text-anchor="middle">AWD Defense SSH Gateway</text>
+  <text class="bodyText" x="840" y="212" text-anchor="middle">ticket 校验 / interactive exec</text>
+
+  <rect class="box green" x="230" y="288" width="230" height="72" />
+  <text class="titleText" x="345" y="315" text-anchor="middle">Go API Server</text>
+  <text class="bodyText" x="345" y="337" text-anchor="middle">Gin / HTTP API / WebSocket</text>
+
+  <rect class="box purple" x="520" y="283" width="330" height="82" />
+  <text class="titleText" x="685" y="306" text-anchor="middle">模块化单体</text>
+  <text class="bodyText" x="685" y="328" text-anchor="middle">auth · identity · challenge · practice · contest</text>
+  <text class="bodyText" x="685" y="348" text-anchor="middle">instance · container_runtime · assessment · ops</text>
+
+  <rect class="box purple" x="910" y="288" width="250" height="72" />
+  <text class="titleText" x="1035" y="315" text-anchor="middle">后台任务</text>
+  <text class="bodyText" x="1035" y="337" text-anchor="middle">scheduler / health / cleanup / outbox</text>
+
+  <rect class="box yellow" x="210" y="412" width="165" height="80" />
+  <text class="titleText" x="292" y="440" text-anchor="middle">PostgreSQL</text>
+  <text class="bodyText" x="292" y="462" text-anchor="middle">业务事实</text>
+  <text class="bodyText" x="292" y="480" text-anchor="middle">instances / runtime_nodes</text>
+
+  <rect class="box yellow" x="430" y="412" width="165" height="80" />
+  <text class="titleText" x="512" y="440" text-anchor="middle">Redis</text>
+  <text class="bodyText" x="512" y="462" text-anchor="middle">会话 / 锁 / 榜单</text>
+  <text class="bodyText" x="512" y="480" text-anchor="middle">短期状态</text>
+
+  <rect class="box yellow" x="650" y="412" width="215" height="80" />
+  <text class="titleText" x="758" y="438" text-anchor="middle">Shared FS</text>
+  <text class="bodyText" x="758" y="460" text-anchor="middle">附件 / 报表 / runtime secret</text>
+  <text class="bodyText" x="758" y="478" text-anchor="middle">AWD SSH host key</text>
+
+  <rect class="box yellow" x="930" y="412" width="185" height="80" />
+  <text class="titleText" x="1022" y="440" text-anchor="middle">Registry</text>
+  <text class="bodyText" x="1022" y="462" text-anchor="middle">题目镜像仓库</text>
+
+  <rect class="box red" x="250" y="540" width="300" height="76" />
+  <text class="titleText" x="400" y="566" text-anchor="middle">runtime node execution router</text>
+  <text class="bodyText" x="400" y="588" text-anchor="middle">按 instances.node_id / container_id 路由</text>
+
+  <rect class="box red" x="700" y="540" width="300" height="76" />
+  <text class="titleText" x="850" y="566" text-anchor="middle">runtime-agent 协议</text>
+  <text class="bodyText" x="850" y="588" text-anchor="middle">mTLS / stats / create / cleanup / exec</text>
+
+  <rect class="box red" x="250" y="670" width="300" height="92" />
+  <text class="titleText" x="400" y="696" text-anchor="middle">Runtime Node A</text>
+  <text class="bodyText" x="400" y="718" text-anchor="middle">runtime-agent + Docker Engine</text>
+  <text class="bodyText" x="400" y="740" text-anchor="middle">拓扑实例 A1 / A2（拓扑内 co-location）</text>
+
+  <rect class="box red" x="700" y="670" width="300" height="92" />
+  <text class="titleText" x="850" y="696" text-anchor="middle">Runtime Node B</text>
+  <text class="bodyText" x="850" y="718" text-anchor="middle">runtime-agent + Docker Engine</text>
+  <text class="bodyText" x="850" y="740" text-anchor="middle">拓扑实例 B1 / B2（拓扑间分布）</text>
+
+  <rect class="box note" x="680" y="805" width="470" height="52" />
+  <text class="smallText" x="700" y="827">边界：一个实例 / 一个网络拓扑只绑定一个 runtime node；</text>
+  <text class="smallText" x="700" y="847">当前不做拓扑内跨宿主机拆分、overlay 网络或 live migration。</text>
+
+  <path class="edge" d="M 435 83 H 585" />
+  <text class="edgeLabel" x="510" y="74" text-anchor="middle">访问平台</text>
+  <path class="edge" d="M 680 114 V 145 H 475 V 162" />
+  <text class="edgeLabel" x="575" y="148" text-anchor="middle">HTTPS / WSS</text>
+  <path class="edge" d="M 475 234 V 288 H 345" />
+  <text class="edgeLabel" x="405" y="274" text-anchor="middle">API / WS 转发</text>
+  <path class="edge" d="M 460 324 H 520" />
+  <text class="edgeLabel" x="490" y="316" text-anchor="middle">用例编排</text>
+  <path class="edge" d="M 345 360 V 400 H 292 V 412" />
+  <path class="edge" d="M 380 360 V 400 H 512 V 412" />
+  <path class="edge" d="M 415 360 V 400 H 758 V 412" />
+  <path class="edge" d="M 450 360 V 400 H 1022 V 412" />
+  <path class="edge" d="M 1035 360 V 520 H 400 V 540" />
+  <text class="edgeLabel" x="705" y="525" text-anchor="middle">调度 / 健康探测 / 清理</text>
+  <path class="edge" d="M 345 360 V 540 H 400" />
+  <text class="edgeLabel" x="340" y="515" text-anchor="middle">实例创建 / 访问</text>
+  <path class="edge" d="M 840 234 V 515 H 480 V 540" />
+  <text class="edgeLabel" x="690" y="506" text-anchor="middle">workspace exec 路由</text>
+  <path class="edge" d="M 550 578 H 700" />
+  <text class="edgeLabel" x="625" y="568" text-anchor="middle">mTLS</text>
+  <path class="edge" d="M 790 616 V 650 H 400 V 670" />
+  <text class="edgeLabel" x="575" y="650" text-anchor="middle">node A</text>
+  <path class="edge" d="M 910 616 V 670" />
+  <text class="edgeLabel" x="950" y="650" text-anchor="middle">node B</text>
+  <path class="edge" d="M 1022 492 V 650 H 850 V 670" />
+  <text class="edgeLabel" x="944" y="640" text-anchor="middle">拉取题目镜像</text>
+</svg>

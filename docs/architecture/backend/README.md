@@ -35,6 +35,14 @@
 | [06-file-storage.md](./06-file-storage.md) | 文件、导出产物、题包与运行时存储边界 |
 | [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md) | 当前模块化单体边界、拆分约束与历史兼容说明 |
 
+## 当前图表资产
+
+| 图表 | 说明 |
+| --- | --- |
+| [platform-overall-architecture.drawio](./platform-overall-architecture.drawio) | 项目总体架构图源文件，来自论文图表并已按当前 runtime-agent 执行面更新 |
+| [platform-overall-architecture.svg](./platform-overall-architecture.svg) | 项目总体架构图的文本图像版本 |
+| [platform-overall-architecture.png](./platform-overall-architecture.png) | GitHub 仓库首页 README 使用的项目总体架构图 |
+
 ## 已采用专题
 
 | 文档 | 说明 |
