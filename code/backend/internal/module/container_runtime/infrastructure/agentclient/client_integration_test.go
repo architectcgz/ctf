@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing.T) {
+func TestRemoteExecutionClientDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing.T) {
 	t.Parallel()
 
 	serverTLS, clientTLS := newMutualTLSConfigs(t)
@@ -82,10 +82,10 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 		t.Fatalf("expected health ready, got %+v", healthResp)
 	}
 
-	bridge := agentclient.New(conn)
-	checkerRunnerClient := contestinfra.NewSandboxCheckerRunner(bridge)
+	client := agentclient.New(conn)
+	checkerRunnerClient := contestinfra.NewSandboxCheckerRunner(client)
 
-	networkID, err := bridge.CreateNetwork(ctx, "ctf-net", map[string]string{"scope": "test"}, true, true, "10.10.0.0/24")
+	networkID, err := client.CreateNetwork(ctx, "ctf-net", map[string]string{"scope": "test"}, true, true, "10.10.0.0/24")
 	if err != nil {
 		t.Fatalf("CreateNetwork() error = %v", err)
 	}
@@ -100,7 +100,7 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 	aclRules := []runtimecontracts.InstanceRuntimeACLRule{
 		{SourceIP: "10.10.0.2", TargetIP: "10.10.0.3", Action: "allow", Protocol: "tcp", Ports: []int{8080}},
 	}
-	if err := bridge.ApplyACL(ctx, aclHandle, aclRules); err != nil {
+	if err := client.ApplyACL(ctx, aclHandle, aclRules); err != nil {
 		t.Fatalf("ApplyACL() error = %v", err)
 	}
 	if hostExecutor.appliedACLHandle == nil || hostExecutor.appliedACLHandle.Chain != "CTF-INS-77" {
@@ -109,7 +109,7 @@ func TestRemoteExecutionBridgeDelegatesRuntimeAndCheckerCallsOverMTLS(t *testing
 	if len(hostExecutor.appliedACLRules) != 1 || hostExecutor.appliedACLRules[0].TargetIP != "10.10.0.3" {
 		t.Fatalf("expected remote host executor to receive acl rules, got %+v", hostExecutor.appliedACLRules)
 	}
-	if err := bridge.RemoveACL(ctx, aclHandle); err != nil {
+	if err := client.RemoveACL(ctx, aclHandle); err != nil {
 		t.Fatalf("RemoveACL() error = %v", err)
 	}
 	if hostExecutor.removedACLHandle == nil || hostExecutor.removedACLHandle.Chain != "CTF-INS-77" {

@@ -136,22 +136,22 @@ func buildRuntimeNodeClientFromNode(
 		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, contestinfra.NewSandboxCheckerRunner(sandboxExecutor), nil), nil
 	}
 
-	bridge, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))
+	client, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))
 	if err != nil {
 		return nil, err
 	}
-	if err := verifyRuntimeAgentNodeIdentity(ctx, node, bridge, strings.TrimSpace(cfg.RuntimeAgent.NodeName) != "", cfg.RuntimeAgent.DialTimeout); err != nil {
-		_ = bridge.Close(ctx)
+	if err := verifyRuntimeAgentNodeIdentity(ctx, node, client, strings.TrimSpace(cfg.RuntimeAgent.NodeName) != "", cfg.RuntimeAgent.DialTimeout); err != nil {
+		_ = client.Close(ctx)
 		return nil, err
 	}
-	return newNodeRuntimeClient(cfg, logger, allocationRepo, bridge, contestinfra.NewSandboxCheckerRunner(bridge), bridge), nil
+	return newNodeRuntimeClient(cfg, logger, allocationRepo, client, contestinfra.NewSandboxCheckerRunner(client), client), nil
 }
 
-func verifyRuntimeAgentNodeIdentity(ctx context.Context, node *runtimeentity.RuntimeNode, bridge *agentclient.Bridge, strict bool, timeout time.Duration) error {
+func verifyRuntimeAgentNodeIdentity(ctx context.Context, node *runtimeentity.RuntimeNode, client *agentclient.Client, strict bool, timeout time.Duration) error {
 	if node == nil {
 		return runtimeports.ErrRuntimeNodeUnavailable
 	}
-	if bridge == nil {
+	if client == nil {
 		return runtimeports.ErrRuntimeNodeUnavailable
 	}
 	healthCtx := ctx
@@ -161,7 +161,7 @@ func verifyRuntimeAgentNodeIdentity(ctx context.Context, node *runtimeentity.Run
 	}
 	defer cancel()
 
-	health, err := bridge.Health(healthCtx)
+	health, err := client.Health(healthCtx)
 	if err != nil {
 		return fmt.Errorf("check runtime agent node identity for expected node %q at endpoint %q: %w", node.Name, node.Endpoint, err)
 	}
