@@ -66,6 +66,5 @@
 
 ## 历史迁移说明
 
-- 原 `design-system/ctf-platform/` 下仍有效的最终设计已经并入 `docs/architecture/frontend/`。
 - 原 superpowers specs 下仍有效的专题设计已经并入 `docs/architecture/features/`。
 - superpowers 的过程资料索引保留在 `practice/superpowers-plan-index.md`，不再作为最终设计入口。

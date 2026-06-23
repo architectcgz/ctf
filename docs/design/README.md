@@ -66,8 +66,6 @@
   - 迁移原因：仍有效的专题设计已经统一迁入 `docs/architecture/features/`，`docs/superpowers` 不再保存最终设计副本。
 - 历史 AWD UI 代码稿 awd-ui-pages-vue3-ts-tailwind.md
   - 移除原因：这是早期 Vue + Tailwind 页面骨架稿，不再作为活动设计文档保留。
-- 历史 UI token 草稿 design-system.md
-  - 移除原因：这是早期设计系统草稿，不再作为活动设计文档保留。
 - 历史 AWD 能力画像回流方案
   - 移除原因：其中关于 AWD 个人攻击证据回流 teaching fact snapshot、推荐理由和班级复盘口径的最终结论，已经并入 `docs/architecture/features/教学复盘建议生成架构.md`，不再保留活动 Draft。
 - 历史 Jeopardy 80 真实训练题去重矩阵

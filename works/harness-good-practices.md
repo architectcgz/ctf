@@ -46,7 +46,7 @@
 
 - 中间设计一旦稳定，架构结论要回收到 `docs/architecture/`。
 - 字段、接口、格式一旦稳定，契约要回收到 `docs/contracts/`。
-- 页面结构和视觉方向一旦稳定，页面最终稿要回收到 `docs/architecture/frontend/pages/` 或 `docs/architecture/frontend/design-system/`。
+- 页面结构和视觉方向一旦稳定，页面最终稿要回收到 `docs/architecture/frontend/pages/`；跨页面 UI 原语、主题和间距规则回收到 `docs/architecture/frontend/` 中对应文档。
 - 单题设计如果已经落地到题包，不再额外复制一份到 `features/`；需要说明时只保留题包入口或迁移索引。
 - 原中间稿不要继续冒充事实源，应该在原位置写明 `Superseded by ...`。
 
