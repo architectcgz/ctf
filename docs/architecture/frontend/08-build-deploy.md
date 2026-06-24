@@ -84,7 +84,111 @@ dev proxy 规则：
 | `echarts-runtime` | `echarts` 核心运行时 |
 | `zrender` | `zrender` |
 
-当前目标不是“每个页面一个手写 chunk”，而是先把重依赖拆清，再让路由懒加载处理页面级切分。
+当前目标不是”每个页面一个手写 chunk”，而是先把重依赖拆清，再让路由懒加载处理页面级切分。
+
+## 3.1 构建流程
+
+### 3.1.1 Vite 构建配置
+
+**构建命令**：
+
+```bash
+npm run build
+```
+
+**构建产物位置**：
+
+- 输出目录：`code/frontend/dist/`
+- 静态资源：`dist/assets/`
+- 入口 HTML：`dist/index.html`
+
+**构建优化**：
+
+- Tree-shaking：Vite 自动移除未使用的代码
+- 代码分割：按路由懒加载自动分割
+- 资源压缩：生产模式自动压缩 JS/CSS
+- 资源 hash：文件名包含内容 hash，便于缓存
+
+### 3.1.2 环境变量注入
+
+**构建时注入**：
+
+Vite 在构建时将 `.env.production` 或环境变量中的 `VITE_*` 前缀变量注入到代码中：
+
+```bash
+# 生产环境构建时注入
+VITE_API_BASE_URL=/api/v1 npm run build
+```
+
+**当前使用的环境变量**：
+
+| 变量 | 构建时 | 运行时 | 说明 |
+|------|--------|--------|------|
+| `VITE_API_BASE_URL` | ✓ | ✓ | API 基础路径，默认 `/api/v1` |
+| `VITE_API_TIMEOUT` | ✓ | ✓ | API 超时时间，默认 `15000` |
+| `VITE_WS_BASE_URL` | ✓ | ✓ | WebSocket 基础路径，默认 `/ws` |
+| `VITE_DEV_PROXY_TARGET` | ✓ | ✗ | 仅开发模式，代理目标地址 |
+
+**注意**：
+
+- 环境变量在构建时被内联到代码中，不可在运行时动态修改
+- 敏感信息不应放在 `VITE_*` 环境变量中（会暴露在客户端代码）
+
+### 3.1.3 静态资源部署
+
+**资源路径策略**：
+
+- 默认使用相对路径 `/assets/`
+- 如需 CDN，可在构建时配置 `base` 选项
+
+**资源类型**：
+
+| 资源类型 | 处理方式 |
+|---------|---------|
+| `.js` / `.css` | 自动压缩、hash 命名 |
+| `.png` / `.jpg` / `.svg` | 小于 4KB 内联为 base64，否则复制到 `assets/` |
+| `.woff` / `.woff2` | 复制到 `assets/` |
+| `public/` 目录 | 直接复制到 `dist/` 根目录 |
+
+**缓存策略建议**：
+
+```nginx
+# 示例 Nginx 配置
+location /assets/ {
+    expires 1y;
+    add_header Cache-Control “public, immutable”;
+}
+
+location / {
+    try_files $uri $uri/ /index.html;
+    expires -1;
+    add_header Cache-Control “no-store”;
+}
+```
+
+### 3.1.4 CDN 配置
+
+**当前状态**：未启用 CDN
+
+**启用方式**（如需）：
+
+1. 修改 `vite.config.ts`：
+
+```typescript
+export default defineConfig({
+  base: 'https://cdn.example.com/',
+  // ...
+})
+```
+
+2. 构建后将 `dist/assets/` 上传到 CDN
+3. 确保 CDN 配置了正确的 CORS 头
+
+**CDN 注意事项**：
+
+- 入口 `index.html` 不应放在 CDN，应由后端服务器直接提供
+- CDN 资源必须配置 `Cache-Control` 和 `Access-Control-Allow-Origin`
+- 首次部署后验证资源加载路径是否正确
 
 ## 4. 运行时启动链
 

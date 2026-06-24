@@ -105,7 +105,94 @@
 
 ## 2. 当前共享原语
 
-### 2.0 通用按钮采用边界
+### 2.0 共享组件清单
+
+当前 `shared/ui/common/` 下的组件清单：
+
+#### 2.0.1 展示原语
+
+| 组件 | 用途 | 代码位置 |
+|------|------|---------|
+| `AppEmpty.vue` | 统一空状态壳和图标映射 | `shared/ui/common/` |
+| `AppLoading.vue` | 全局或局部加载状态 | `shared/ui/common/` |
+| `AppSkeleton.vue` | 页面或局部数据加载骨架 | `shared/ui/common/` |
+| `AppCard.vue` | 通用卡片容器 | `shared/ui/common/` |
+| `SectionCard.vue` | 页面内分区卡片 | `shared/ui/common/` |
+| `MetricCard.vue` | 指标展示卡片 | `shared/ui/common/` |
+| `PageHeader.vue` | 页面顶部标题区 | `shared/ui/common/` |
+| `SkillRadar.vue` | 技能雷达图 | `shared/ui/common/` |
+
+#### 2.0.2 交互原语
+
+| 组件 | 用途 | 代码位置 |
+|------|------|---------|
+| `AppToast.vue` | 全局 toast 渲染，消费 `useToast()` 状态 | `shared/ui/common/` |
+| `AppDestructiveConfirm.vue` | 危险确认弹窗壳 | `shared/ui/common/` |
+| `DeleteConfirmModal.vue` | 删除确认模态框 | `shared/ui/common/` |
+| `CActionMenu.vue` | 通用操作菜单 | `shared/ui/common/menus/` |
+
+#### 2.0.3 目录与数据表格
+
+| 组件 | 用途 | 代码位置 |
+|------|------|---------|
+| `WorkspaceDataTable.vue` | 工作区目录表格骨架、列配置、插槽型单元格渲染 | `shared/ui/common/` |
+| `WorkspaceDirectoryToolbar.vue` | 工作区目录工具栏 | `shared/ui/common/` |
+| `WorkspaceDirectoryPagination.vue` | 工作区目录分页 | `shared/ui/common/` |
+| `PagePaginationControls.vue` | 通用分页控件 | `shared/ui/common/` |
+
+#### 2.0.4 Overlay 模板
+
+| 组件 | 用途 | 代码位置 |
+|------|------|---------|
+| `OverlayPortal.vue` | `Teleport` 到 `body`、transition、backdrop 点击关闭 | `shared/ui/common/modal-templates/` |
+| `ModalTemplateShell.vue` | OverlayPortal 包装层，注入 aria/role/panelClass/frosted | `shared/ui/common/modal-templates/` |
+| `ClassicCenteredModal.vue` | 居中弹窗结构模板 | `shared/ui/common/modal-templates/` |
+| `SlideOverDrawer.vue` | 右侧抽屉结构模板 | `shared/ui/common/modal-templates/` |
+| `AdminSurfaceModal.vue` | 后台工作区常规居中弹窗 | `shared/ui/common/modal-templates/` |
+| `AdminSurfaceDrawer.vue` | 后台工作区常规侧边抽屉 | `shared/ui/common/modal-templates/` |
+| `MinimalFloatingModal.vue` | 轻量浮动模态框 | `shared/ui/common/modal-templates/` |
+| `CFocusedInputDialog.vue` | 聚焦输入对话框 | `shared/ui/common/modal-templates/` |
+| `CImmersiveConfirmDialog.vue` | 沉浸式确认对话框 | `shared/ui/common/modal-templates/` |
+| `CLightActionPopover.vue` | 轻量操作弹出层 | `shared/ui/common/modal-templates/` |
+| `CContextTooltip.vue` | 上下文提示浮层 | `shared/ui/common/modal-templates/` |
+
+#### 2.0.5 组件使用规范
+
+**复用原则**：
+
+- **展示原语**：跨页面、跨 feature 复用的基础展示组件
+- **交互原语**：全局反馈、确认流程的统一交互
+- **目录与表格**：后台工作区目录页的标准结构
+- **Overlay 模板**：弹窗、抽屉、浮层的行为层和结构模板
+
+**不适合放在 `shared/ui/common/` 的内容**：
+
+- 强业务语义的展示块（应放 `entities/**/ui` 或 `features/**/ui`）
+- 只服务单一 feature 的 UI（应放 `features/**/ui`）
+- 页面级工作台组合（应放 `widgets/**`）
+- 页面数据编排和路由交互（应放 `features/**/model`）
+
+#### 2.0.6 设计 Token 映射
+
+共享组件的视觉风格通过以下 CSS 文件控制：
+
+| CSS 文件 | 用途 |
+|---------|------|
+| `assets/styles/theme.css` | 全局主题变量（颜色、间距、字体） |
+| `assets/styles/surface-shell-background.css` | 页面壳与背景 |
+| `assets/styles/workspace-shell.css` | 工作区壳与按钮原语 |
+| `assets/styles/journal-soft-surfaces.css` | 学生侧 soft journal 风格 |
+| `assets/styles/journal-admin-shell.css` | 管理员侧工作区风格 |
+| `assets/styles/journal-user-shell.css` | 用户侧壳风格 |
+
+**设计 Token 使用规范**：
+
+- 共享组件内部优先使用 `theme.css` 中的 CSS 变量
+- 不在组件内硬编码颜色值或间距
+- 页面级样式调整通过覆盖 CSS 变量，而非覆盖组件类
+- 夜间模式适配通过 `[data-theme='dark']` 选择器统一处理
+
+### 2.1 通用按钮采用边界
 
 `workspace-shell.css` 中的 `ui-btn` 是通用工作区按钮原语。页面如果只是需要常规 primary、secondary、ghost、danger 动作，应直接组合 `ui-btn` 与对应变体类；页面局部只允许通过 `--ui-btn-*` 变量调整尺寸、边框强度或主题语义。
 
