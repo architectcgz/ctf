@@ -83,6 +83,274 @@
   - 负责：启动时只加载预先存在的 `container.defense_ssh_host_key_path`，缺失时直接失败；相对路径按 `shared_storage.shared_fs.root` 解析，多副本 behind TCP LB 依赖部署层把同一份 host key 文件挂到所有 gateway 实例。`docker/docker-compose.dev.yml` 里的 `ctf-awd-defense-ssh-host-key` 只是开发态预置 owner，不改变运行时 load-only 契约
   - 不负责：签发 ticket、决定 contest/team/service 作用域规则，或替 `runtime-agent` 承担执行面 owner
 
+## 调度锁与并发控制
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明调度器并发控制机制、Redis scheduler lock、并发槽位限制和代码位置 | 记录完整调度算法和失败补偿策略；详见专题文档 |
+| 记录 provisioning 串行创建流程和资源清理机制 | 记录业务 scope 判断逻辑；scope owner 在 practice/contest 模块 |
+| 指向容器调度与并发控制专题文档 | 替代专题文档中的并发槽位控制细节 |
+
+### Provisioning Scheduler 并发控制
+
+- **Redis 分布式锁**：
+  - `practice/application/commands/instance_provisioning_scheduler.go` 通过 Redis `ctf:practice:instance:scheduler:lock` 把 provisioning scheduler 收口成多副本单 owner
+  - 只有拿到 `container.scheduler.lock_ttl` 租约并持续续租的实例才会执行 desired reconcile 和 `pending -> creating` 领取
+  - 锁持有时长默认按 `lock_ttl` 配置，续租失败时调度器自动退出，避免脑裂
+- **并发槽位控制**：
+  - `container.scheduler.max_concurrent_starts` 限制同一轮并发创建数（例如同时创建 4 个容器）
+  - `container.scheduler.max_active_instances` 限制活跃实例总量（例如全局最多 60 个 running 实例）
+  - 达到并发上限时，新 `pending` 实例保持排队，等待当前 batch 完成后再领取
+- **调度流程**：
+  1. Scheduler 获取 Redis lock
+  2. 按 `container.scheduler.poll_interval` 周期性扫描 `pending` 实例
+  3. 检查当前并发数和活跃实例数，未达上限时领取一批 `pending` 实例
+  4. 选择健康 runtime node，绑定 `runtime_node_id` 并标记为 `creating`
+  5. 调用 `CreateTopology()` 串行完成容器创建
+  6. 成功后标记 `running`，失败后清理资源并记录 `failure_count`
+
+### Provisioning 串行创建流程
+
+- **`container_runtime/application/commands/provisioning_service.go`**：
+  - `CreateTopology()` 在一个调用内串行完成：端口预留 → 网络创建 → 容器创建 → 网络连接 → ACL 解析与下发
+  - 任何阶段失败都清理已创建 runtime resource（容器、网络）并释放端口 / 子网占用
+  - 不负责决定业务 scope 是否应该启动；这个判断已经在 practice / contest owner 完成
+- **失败清理机制**：
+  - 创建阶段失败：立即清理已创建的部分资源，避免残留容器或网络
+  - 端口 / 子网预留失败：返回错误，不创建任何 runtime resource
+  - ACL 下发失败：清理容器和网络，返回错误，不允许无 ACL 保护的实例进入 running 状态
+- **代码位置**：
+  - Scheduler：`code/backend/internal/module/practice/application/commands/instance_provisioning_scheduler.go`
+  - Provisioning：`code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
+  - Lock store：`code/backend/internal/module/practice/infrastructure/instance_scheduler_lock_store.go`
+- **专题文档引用**：完整调度与并发模型 → `docs/architecture/features/容器调度与并发控制.md`
+
+## 安全隔离与降级
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明容器安全隔离机制、配置参数和降级策略 | 记录 seccomp/AppArmor profile 完整规则；完整 profile 见配置文件 |
+| 记录创建阶段安全配置失败的处理策略 | 记录清理阶段的 warn-only 语义；清理降级在清理服务文档中 |
+| 指向代码位置和配置入口 | 替代安全扫描工具使用文档 |
+
+### 安全隔离机制
+
+- **容器安全配置**：
+  - `Privileged=false`：禁止特权容器，防止容器逃逸
+  - `ReadonlyRootfs=true`：只读根文件系统（题目需要可写目录时通过 tmpfs / volume 挂载）
+  - `CapDrop=[ALL]`：默认 Drop 所有 Linux Capabilities
+  - `CapAdd`：按题目需求白名单添加，通常只包含 `NET_BIND_SERVICE`
+  - `SecurityOpt`：注入 `no-new-privileges:true`、seccomp profile、AppArmor profile
+  - 资源限制：CPU、内存、磁盘 I/O、PID 上限（防止 Fork Bomb）
+- **Docker Sandbox Executor**：
+  - 题目自检和预览阶段的临时运行使用更严格的隔离
+  - `Privileged=false`、`ReadonlyRootfs=true`、`CapDrop=[ALL]`、`no-new-privileges:true`
+  - 固定资源限制，禁止网络访问（除非题目明确需要）
+- **代码位置**：
+  - 容器创建安全配置：`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`（`buildSecurityConfig`）
+  - Sandbox executor：`code/backend/internal/module/container_runtime/infrastructure/docker_sandbox_executor.go`
+  - 配置入口：`code/backend/internal/config/container.go`（安全配置参数）
+
+### 创建阶段安全配置失败处理
+
+- **失败即停止原则**：
+  - 安全配置（seccomp、AppArmor、Capabilities）注入失败时，`CreateTopology()` 返回错误并清理已创建资源
+  - 不允许在安全配置失败时静默放宽隔离后继续创建容器
+  - ACL 下发失败时同样返回错误，不允许无 ACL 保护的实例进入 running 状态
+- **失败清理**：
+  - 容器创建失败：删除已创建的网络、释放端口 / 子网占用
+  - 网络创建失败：释放端口 / 子网占用
+  - ACL 下发失败：删除容器、删除网络、释放端口 / 子网占用
+- **降级策略（仅清理阶段）**：
+  - `container_runtime/application/commands/runtime_cleanup_service.go` 在清理时优先删除 ACL
+  - ACL 删除失败只记录 warn 后继续删除容器、网络和端口 / 子网占用，避免残留资源因为 ACL 回收异常而无法释放
+  - 清理的 warn-only 语义不适用于创建阶段；创建阶段安全配置失败必须返回错误
+- **代码位置**：
+  - 安全配置注入：`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`
+  - ACL 下发：`code/backend/internal/module/container_runtime/domain/topology_acl.go`、`infrastructure/acl.go`
+  - 清理服务：`code/backend/internal/module/container_runtime/application/commands/runtime_cleanup_service.go`
+
+## 节点故障处理
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明 runtime node 健康探测、offline 处理和实例重建机制 | 记录 runtime-agent 协议细节；agent 协议见 runtime-agent 文档 |
+| 记录 node offline 后的实例重排策略 | 记录跨 node 容器迁移或会话迁移方案；当前不支持 |
+| 指向代码位置和配置入口 | 记录容量打分算法；当前只使用健康和心跳条件 |
+
+### Runtime Node 健康探测
+
+- **探测机制**：
+  - `container_runtime/application/node_health_service.go` 按 `container.runtime_node_health.*` 配置探测 runtime node
+  - 探测成功：更新 `runtime_nodes.health_status=ready`、`last_seen_at` 和 `capacity_snapshot`
+  - 探测失败：达到 `failure_threshold` 或心跳超过 `stale_after` 时，标记 `health_status=offline`
+- **健康状态**：
+  - `ready`：节点健康，可接受新调度
+  - `degraded`：节点部分可用，仍可接受新调度（预留状态）
+  - `unknown`：节点未探测过或探测结果不确定
+  - `offline`：节点离线或心跳超时，不接受新调度
+- **调度器使用**：
+  - 默认 selector 只选择 `ready / degraded` 且 `last_seen_at >= now - stale_after` 的 schedulable node
+  - `schedulable=false` 只表示不接收新调度，健康探测仍会继续更新该 node
+  - 显式 `runtime_node_id` 绑定的旧容器操作在 node 健康且心跳新鲜时仍按原 node 执行
+- **配置参数**：
+  - `container.runtime_node_health.enabled`：健康探测开关，关闭时回退到旧的 schedulable-only 查找
+  - `container.runtime_node_health.interval`：探测周期（例如 30s）
+  - `container.runtime_node_health.timeout`：单次探测超时（例如 10s）
+  - `container.runtime_node_health.stale_after`：心跳过期阈值（例如 90s）
+  - `container.runtime_node_health.failure_threshold`：连续失败阈值（例如 3 次）
+- **代码位置**：
+  - 健康服务：`code/backend/internal/module/container_runtime/application/node_health_service.go`
+  - Node repository：`code/backend/internal/module/container_runtime/infrastructure/node_repository.go`
+  - 配置入口：`code/backend/internal/config/container.go`
+
+### Node Offline 后的实例处理
+
+- **Failover 机制**：
+  - `app/composition/runtime_node_failover.go` 在 node 转为 offline 后触发 failover
+  - 把该 node 上未过期的 `creating / running` 实例清空 `runtime_node_id`、`container_id`、`network_id`、`runtime_details`、`access_url` 并放回 `pending`
+  - Scheduler 在下一轮领取这些 `pending` 实例时重新选择健康 node，并在 runtime create 前把新 `runtime_node_id` 写入 `creating` 行
+- **AWD Scope 特殊处理**：
+  - AWD scope 的实例只能使用 `contest_runtime_placements` 中 active 的 `runtime_node_id`
+  - 绑定 node 不健康时不回退到默认 selector，而是直接等待 / backoff
+  - 不会静默改绑到其他 node，避免破坏 AWD 同 contest 同 node 的二层互通语义
+- **不支持的操作**：
+  - 跨 node 迁移单个容器：当前不支持
+  - 迁移会话或热迁移：当前不支持
+  - 同一 topology 内的容器分散到多个 runtime node：当前不支持
+- **代码位置**：
+  - Failover wiring：`code/backend/internal/app/composition/runtime_node_failover.go`
+  - Instance module handler：`code/backend/internal/module/instance/application/commands/instance_service.go`（`HandleRuntimeNodeOffline`）
+  - Practice reconcile：`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`
+
+### Capacity Snapshot（预留）
+
+- **当前状态**：
+  - `runtime_nodes.capacity_snapshot` 由 managed container stats 汇总，记录 node CPU、内存、容器数等资源使用情况
+  - 健康探测会更新 `capacity_snapshot`，但当前 selector 不参与容量打分
+  - 未来可扩展为资源感知调度：按 CPU / 内存 / 容器数加权打分，选择负载最低的健康 node
+- **代码位置**：
+  - Capacity 汇总：`code/backend/internal/module/container_runtime/application/node_health_service.go`（`updateCapacitySnapshot`）
+  - Selector：`code/backend/internal/module/container_runtime/infrastructure/node_repository.go`（`SelectHealthyNode`）
+
+## 安全隔离与降级
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明容器安全隔离机制、配置参数和降级策略 | 记录 seccomp/AppArmor profile 完整规则；完整 profile 见配置文件 |
+| 记录创建阶段安全配置失败的处理策略 | 记录清理阶段的 warn-only 语义；清理降级在清理服务文档中 |
+| 指向代码位置和配置入口 | 替代安全扫描工具使用文档 |
+
+### 安全隔离机制
+
+- **容器安全配置**：
+  - `Privileged=false`：禁止特权容器，防止容器逃逸
+  - `ReadonlyRootfs=true`：只读根文件系统（题目需要可写目录时通过 tmpfs / volume 挂载）
+  - `CapDrop=[ALL]`：默认 Drop 所有 Linux Capabilities
+  - `CapAdd`：按题目需求白名单添加，通常只包含 `NET_BIND_SERVICE`
+  - `SecurityOpt`：注入 `no-new-privileges:true`、seccomp profile、AppArmor profile
+  - 资源限制：CPU、内存、磁盘 I/O、PID 上限（防止 Fork Bomb）
+- **Docker Sandbox Executor**：
+  - 题目自检和预览阶段的临时运行使用更严格的隔离
+  - `Privileged=false`、`ReadonlyRootfs=true`、`CapDrop=[ALL]`、`no-new-privileges:true`
+  - 固定资源限制，禁止网络访问（除非题目明确需要）
+- **代码位置**：
+  - 容器创建安全配置：`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`（`buildSecurityConfig`）
+  - Sandbox executor：`code/backend/internal/module/container_runtime/infrastructure/docker_sandbox_executor.go`
+  - 配置入口：`code/backend/internal/config/container.go`（安全配置参数）
+
+### 创建阶段安全配置失败处理
+
+- **失败即停止原则**：
+  - 安全配置（seccomp、AppArmor、Capabilities）注入失败时，`CreateTopology()` 返回错误并清理已创建资源
+  - 不允许在安全配置失败时静默放宽隔离后继续创建容器
+  - ACL 下发失败时同样返回错误，不允许无 ACL 保护的实例进入 running 状态
+- **失败清理**：
+  - 容器创建失败：删除已创建的网络、释放端口 / 子网占用
+  - 网络创建失败：释放端口 / 子网占用
+  - ACL 下发失败：删除容器、删除网络、释放端口 / 子网占用
+- **降级策略（仅清理阶段）**：
+  - `container_runtime/application/commands/runtime_cleanup_service.go` 在清理时优先删除 ACL
+  - ACL 删除失败只记录 warn 后继续删除容器、网络和端口 / 子网占用，避免残留资源因为 ACL 回收异常而无法释放
+  - 清理的 warn-only 语义不适用于创建阶段；创建阶段安全配置失败必须返回错误
+- **代码位置**：
+  - 安全配置注入：`code/backend/internal/module/container_runtime/infrastructure/engine_provisioning.go`
+  - ACL 下发：`code/backend/internal/module/container_runtime/domain/topology_acl.go`、`infrastructure/acl.go`
+  - 清理服务：`code/backend/internal/module/container_runtime/application/commands/runtime_cleanup_service.go`
+
+## 节点故障处理
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明 runtime node 健康探测、offline 处理和实例重建机制 | 记录 runtime-agent 协议细节；agent 协议见 runtime-agent 文档 |
+| 记录 node offline 后的实例重排策略 | 记录跨 node 容器迁移或会话迁移方案；当前不支持 |
+| 指向代码位置和配置入口 | 记录容量打分算法；当前只使用健康和心跳条件 |
+
+### Runtime Node 健康探测
+
+- **探测机制**：
+  - `container_runtime/application/node_health_service.go` 按 `container.runtime_node_health.*` 配置探测 runtime node
+  - 探测成功：更新 `runtime_nodes.health_status=ready`、`last_seen_at` 和 `capacity_snapshot`
+  - 探测失败：达到 `failure_threshold` 或心跳超过 `stale_after` 时，标记 `health_status=offline`
+- **健康状态**：
+  - `ready`：节点健康，可接受新调度
+  - `degraded`：节点部分可用，仍可接受新调度（预留状态）
+  - `unknown`：节点未探测过或探测结果不确定
+  - `offline`：节点离线或心跳超时，不接受新调度
+- **调度器使用**：
+  - 默认 selector 只选择 `ready / degraded` 且 `last_seen_at >= now - stale_after` 的 schedulable node
+  - `schedulable=false` 只表示不接收新调度，健康探测仍会继续更新该 node
+  - 显式 `runtime_node_id` 绑定的旧容器操作在 node 健康且心跳新鲜时仍按原 node 执行
+- **配置参数**：
+  - `container.runtime_node_health.enabled`：健康探测开关，关闭时回退到旧的 schedulable-only 查找
+  - `container.runtime_node_health.interval`：探测周期（例如 30s）
+  - `container.runtime_node_health.timeout`：单次探测超时（例如 10s）
+  - `container.runtime_node_health.stale_after`：心跳过期阈值（例如 90s）
+  - `container.runtime_node_health.failure_threshold`：连续失败阈值（例如 3 次）
+- **代码位置**：
+  - 健康服务：`code/backend/internal/module/container_runtime/application/node_health_service.go`
+  - Node repository：`code/backend/internal/module/container_runtime/infrastructure/node_repository.go`
+  - 配置入口：`code/backend/internal/config/container.go`
+
+### Node Offline 后的实例处理
+
+- **Failover 机制**：
+  - `app/composition/runtime_node_failover.go` 在 node 转为 offline 后触发 failover
+  - 把该 node 上未过期的 `creating / running` 实例清空 `runtime_node_id`、`container_id`、`network_id`、`runtime_details`、`access_url` 并放回 `pending`
+  - Scheduler 在下一轮领取这些 `pending` 实例时重新选择健康 node，并在 runtime create 前把新 `runtime_node_id` 写入 `creating` 行
+- **AWD Scope 特殊处理**：
+  - AWD scope 的实例只能使用 `contest_runtime_placements` 中 active 的 `runtime_node_id`
+  - 绑定 node 不健康时不回退到默认 selector，而是直接等待 / backoff
+  - 不会静默改绑到其他 node，避免破坏 AWD 同 contest 同 node 的二层互通语义
+- **不支持的操作**：
+  - 跨 node 迁移单个容器：当前不支持
+  - 迁移会话或热迁移：当前不支持
+  - 同一 topology 内的容器分散到多个 runtime node：当前不支持
+- **代码位置**：
+  - Failover wiring：`code/backend/internal/app/composition/runtime_node_failover.go`
+  - Instance module handler：`code/backend/internal/module/instance/application/commands/instance_service.go`（`HandleRuntimeNodeOffline`）
+  - Practice reconcile：`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`
+
+### Capacity Snapshot（预留）
+
+- **当前状态**：
+  - `runtime_nodes.capacity_snapshot` 由 managed container stats 汇总，记录 node CPU、内存、容器数等资源使用情况
+  - 健康探测会更新 `capacity_snapshot`，但当前 selector 不参与容量打分
+  - 未来可扩展为资源感知调度：按 CPU / 内存 / 容器数加权打分，选择负载最低的健康 node
+- **代码位置**：
+  - Capacity 汇总：`code/backend/internal/module/container_runtime/application/node_health_service.go`（`updateCapacitySnapshot`）
+  - Selector：`code/backend/internal/module/container_runtime/infrastructure/node_repository.go`（`SelectHealthyNode`）
+
 ## 接口或数据影响
 
 - 当前运行态核心数据在 `instances`、`runtime_nodes`、`contest_runtime_placements`、`port_allocations`、`contest_awd_services`、`awd_service_operations`、`awd_defense_workspaces`，并受 `runtime_details`、`access_url`、`service_id`、`share_scope`、`flag_key_id`、`runtime_node_id` 等字段约束。
@@ -1176,40 +1444,16 @@ func (cm *containerManager) injectFlagFile(ctx context.Context, containerID, fla
 
 ### 7.4 AWD 模式 Flag 轮换
 
-AWD 模式下，每轮比赛需要更新所有队伍靶机中的 Flag：
+AWD 当前没有独立 GameBox 进程，也不把每轮 Flag 明文写入 PostgreSQL。当前实现分两种路径：
 
-```go
-// AWD Flag 轮换流程
-func (cm *containerManager) RotateAWDFlags(ctx context.Context, gameID uint64, round int) error {
-    // 1. 获取本场比赛所有队伍的靶机实例
-    instances, err := cm.repo.GetAWDInstances(ctx, gameID)
-    if err != nil {
-        return fmt.Errorf("获取 AWD 实例列表失败: %w", err)
-    }
+- 轮次推进：`contest/application/jobs/awd_round_flag_lookup_support.go` 优先读取 Redis 中的 materialized round flag；不存在时使用 `contestdomain.BuildAWDRoundFlag(contestID, roundNumber, teamID, awdChallengeID, flagSecret, flagPrefix)` 确定性复算，再由 `awd_round_flag_sync.go` 通过 `AWDFlagInjector` 注入对应队伍服务容器。
+- 攻击成功轮换：`contest/application/commands/awd_attack_flag_rotation_support.go` 用 `ReplaceAWDRoundFlagIfMatch()` 对当前 victim team + service 的当前轮 Flag 做 CAS 轮换，避免重复成功提交并发覆盖；注入失败时回滚 Redis cache，并尝试把旧 Flag 注回容器。
 
-    // 2. 为每个队伍生成本轮 Flag
-    for _, inst := range instances {
-        flag := GenerateAWDRoundFlag(inst.TeamID, gameID, round, cm.config.AWDSalt)
+**当前不变量：**
 
-        // 3. 通过 Docker API CopyToContainer 写入新 Flag（替代 sh -c echo，避免命令注入）
-        if err := cm.copyFlagToContainer(ctx, inst.ContainerID, flag); err != nil {
-            log.Error("Flag 轮换失败",
-                "team_id", inst.TeamID, "round", round, "error", err)
-            continue // 单个失败不阻塞其他队伍
-        }
-
-        // 4. 记录本轮 Flag 到数据库（用于判题验证）
-        cm.repo.SaveRoundFlag(ctx, gameID, inst.TeamID, round, flag)
-    }
-
-    return nil
-}
-```
-
-**轮换时序保障：**
-- Flag 轮换由 GameBox 服务在每轮开始时触发，通过分布式锁保证只执行一次
-- 轮换超时设置为 30s，超时后记录告警，管理员可手动重试
-- 轮换期间暂停该轮的 Flag 提交判定，轮换完成后开放
+- 判题优先使用 Redis 当前轮 Flag，Redis 缺失时按全局 secret 确定性复算；容器内 Flag 不是判题事实源。
+- 只有当前轮攻击成功并成功 claim 当前 Flag 时才轮换；上一轮宽限 Flag、攻击失败或已被其他提交 claim 的 Flag 不触发轮换。
+- `AWDService` 和 `AWDRoundUpdater` 都允许 noop injector 作为降级，但 Docker 装配路径通过 `contestinfra.NewDockerAWDFlagInjector(...)` 写入实际运行容器。
 
 ## 8. 竞赛高峰预热方案
 
