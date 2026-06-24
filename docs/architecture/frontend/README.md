@@ -28,12 +28,12 @@
 
 | 文档 | 说明 |
 | --- | --- |
-| [01-architecture-overview.md](./01-architecture-overview.md) | 前端分层、路由命名空间、共享原语与页面拆分基线 |
-| [02-routing.md](./02-routing.md) | `/academy/*`、`/platform/*` 与学生端路由边界 |
-| [03-state-management.md](./03-state-management.md) | Pinia、页面级 composable、只读派生与跨页状态归属 |
-| [04-api-layer.md](./04-api-layer.md) | API 请求层、错误映射、认证与重试边界 |
+| [01-architecture-overview.md](./01-architecture-overview.md) | 前端分层、路由命名空间、共享原语与页面拆分基线；补充 Entities 边界约束与 Widgets 层定位 |
+| [02-routing.md](./02-routing.md) | `/academy/*`、`/platform/*` 与学生端路由边界；补充路由守卫执行顺序、Session 恢复时机、Redirect 路径清洗与 403 跳转策略 |
+| [03-state-management.md](./03-state-management.md) | Pinia、页面级 composable、只读派生与跨页状态归属；补充 Pinia Store 职责边界、状态持久化策略与跨 Store 通信模式 |
+| [04-api-layer.md](./04-api-layer.md) | API 请求层、错误映射、认证与重试边界；补充目录组织规则（顶层 vs 子目录放置、角色聚合入口使用时机、新增 API 模块决策树） |
 | [05-websocket-composables.md](./05-websocket-composables.md) | WebSocket、ticket、通知与实时状态同步 |
-| [06-components.md](./06-components.md) | 共享 UI 原语、工作台表格、弹窗模板与主题规则 |
+| [06-components.md](./06-components.md) | 共享 UI 原语、工作台表格、弹窗模板与主题规则；补充业务组件分层规则（Entities vs Features 判断）与 Workspace 组件设计（Widgets 与 Pages 关系） |
 | [07-pages-dataflow.md](./07-pages-dataflow.md) | 典型页面的数据流、owner 和交互拆分 |
 | [08-build-deploy.md](./08-build-deploy.md) | Vite 构建、环境变量与部署约束 |
 | [09-spacing-system.md](./09-spacing-system.md) | 间距 token、目录页节奏与工作台布局 guardrail |
