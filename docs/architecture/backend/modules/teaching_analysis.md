@@ -86,6 +86,59 @@
 - 学生训练活动时间线和复盘详情。
 - 教师复盘建议聚合，消费 assessment recommendation provider。
 
+## 复盘建议生成
+
+### 四个子包职责
+
+复盘建议生成逻辑分散在 `code/backend/internal/teaching/` 下四个子包：
+
+| 子包 | 职责 | 核心类型 |
+| --- | --- | --- |
+| **advice** | 学生评估算法、维度分析、建议生成规则和严重级别判定 | `StudentEvaluation`、`DimensionAdvice`、`ReviewArchiveObservation` |
+| **evidence** | 证据链事件类型定义、事件聚合和时间线构建 | `Event`、`EventType`（实例访问、代理请求、提交、题解、AWD 攻击） |
+| **classwindow** | 时间窗口解析、默认 7 天回溯和最大 31 天限制 | `Range`（`FromDate`、`ToDate`、`Since`、`EndExclusive`） |
+| **classreview** | 班级复盘响应构建、学生评估聚合和推荐题目解析 | `Input`、`Response`、`ClassReviewItem`、`RecommendationResolver` |
+
+### 证据链聚合逻辑
+
+证据链从多个数据源聚合，通过 `evidence.Event` 统一表达：
+
+**事件类型**：
+- `EventTypeInstanceAccess`：实例访问记录（来自 `audit_logs`）
+- `EventTypeInstanceProxy`：代理请求记录（来自 `audit_logs`）
+- `EventTypeChallengeSubmission`：题目提交记录（来自 `submissions`）
+- `EventTypeWriteup`：题解提交记录（来自 `submission_writeups`）
+- `EventTypeAWDAttackSubmission`：AWD 攻击提交（来自 `awd_attack_logs`）
+- `EventTypeAWDTraffic`：AWD 流量事件（来自 `awd_traffic_events`）
+
+**聚合来源**：
+- `teaching_analysis/infrastructure/*_repository.go` 从多表只读查询，转换为 `evidence.Event`
+- 时间线按 `Timestamp` 降序排列，支持分页和时间窗口过滤
+
+### 窗口划分策略
+
+时间窗口由 `classwindow.Parse(now, fromDate, toDate)` 解析：
+
+- **默认窗口**：`fromDate` 和 `toDate` 都为空时，默认回溯 7 天（`DefaultDays = 7`）
+- **自定义窗口**：传入 `fromDate` 和 `toDate`（格式 `YYYY-MM-DD`），最大跨度 31 天（`MaxDays = 31`）
+- **UTC 对齐**：窗口边界对齐 UTC 日期零点，`EndExclusive` 为次日零点
+- **验证规则**：
+  - `fromDate` 和 `toDate` 必须同时传入或同时为空
+  - `toDate` 不能早于 `fromDate`
+  - 窗口跨度不能超过 `MaxDays`
+
+**代码位置**：
+- `code/backend/internal/teaching/classwindow/window.go`：时间窗口解析和验证
+- `code/backend/internal/teaching/evidence/evidence.go`：证据链事件类型和聚合
+- `code/backend/internal/teaching/advice/advice.go`：学生评估算法和建议生成规则
+- `code/backend/internal/teaching/classreview/review.go`：班级复盘响应构建
+- `code/backend/internal/module/teaching_analysis/application/queries/student_review_service.go`：学生复盘查询用例
+- `code/backend/internal/module/teaching_analysis/application/queries/class_insight_service.go`：班级复盘查询用例
+
+**相关专题**：
+- 复盘建议规则详细设计 → `docs/architecture/features/教学复盘建议生成架构.md`
+- 班级洞察与趋势分析 → `docs/architecture/features/教师教学概览聚合架构.md`
+
 ## 数据与副作用
 
 - PostgreSQL：只读查询多个 owner 的表和读模型。
@@ -106,6 +159,9 @@
 - `code/backend/internal/module/teaching_analysis/architecture_test.go`：禁止 API / queries 依赖 infrastructure，禁止宽 repository 和 GORM tag 泄漏到 ports。
 - `code/backend/internal/module/teaching_analysis/api/http/handler_contract_test.go`：约束 handler 构造 contract。
 - `code/backend/internal/module/teaching_analysis/application/queries/*_test.go`：覆盖概览、班级洞察和学生复盘查询。
+- `code/backend/internal/teaching/advice/advice_test.go`：覆盖学生评估算法和建议生成规则。
+- `code/backend/internal/teaching/classwindow/window_test.go`：覆盖时间窗口解析和边界验证。
+- `code/backend/internal/teaching/evidence/evidence_test.go`：覆盖证据链事件聚合。
 
 ## 已知限制
 
