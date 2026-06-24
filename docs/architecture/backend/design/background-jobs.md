@@ -15,6 +15,19 @@
 
 ## 当前设计
 
+### 组件边界
+
+**本设计负责**：
+- 定义 BackgroundJob 注册方式和启动流程
+- 说明任务调度器类型（Cron、Interval、Event-driven）
+- 记录并发控制、失败重试、优雅停机机制
+- 列举各模块的后台任务清单
+
+**本设计不负责**：
+- 具体任务的业务逻辑实现（见各模块文档）
+- 任务监控和告警配置（见 `docs/operations/`）
+- 分布式任务调度（当前为单节点运行）
+
 ### BackgroundJob 注册方式
 
 后台任务通过 `runtime/module.go` 的 `BackgroundJob` 结构体注册到模块：

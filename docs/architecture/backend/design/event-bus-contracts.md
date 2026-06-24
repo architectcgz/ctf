@@ -15,6 +15,19 @@
 
 ## 当前设计
 
+### 组件边界
+
+**本设计负责**：
+- 定义事件 Payload 结构规范和命名约定
+- 说明事件版本演进策略和兼容性原则
+- 记录消费方注册机制和 Handler 规范
+- 规定事件审计要求和日志记录
+
+**本设计不负责**：
+- 事件发布策略（强事件 vs 弱事件）→ `docs/architecture/features/事件发布与降级策略.md`
+- 具体事件的业务语义（见各模块文档和 `docs/contracts/`）
+- 消息队列的部署和配置（见 `docs/operations/`）
+
 ### 事件总线架构
 
 **代码位置**：`code/backend/internal/platform/events/bus.go`
