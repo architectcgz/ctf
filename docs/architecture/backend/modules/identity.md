@@ -56,6 +56,66 @@
 | Admin query service | `identity/application/queries/admin_service.go` | 管理端用户列表、详情和筛选 | 业务面板聚合 |
 | Profile query service | `identity/application/queries/profile_service.go` | 当前用户资料和基础用户 lookup | 教师复盘聚合 |
 
+## 权限模型
+
+### 用户、角色、组织三层结构
+
+`identity` 模块采用 **User - Role - Organization** 三层结构：
+
+1. **User（用户层）**：用户账号、资料、状态和登录失败计数
+   - Entity：`identity/entity.User`
+   - 核心字段：`id`、`username`、`role`（单一角色字段）、`student_no`、`teacher_no`、`class_name`、`status`
+   
+2. **Role（角色层）**：系统角色定义
+   - Entity：`identity/entity.Role`
+   - 角色类型：`student`、`teacher`、`admin`（常量定义在 `entity/role.go`）
+   - 当前没有独立角色 CRUD API，角色参考数据由 migration / seed 维护
+
+3. **Organization（组织层）**：班级归属
+   - 当前通过 `users.class_name` 字符串字段表达
+   - 班级不是独立实体，只作为用户资料的一部分
+
+### 角色类型与权限范围
+
+| 角色常量 | 代码值 | 权限范围 | 典型路由前缀 |
+| --- | --- | --- | --- |
+| `RoleStudent` | `"student"` | 学生侧题目、训练、提交、排行榜、社区题解 | `/api/v1/challenges`、`/api/v1/practice`、`/api/v1/contests` |
+| `RoleTeacher` | `"teacher"` | 教师侧班级管理、复盘分析、题解审核、AWD 赛事管理 | `/api/v1/teacher`、`/api/v1/academy` |
+| `RoleAdmin` | `"admin"` | 管理员侧用户管理、题目出题、镜像构建、系统配置 | `/api/v1/admin`、`/api/v1/authoring` |
+
+### 权限检查层级
+
+权限检查分为两层：
+
+1. **API Handler 层**：粗粒度角色检查
+   - 通过 `middleware.Auth()` 中间件解析当前用户，将 `authctx.CurrentUser` 存入 `gin.Context`
+   - Handler 通过 `middleware.MustCurrentUser(c)` 获取当前用户和角色
+   - 例：管理员路由 `/api/v1/admin/*` 统一通过路由分组 + 中间件检查角色
+
+2. **Application Service 层**：细粒度业务权限检查
+   - 服务层通过 `ctx context.Context` 参数接收当前用户信息
+   - 业务逻辑内检查资源归属、班级访问权限、跨模块权限
+   - 例：`teaching_analysis` 模块中教师只能访问自己班级的学生复盘
+
+### Context 传递机制
+
+当前用户信息通过 **Gin Context** 传递，不使用 Go 标准库 `context.WithValue`：
+
+- **存储**：`middleware.Auth()` 调用 `authctx.SetCurrentUser(c, authctx.CurrentUser{...})`，将当前用户存入 `gin.Context`
+- **读取**：Handler 或 Service 通过 `middleware.MustCurrentUser(c)` 或 `authctx.MustCurrentUser(c)` 获取
+- **传递路径**：`middleware.Auth()` → Gin Context → Handler → Service（如需细粒度检查）
+
+**代码位置**：
+- `code/backend/internal/authctx/authctx.go`：`CurrentUser` 结构体和 Context 存取
+- `code/backend/internal/middleware/auth.go`：认证中间件和当前用户解析
+- `code/backend/internal/module/identity/contracts/auth.go`：角色常量和用户 repository 契约
+- `code/backend/internal/module/identity/entity/user.go`：User Entity 和角色字段
+- `code/backend/internal/module/identity/entity/role.go`：Role Entity 和角色常量
+
+**相关专题**：
+- 认证与会话管理 → `docs/architecture/backend/modules/auth.md`
+- 教师班级访问权限 → `docs/architecture/backend/modules/teaching_analysis.md`
+
 ## 数据设计
 
 | 表 | Entity | Owner 语义 | 主要写入方 |
@@ -99,6 +159,8 @@
 - `code/backend/internal/module/identity/architecture_test.go`：禁止 concrete Go 文件停留在根包，约束 API / application / contracts 分层。
 - `code/backend/internal/app/router_user_self_domain_routes_test.go`：覆盖当前用户域路由归属。
 - `code/backend/internal/app/router_admin_identity_routes.go`：管理员 identity 路由集中注册。
+- `code/backend/internal/middleware/auth.go`：认证中间件覆盖当前用户解析和角色提取。
+- `code/backend/internal/authctx/authctx.go`：Context 存取当前用户信息的标准方式。
 
 ## 已知限制
 
