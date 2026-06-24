@@ -36,6 +36,96 @@
   - 负责：实例仓储、proxy ticket store、runtime state store、boot id reader、cleaner、ACL migration state、container inventory。
   - 不负责：写 practice / contest 业务状态，或拥有容器执行逻辑。
 
+## 启动恢复协议
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明 Instance 启动恢复机制、leader election、boot_id 检测和代码位置 | 记录 Redis lock concrete 实现细节；lock 模式见 runtime 或基础设施文档 |
+| 记录恢复流程步骤：暂停补时、lost runtime 修复、AWD 期望态协调 | 替代 startup_runtime_recovery_service.go 代码；冲突时以代码为准 |
+| 指向容器调度与并发控制专题文档 | 记录手动暂停赛事的管理命令设计 |
+
+### 启动恢复机制
+
+- **Leader Election**：
+  - 进程启动后读取宿主 `/proc/sys/kernel/random/boot_id`（通过 `boot_id_reader.go` 端口）
+  - 竞争 Redis 分布式锁 `ctf:platform:runtime:recovery:lock`，成功者成为 recovery leader
+  - Leader 续租成功后读取 Redis `platform_runtime_state` 中的上次 `boot_id + last_heartbeat_at`
+  - Standby 副本拿不到锁时只等待 leader readiness；看到同 boot_id 且 heartbeat 未过期后才返回启动完成
+- **Boot ID 变化检测**：
+  - 对比当前 `boot_id` 与上次保存的 `boot_id`
+  - 如果不同，说明宿主机重启或进程迁移，需要执行完整恢复流程
+  - 如果相同，只更新 heartbeat，跳过恢复步骤
+- **恢复流程（boot_id 变化时）**：
+  1. **AWD 赛事暂停补时**：按 `last_heartbeat_at -> started_at` 给 active AWD 比赛补暂停时长，并刷新这些比赛下活跃实例的 `expires_at`
+  2. **Lost Active Runtime 修复**：调用 `ReconcileLostActiveRuntimes()` 修复停机前仍有 active row 但实际容器已丢失的运行态（标记 `lost`、清理残留或触发重建）
+  3. **AWD 期望态补齐**：调用 app composition 注入的 `ReconcileDesiredAWDInstances()` 补齐 AWD `team × visible service` 期望态（确保每个队伍的每个服务都有实例）
+  4. **恢复耗时补差**：按 `last_heartbeat_at -> recovered_at` 再补齐恢复耗时；`runtime_recovery_key + runtime_recovery_applied_seconds` 保证重试只补差值，避免重复补时
+- **幂等性保证**：
+  - `runtime_recovery_key` 基于 `boot_id` 生成，每次宿主重启产生新 key
+  - `runtime_recovery_applied_seconds` 记录已补偿秒数，重复执行时只补差值
+  - 同一 boot_id 下的多次心跳间隙不触发恢复流程
+- **代码位置**：
+  - 恢复编排：`code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
+  - Boot ID 读取：`code/backend/internal/module/instance/infrastructure/boot_id_reader.go`
+  - Runtime state 存储：`code/backend/internal/module/instance/infrastructure/platform_runtime_state_store.go`
+  - Recovery lock：`code/backend/internal/module/instance/infrastructure/startup_runtime_recovery_lock_store.go`
+  - Composition 接线：`code/backend/internal/app/composition/instance_module.go`（注入 AWD reconcile adapter）
+- **专题文档引用**：完整容器调度与并发控制 → `docs/architecture/features/容器调度与并发控制.md`
+
+## 调度器编排与并发控制
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明 Instance 维护清理机制、Redis cleanup lock 和代码位置 | 记录 practice provisioning scheduler 的完整实现；scheduler owner 在 practice 模块 |
+| 记录 Instance 与 practice/contest 的协作边界 | 记录 Docker concrete 或 runtime-agent 协议细节 |
+| 指向容器调度与并发控制专题文档 | 替代专题文档中的并发槽位控制说明 |
+
+### 维护清理机制
+
+- **清理范围**：
+  - 过期实例：`expires_at` 已过且状态不是 `stopping` 或 `stopped` 的实例
+  - Stopping 实例：状态为 `stopping` 的实例，需要实际销毁容器和网络资源
+  - Lost active runtime：停机前仍有 active row 但实际容器已丢失的运行态
+- **并发控制**：
+  - Redis 分布式锁 `ctf:container:cleanup:lock` 串行化 runtime cleanup
+  - 避免多 API 副本重复销毁同一批资源，导致并发冲突或重复日志
+  - 锁持有时长默认 30 秒，清理完成后释放
+- **清理流程**：
+  1. `maintenance_service.go` 定期扫描过期和 stopping 实例
+  2. 获取 cleanup lock，成功后执行清理
+  3. 调用 `container_runtime` capability 销毁容器和网络
+  4. 更新实例状态为 `stopped`，记录清理结果
+  5. 释放 cleanup lock
+- **代码位置**：
+  - 维护服务：`code/backend/internal/module/instance/application/commands/maintenance_service.go`
+  - Cleanup lock：`code/backend/internal/module/instance/infrastructure/stopping_cleanup_lock_store.go`
+  - Runtime identity 修复：`code/backend/internal/module/instance/application/commands/runtime_maintenance_service.go`
+
+### 与 Practice/Contest 协作边界
+
+- **Instance 职责**：
+  - 提供实例生命周期 contract（创建、停止、延期、访问）
+  - 维护实例记录、runtime identity、proxy ticket
+  - 启动恢复时修复 lost active runtime
+  - 清理过期和 stopping 实例
+- **Practice 职责**：
+  - 拥有训练开题策略和 provisioning scheduler
+  - 决定何时领取 `pending` 实例并调用 container runtime 创建容器
+  - 消费 instance repository 和 runtime service，但不反向拥有实例访问 contract
+- **Contest 职责**：
+  - 拥有 AWD runtime placement 和轮次状态
+  - 通过 app composition adapter 注入 `ReconcileDesiredAWDInstances()` 到 startup recovery
+  - Instance 不导入 contest 生产代码，只通过 composition 接线协作
+- **Composition 接线**：
+  - `code/backend/internal/app/composition/instance_module.go`：Instance module 组装
+  - `code/backend/internal/app/composition/instance_practice_adapters.go`：Practice 与 instance 适配器
+  - `code/backend/internal/app/composition/instance_contest_adapters.go`：Contest AWD 期望态协调适配器
+- **专题文档引用**：完整调度与并发模型 → `docs/architecture/features/容器调度与并发控制.md`
+
 ## API 入口设计
 
 | 路由 | Handler | Service / 用例 |
@@ -108,6 +198,8 @@
 - `code/backend/internal/module/instance/architecture_test.go`：禁止 commands / queries 依赖 HTTP 或 runtime infrastructure，生产代码禁止导入 contest module。
 - `code/backend/internal/app/router_route_wiring_test.go`：约束实例路由使用 instance handler。
 - `code/backend/internal/app/composition/instance_practice_runtime_adapter_test.go`：覆盖 instance 与 practice runtime adapter。
+- `code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`：覆盖 boot id 变化、leader/standby、暂停补差和重复恢复幂等。
+- `code/backend/internal/module/instance/application/commands/runtime_maintenance_service_test.go`：覆盖 lost active runtime reconcile、stopping cleanup 和 runtime identity 修复。
 
 ## 已知限制
 

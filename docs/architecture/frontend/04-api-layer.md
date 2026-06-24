@@ -4,11 +4,21 @@
 > 事实源：`code/frontend/src/api/`、`code/frontend/src/runtime/globalErrorRuntime.ts`、`docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`
 > 替代：无
 
+## 本文档范围
+
+| 覆盖 | 不覆盖 |
+|------|--------|
+| `request.ts` 统一请求入口、Axios 实例配置、envelope 解包、`ApiError` 构造 | 页面如何展示错误提示、页面如何组织 loading 状态 |
+| 各业务 API 模块（`auth.ts`、`challenge.ts`、`contest.ts`、`instance.ts` 等） | 后端接口语义本身（见 `docs/contracts/`） |
+| `teacher/` 子目录（教师工作区）、`teaching/` 子目录（教学分析领域）、`admin/` 子目录（平台工作区）拆分 | 页面级权限判断和 feature-owned 错误边界 |
+| 顶层独立模块（`assessment.ts`、`instances.ts`、`awd-reviews.ts`、`contracts.ts`）和角色聚合入口（`teacher.ts`、`teaching.ts` re-export） | API 层之外的错误日志上报与 APM 集成 |
+| 错误模型（`ApiError`）、环境变量（`VITE_API_BASE_URL`、`VITE_API_TIMEOUT`） | 页面业务状态机中的显式 error state |
+
 ## 定位
 
 本文档只说明前端请求层的封装方式、模块边界、错误回退和数据归一化规则。
 
-- 覆盖：`request.ts`、各业务 API 模块、teacher/admin 子目录拆分、错误模型和环境变量。
+- 覆盖：`request.ts`、各业务 API 模块、teacher/teaching/admin 子目录拆分、顶层角色聚合入口、错误模型和环境变量。
 - 不覆盖：页面如何展示错误提示、页面如何组织 loading 状态、后端接口语义本身；接口契约仍以 `docs/contracts/` 为准。
 
 ## 当前设计
@@ -25,9 +35,13 @@
   - 负责：按领域封装学生侧和共享能力接口，并在 API 边界完成 ID、可空字段和响应结构归一化
   - 不负责：在页面层重复写 URL、手动解 envelope，或把同类接口继续散落到多个 view
 
-- `code/frontend/src/api/teacher/`、`code/frontend/src/api/admin/`
-  - 负责：按教师工作区和平台工作区拆分接口 owner，避免旧的 `api/teacher.ts`、`api/admin.ts` 大文件继续膨胀
+- `code/frontend/src/api/teacher/`、`code/frontend/src/api/teaching/`、`code/frontend/src/api/admin/`
+  - 负责：按教师工作区、教学分析领域和平台工作区拆分接口 owner，避免旧的 `api/teacher.ts`、`api/admin.ts` 大文件继续膨胀
   - 不负责：要求所有后台接口都落在同一个 URL 前缀；当前 `authoring`、`reports` 等接口仍按后端契约分组
+
+- `code/frontend/src/api/assessment.ts`、`instances.ts`、`awd-reviews.ts`、`teacher.ts`、`teaching.ts`、`contracts.ts`
+  - 负责：保留学生画像 / 报告、按角色分发的实例目录和 AWD 复盘入口、teacher / teaching 子目录 re-export、共享 DTO 类型。
+  - 不负责：继续承载新的大型后台接口实现；新增平台或教师工作区接口优先进入对应子目录。
 
 ## 1. 请求入口与统一契约
 
@@ -108,6 +122,21 @@ interface ApiEnvelope<T> {
 | `api/notification.ts` | 通知列表、标记已读 |
 | `api/scoreboard.ts` | 练习排行榜等独立排行入口 |
 
+### 3.1.1 顶层独立模块
+
+| 文件 | 当前负责 |
+| --- | --- |
+| `api/assessment.ts` | 学生个人进度、画像、推荐、timeline 和报告导出 |
+| `api/instances.ts` | 按角色分发教师 / 平台实例目录和销毁能力 |
+| `api/awd-reviews.ts` | 按角色分发教师 / 平台 AWD 复盘、归档和报告导出 |
+| `api/contracts.ts` | 前端共享 DTO、分页、ID、枚举与接口响应类型 |
+
+边界：
+
+- `assessment.ts` 承载学生画像与报告能力，语义上服务学生侧和教师侧
+- `instances.ts` 和 `awd-reviews.ts` 作为按角色分发的目录入口，内部调用 `teacher/` 或 `admin/` 子目录的具体实现
+- `contracts.ts` 只承载前端共享 DTO 类型，不承载接口实现；新增平台或教师工作区接口应进入对应子目录
+
 ### 3.2 教师工作区模块
 
 `code/frontend/src/api/teacher/index.ts` 当前重导出以下子模块：
@@ -120,6 +149,28 @@ interface ApiEnvelope<T> {
 | `teacher/instances.ts` | 教师视角实例目录、销毁、班级报告导出 |
 | `teacher/awd-reviews.ts` | AWD 复盘、轮次、攻击记录、归档导出 |
 
+`code/frontend/src/api/teacher.ts` 当前只 re-export `teacher/index.ts`，作为历史顶层入口；新增教师工作区接口应进入 `api/teacher/*` 或已采用的 teaching 子目录。
+
+### 3.2.1 教学分析领域模块
+
+`code/frontend/src/api/teaching/index.ts` 当前重导出以下子模块：
+
+| 文件 | 当前负责 |
+| --- | --- |
+| `teaching/classes.ts` | 教师 overview、班级目录、班级学生、班级洞察、班级复盘 |
+| `teaching/students.ts` | 学生目录、个人分析、证据、建议、时间线和 review archive |
+| `teaching/writeups.ts` | 教学视角题解审核与推荐 |
+| `teaching/instances.ts` | 教学视角实例目录和销毁能力 |
+| `teaching/awd-reviews.ts` | 教学视角 AWD 复盘归档和报告 |
+
+`code/frontend/src/api/teaching.ts` 当前只 re-export `teaching/index.ts`。`admin/teaching.ts` 复用 `teaching/instances` 和 `teaching/classes`，为平台工作区提供实例目录与学生目录兼容入口。
+
+边界：
+
+- `teaching/` 子目录承载教学分析领域接口，语义上服务 `/academy/*` 教师后台页面，但部分接口也被平台工作区复用（例如实例目录、班级学生目录）
+- `teaching/` 与 `teacher/` 的区分：`teacher/` 承载教师工作区能力（班级管理、学生管理、题解审核、实例管理、AWD 复盘），`teaching/` 承载教学分析领域能力（班级洞察、学生分析、时间线、复盘归档）
+- 当前 `teaching/` 子目录与 `teacher/` 子目录存在部分重叠（例如 `classes.ts`、`students.ts`、`writeups.ts`、`instances.ts`、`awd-reviews.ts` 在两个子目录都存在）；后续可考虑收口成单一子目录或按接口语义明确划分
+
 ### 3.3 平台工作区模块
 
 `code/frontend/src/api/admin/index.ts` 当前重导出以下子模块：
@@ -131,6 +182,7 @@ interface ApiEnvelope<T> {
 | `admin/authoring.ts` | 题目创作、题包导入、拓扑、题解管理、镜像相关创作接口 |
 | `admin/awd-authoring.ts` | AWD 题目库和导入管理 |
 | `admin/contests.ts` | 竞赛管理、公告、队伍、AWD 运维与导出 |
+| `admin/teaching.ts` | 平台工作区复用 teaching 实例目录、销毁和学生目录能力 |
 
 说明：
 
