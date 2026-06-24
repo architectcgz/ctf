@@ -192,6 +192,7 @@ These rationalizations mean STOP — re-read the relevant rules instead:
 - 生成架构图或让模型根据文档生成图片前，必须按 `docs/文档规范.md` 的“架构图生成规范”执行。
 - 新增文件前，先判断它属于“最终事实”“中间设计”“实施过程”“评审证据”“长期积累”中的哪一类。
 - `docs/architecture/`：当前架构与最终设计事实源；后端、前端、业务专题和最终页面设计进入这里。
+- `docs/architecture/backend/modules/`：后端模块化单体的模块级具体设计入口；修改 `code/backend/internal/module/*` 的 owner、用例、依赖或 Guardrail 前先读对应模块文档。
 - `docs/contracts/`：API、OpenAPI、事件、题包格式、导入导出结构等契约。
 - OpenAPI v1 采用双层结构：`docs/contracts/openapi-v1/` 是拆分源，`docs/contracts/openapi-v1.yaml` 是稳定 bundle；修改 OpenAPI 时先改拆分源，再运行 `python3 tools/sync_openapi_from_contract.py`。
 - `docs/design/`：仍在推演的中间设计稿、设计索引和过期说明。

@@ -15,19 +15,21 @@
 ## 读取顺序
 
 1. [01-system-architecture.md](./01-system-architecture.md)
-2. [02-database-design.md](./02-database-design.md)
-3. [03-container-architecture.md](./03-container-architecture.md)
-4. [04-api-design.md](./04-api-design.md)
-5. [05-key-flows.md](./05-key-flows.md)
-6. [06-file-storage.md](./06-file-storage.md)
-7. [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md)
-8. [design/README.md](./design/README.md)
+2. [modules/README.md](./modules/README.md)
+3. [02-database-design.md](./02-database-design.md)
+4. [03-container-architecture.md](./03-container-architecture.md)
+5. [04-api-design.md](./04-api-design.md)
+6. [05-key-flows.md](./05-key-flows.md)
+7. [06-file-storage.md](./06-file-storage.md)
+8. [07-modular-monolith-refactor.md](./07-modular-monolith-refactor.md)
+9. [design/README.md](./design/README.md)
 
 ## 当前活动文档
 
 | 文档 | 说明 |
 | --- | --- |
 | [01-system-architecture.md](./01-system-architecture.md) | 进程级 composition、模块 owner、主依赖方向与运行时边界 |
+| [modules/README.md](./modules/README.md) | 参考 `zhicore-go` 拆开的后端模块设计入口，覆盖 `auth`、`identity`、`challenge`、`container_runtime`、`instance`、`practice`、`contest`、`assessment`、`ops`、`teaching_analysis` |
 | [02-database-design.md](./02-database-design.md) | PostgreSQL 主模型、读写分工、关键表关系与持久化约束 |
 | [03-container-architecture.md](./03-container-architecture.md) | Docker runtime、网络隔离、资源限制、端口与 ACL |
 | [04-api-design.md](./04-api-design.md) | HTTP / WebSocket 契约、错误码、鉴权与返回结构 |
