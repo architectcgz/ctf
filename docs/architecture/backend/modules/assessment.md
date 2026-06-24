@@ -92,6 +92,112 @@
 - 渲染 PDF / spreadsheet / JSON 输出并提供下载。
 - 清理过期报告输出。
 
+## 技能画像计算
+
+### 画像数据来源
+
+技能画像基于用户提交记录聚合生成，数据来源：
+
+- **训练提交**：`practice` 模块发布 `EventFlagAccepted` 事件，包含 `userID`、`challengeID`、`dimension`
+- **竞赛提交**：`contest` 模块发布 `EventFlagAccepted` 和 `EventAWDAttackAccepted` 事件
+- **题目维度**：从 `challenge` 模块读取题目维度（`web`、`crypto`、`pwn`、`reverse`、`misc` 等）
+
+### 维度权重计算
+
+画像计算采用 **增量更新 + 按需重建** 双轨策略：
+
+1. **增量更新**（主流程）：
+   - 订阅 `practice.FlagAccepted` 和 `contest.FlagAccepted` 事件
+   - 事件触发后，调用 `ProfileService.UpdateSkillProfileForDimension(userID, dimension)`
+   - 从数据库读取该用户在该维度下的所有正确提交，重新聚合分数
+   - 更新 `skill_profiles.score` 字段
+
+2. **维度权重计算公式**：
+   - 基础分数 = Σ (题目难度分 × 题目维度权重)
+   - 题目维度权重由 `challenge.tags` 和 `challenge_tags` 表决定
+   - 维度总分缓存在 Redis，题目发布目录变更时失效
+
+3. **缓存失效时机**：
+   - `DimensionTotalCacheInvalidationService` 订阅 `challenge.PublishedCatalogChanged` 事件
+   - 题目发布 / 下架 / 维度变更时，调用 `store.DeletePublishedDimensionTotals(ctx)` 清空维度总分缓存
+   - 下次查询时重新计算并缓存
+
+### 计算触发时机
+
+| 触发方式 | 时机 | 代码位置 |
+| --- | --- | --- |
+| **实时增量更新** | 每次正确提交后，通过事件驱动 | `ProfileService.handleFlagAcceptedEvent()` |
+| **后台重建 job**（按需） | 管理员手动触发或数据修复时 | `ProfileService.RebuildProfile(userID)` |
+| **维度缓存失效** | 题目发布目录变更时 | `DimensionTotalCacheInvalidationService.handlePublishedCatalogChangedEvent()` |
+
+**代码位置**：
+- `code/backend/internal/module/assessment/application/commands/profile_service.go`：画像增量更新用例
+- `code/backend/internal/module/assessment/entity/skill_profile.go`：画像持久化实体
+- `code/backend/internal/module/assessment/application/commands/dimension_total_cache_invalidation_service.go`：维度总分缓存失效
+- `code/backend/internal/module/assessment/infrastructure/state_store.go`：Redis 缓存适配器
+
+**相关专题**：
+- 推荐算法与画像应用 → `docs/architecture/features/教学复盘建议生成架构.md`
+
+## 报告生成流程
+
+### 报告类型与格式
+
+`assessment` 模块支持多种报告类型和输出格式：
+
+| 报告类型常量 | 代码值 | 输出格式 | 适用场景 |
+| --- | --- | --- | --- |
+| `ReportTypePersonal` | `"personal"` | PDF / JSON | 学生个人技能画像报告 |
+| `ReportTypeClass` | `"class"` | Excel / PDF | 班级整体技能画像报告 |
+| `ReportTypeContest` | `"contest_export"` | ZIP（包含 JSON + Excel） | 竞赛结果导出 |
+| `ReportTypeReview` | `"review_archive"` | ZIP（包含学生复盘归档） | 教师学生复盘归档 |
+| `ReportTypeAWDReviewArchive` | `"awd_review_archive"` | ZIP（包含 AWD 复盘数据） | AWD 复盘归档 |
+| `ReportTypeAWDReviewReport` | `"awd_review_report"` | PDF | AWD 复盘分析报告 |
+
+### 报告生成异步流程
+
+报告生成采用 **请求 - 后台生成 - 轮询下载** 模式：
+
+1. **创建报告请求**：
+   - Handler 接收 HTTP 请求，调用 `ReportService.CreateXxxReport()`
+   - 创建 `reports` 表记录，状态为 `ReportStatusProcessing`
+   - 返回 `report_id` 给前端
+
+2. **后台生成**：
+   - 后台 goroutine 或 job 执行报告渲染
+   - 调用 `reporting/` 下的渲染器生成 PDF / Excel / JSON 文件
+   - 文件存储到 LocalFS（通过 `ReportOutputStore`）
+   - 更新 `reports.status` 为 `ReportStatusReady` 或 `ReportStatusFailed`
+
+3. **前端轮询**：
+   - 前端通过 `GET /api/v1/reports/:id` 轮询报告状态
+   - 状态为 `ready` 后，调用 `GET /api/v1/reports/:id/download` 下载文件
+
+### 报告资产存储
+
+- **存储路径**：LocalFS `data/reports/` 目录，由 `ReportOutputStore` 管理
+- **路径结构**：`<storage-root>/<report-type>/<report-id>/<filename>`
+- **路径安全**：通过 `ReportOutputStore` 检查相对路径，拒绝包含 `..` 的路径
+- **生命周期**：报告记录包含 `expires_at` 字段，过期后由 `Cleaner` job 清理
+
+### 缓存失效策略
+
+报告生成不依赖缓存，但推荐和画像缓存会影响报告内容：
+
+- **画像锁**：增量更新时通过 Redis 锁防止并发写入
+- **推荐缓存**：个人报告中包含推荐题目，缓存 TTL 为配置的 `recommendation_cache_ttl`
+- **维度总分缓存**：题目发布目录变更时失效，下次查询重新计算
+
+**代码位置**：
+- `code/backend/internal/module/assessment/application/commands/report_service.go`：报告生成用例
+- `code/backend/internal/module/assessment/entity/report.go`：报告实体和状态常量
+- `code/backend/internal/module/assessment/infrastructure/report_output_store.go`：报告文件存储适配器
+- `code/backend/internal/module/assessment/application/reporting/`：PDF / Excel / JSON 渲染器
+- `code/backend/internal/module/assessment/application/commands/cleaner.go`：报告清理 job
+
+**相关专题**：
+- AWD 复盘报告生成 → `docs/architecture/features/AWD教师复盘归档与报告导出设计.md`
+
 ## 数据与副作用
 
 - PostgreSQL：技能画像、报告记录和评估相关实体。
@@ -113,6 +219,8 @@
 - `code/backend/internal/module/assessment/architecture_test.go`：约束 API / commands / queries / ports 分层。
 - `code/backend/internal/module/assessment/ports/state_store_context_contract_test.go`：约束 Redis state store context。
 - `code/backend/internal/module/assessment/application/commands/report_*_test.go`：覆盖报告生成、渲染、命名和生命周期。
+- `code/backend/internal/module/assessment/application/commands/profile_service_test.go`：覆盖画像增量更新和事件订阅。
+- `code/backend/internal/module/assessment/infrastructure/report_output_store_test.go`：覆盖报告文件存储路径安全检查。
 - `docs/architecture/features/AWD教师复盘归档与报告导出设计.md`：AWD 复盘导出事实源。
 
 ## 已知限制
