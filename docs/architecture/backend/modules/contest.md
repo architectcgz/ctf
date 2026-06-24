@@ -36,6 +36,118 @@
   - 负责：赛事、队伍、报名、提交、AWD、scoreboard、realtime outbox、checker、Redis state store 和 Docker checker adapter。
   - 不负责：拥有 challenge 源数据、practice 训练状态或 ops 通知事实。
 
+## 状态机与并发控制
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 说明 contest 状态转换规则、CAS 并发控制、Redis 分布式锁和代码位置 | 替代专题文档中的完整状态图；详细 side effect 编排见专题文档 |
+| 记录状态推进后台 job、乐观锁 + 分布式锁组合机制 | 绕过状态机的手动管理命令设计 |
+| 指向 `contest_status_update_repository.go` 的 CAS 实现 | 记录每个状态的业务语义；业务规则见 domain 层和专题文档 |
+
+### 状态转换规则
+
+- **状态流转**：`draft` → `preparing` → `running` → `ended` → `archived`
+  - `draft`：初始创建态，管理员可以修改基本信息、时间窗口和模式
+  - `preparing`：进入筹备态，允许添加题目、配置 AWD 服务、预分配 runtime placement
+  - `running`：开赛，学生可见题目、提交 Flag、AWD 攻击和查看榜单
+  - `ended`：比赛结束，冻结提交和攻击，可以解冻榜单和导出报告
+  - `archived`：归档态，只读历史记录
+- **代码位置**：
+  - 状态定义：`code/backend/internal/module/contest/entity/contest.go`（`ContestStatus` 枚举）
+  - 转换规则：`code/backend/internal/module/contest/domain/status_transition.go`（`ValidateStatusTransition`）
+  - 定时推进：`code/backend/internal/module/contest/application/jobs/status_transition_service.go`（后台 job 按时间窗触发）
+  - 手动命令：`code/backend/internal/module/contest/application/commands/contest_service.go`（管理员手动 freeze/unfreeze/archive）
+
+### 并发控制机制
+
+- **乐观锁（数据库层）**：
+  - `contests.status_version` 字段作为 CAS 版本号
+  - `contest_status_update_repository.go` 使用 `WHERE id = ? AND status = ? AND status_version = ? AND deleted_at IS NULL` 条件更新
+  - 更新成功时 `status_version` 加一，失败时返回 `RowsAffected == 0`，调用方判断是否重试
+  - 同一事务内写入 `contest_status_transitions` 记录，确保状态行和迁移历史原子提交
+- **分布式锁（Redis 层）**：
+  - `code/backend/internal/module/contest/infrastructure/status_update_lock_store.go` 提供 Redis 分布式锁
+  - 后台 job `status_transition_service.go` 在推进多个赛事状态前先获取全局锁 `contest:status:update`，避免多 API 副本重复推进
+  - 锁持有时长默认 30 秒，推进完成后释放；如果进程崩溃，锁自动过期不会永久阻塞
+- **组合策略**：
+  - Redis 锁减少并发推进的无效 CAS 尝试，降低数据库压力
+  - 数据库 CAS 保证最终一致性，即使 Redis 锁失效也不会产生脏数据
+- **专题文档引用**：
+  - 完整状态机图和 side effect 编排 → `docs/architecture/backend/design/contest-status-state-machine.md`
+  - 事务管理模式和 CAS 模式 → `docs/architecture/features/数据库事务管理模式.md`
+
+### 代码位置
+
+- `code/backend/internal/module/contest/infrastructure/contest_status_update_repository.go`：CAS 更新实现
+- `code/backend/internal/module/contest/application/jobs/status_transition_service.go`：定时推进 job
+- `code/backend/internal/module/contest/infrastructure/status_update_lock_store.go`：Redis 分布式锁
+- `code/backend/internal/module/contest/domain/status_transition.go`：状态转换规则验证
+- `code/backend/internal/module/contest/infrastructure/contest_status_transition_repository.go`：迁移历史持久化
+
+## 事务处理与事件发布
+
+### 本章节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 列举 contest 模块的显式事务 runner 和代码位置 | 每个事务 runner 的完整业务不变量；不变量由测试覆盖 |
+| 说明弱事件、realtime outbox、platform outbox 的使用场景 | 记录 outbox dispatcher 实现细节；详见专题文档 |
+| 指向事务管理模式和事件发布策略的专题文档 | 替代专题文档；冲突时以专题文档为准 |
+
+### Transaction Runner 模式
+
+- **显式事务边界**：contest 写路径使用命名 runner，由 `ports/*.go` 暴露接口、`infrastructure/*.go` 打开 GORM transaction
+- **当前 runner 清单**：
+  - `WithinScoringTransaction`：提交判分、榜单更新
+  - `WithinAnnouncementTransaction`：公告创建、更新、删除
+  - `WithinServiceCheckTransaction`：AWD 服务检查结果写入
+  - `WithinAttackLogTransaction`：AWD 攻击提交、Flag 验证、计分
+  - `WithinRoundReconcileTransaction`：AWD 轮次推进、服务状态协调
+  - `WithinRoundServiceWritebackTransaction`：AWD 服务状态回写
+- **模式约束**：
+  - Application 层只依赖事务 port，不直接依赖 `*gorm.DB`
+  - Infrastructure 层打开事务并传递事务 scoped repository 给 application callback
+  - 事务内 outbox enqueue 失败会返回错误，触发业务写入回滚
+- **代码位置**：
+  - Port 定义：`code/backend/internal/module/contest/ports/transaction.go`、`awd_transaction.go`
+  - Infrastructure 实现：`code/backend/internal/module/contest/infrastructure/submission_repository.go`（`WithinScoringTransaction` 实现）、`awd_repository.go`（AWD 事务实现）
+  - Application 使用：`code/backend/internal/module/contest/application/commands/submission_score_transaction.go`、`awd_attack_log_transaction.go`
+- **专题文档引用**：完整事务管理模式 → `docs/architecture/features/数据库事务管理模式.md`
+
+### 事件发布策略
+
+- **弱事件（Weak Event）**：
+  - 用于"主业务已完成，事件失败不应影响用户动作结果"的场景
+  - `SubmissionService.publishWeakEvent()` 与 `AWDService.publishWeakEvent()`：`eventBus` 缺失或 `Publish()` 失败只记录 `publish_contest_event_failed` warn 日志，不回滚业务写入
+  - 适用场景：实时 UI 刷新提示、非关键日志、可丢失的状态通知
+- **Contest Realtime Outbox**：
+  - `contest_realtime_outbox` 表用于可靠投递竞赛实时 relay 事件
+  - 使用场景：公告推送、提交榜单更新、checker preview 进度、状态推进 realtime side effect
+  - 在需要强 side effect 时，`EnqueueRealtimeRelay()` 必须在业务事务内调用，失败会触发回滚
+- **Platform Event Outbox**：
+  - `platform_event_outbox` 表用于跨模块可靠投递的平台事件
+  - 使用场景：通知、发布检查、需要审计 / 去重 / 恢复的 side effect
+  - Outbox dispatcher 按 `route`（`handler` / `stream`）分发，失败后按 retry backoff 延后重试
+- **取舍原则**：
+  - 弱事件：主业务已完成，事件失败不应阻塞用户动作
+  - Outbox：需要恢复投递、去重或跨模块消费的 side effect
+  - 禁止把弱事件失败写成业务失败；也禁止把需要审计的 side effect 只放进弱事件
+- **专题文档引用**：完整事件发布与降级策略 → `docs/architecture/features/事件发布与降级策略.md`
+
+## AWD Flag 轮换与注入
+
+- `contest/application/commands/awd_flag_support.go` 与 `contest/application/jobs/awd_round_flag_lookup_support.go`
+  - 负责：优先从 Redis round state 读取当前 materialized Flag；不存在时用 `contestdomain.BuildAWDRoundFlag(contestID, roundNumber, teamID, awdChallengeID, flagSecret, flagPrefix)` 确定性复算。
+  - 不负责：把每轮 Flag 明文写入 PostgreSQL，或依赖容器内 Flag 作为判题真相。
+- `contest/application/commands/awd_attack_flag_rotation_support.go`
+  - 负责：攻击成功时用 `ReplaceAWDRoundFlagIfMatch()` 对当前 victim team + service 的 Flag 做 CAS 轮换；注入失败会回滚 Redis cache，并尝试把旧 Flag 重新注入容器。
+  - 不负责：在攻击失败、重复提交或上一轮宽限命中时轮换当前轮 Flag。
+- `contest/application/jobs/awd_round_flag_sync.go`、`contest/infrastructure/awd_flag_injector.go`、`contest/runtime/wiring.go`
+  - 负责：轮次推进和攻击轮换都通过 `AWDFlagInjector` 写入对应队伍服务容器；装配时使用 `NewDockerAWDFlagInjector(...)`，缺少 writer 时降级为 noop injector 并记录日志。
+  - 不负责：跨 runtime node 查找容器；实例定位仍依赖 service_id、team_id 和 instance/runtime identity。
+
 ## API 入口设计
 
 | 路由组 | 代表路由 | Handler | Service / 用例 |
@@ -124,6 +236,8 @@
 - `code/backend/internal/module/contest/architecture_test.go`：约束 API / commands / queries / ports 分层、禁止 Docker concrete 落入普通 infrastructure 路径。
 - `code/backend/internal/module/contest/ports/*_context_contract_test.go`：约束 state store 和端口 context 传播。
 - `code/backend/internal/app/full_router_contest_state_matrix_test.go`、`full_router_awd_state_matrix_test.go`：覆盖赛事和 AWD 路由状态矩阵。
+- `code/backend/internal/module/contest/infrastructure/contest_status_update_repository_test.go`：覆盖状态 CAS、transition journal 和 realtime outbox rollback。
+- `code/backend/internal/module/contest/application/commands/awd_service_attack_test.go`、`code/backend/internal/module/contest/application/jobs/awd_round_updater_test.go`：覆盖 AWD Flag 读取、轮换、注入和回滚。
 - `docs/architecture/features/校园级CTF-AWD模式完整设计.md`：AWD 总览事实源。
 
 ## 已知限制
