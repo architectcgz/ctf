@@ -14,11 +14,101 @@
 
 ## 当前设计
 
+### 本节范围
+
+| 本文档负责 | 本文档不负责 |
+|----------|------------|
+| 列举数据库 migration 文件、GORM 模型和 repository owner 分工 | 替代 migration SQL 作为 DDL 最终事实源；字段、索引以代码为准 |
+| 说明增量专题表（platform_event_outbox、contest_runtime_placements 等）的业务语义 | 记录完整表结构和索引细节；详见 migration 文件 |
+| 指向 Redis 缓存分工和跨模块查询聚合规则 | 记录 Redis key 完整设计；详见 Redis 缓存键设计章节 |
+
+### Migration 文件与主 Schema
+
 - `code/backend/migrations/000001_init_schema.up.sql`
   - 负责：定义当前 PostgreSQL 主 schema，覆盖用户、题目、实例、竞赛、AWD、评估、导出、审计以及当前已收口的专题表；新增结构统一通过 baseline 更新后的 migration owner 落库
   - 不负责：把文档中的示意表或历史命名直接当成当前数据库真相；最终字段、索引和外键以 migration 为准
 
-- `code/backend/internal/model/challenge.go`、`instance.go`、`contest.go`、`contest_awd_service.go`、`contest_status_transition.go`、`image_build_job.go`、`awd_service_operation.go`、`awd_defense_workspace.go`
+### Migration 000018: 平台事件 Outbox
+
+- **表：`platform_event_outbox`**
+  - **业务语义**：用于可靠投递跨模块平台事件，支持去重、重试和失败标记
+  - **关键字段**：
+    - `event_name`：事件名称（例如 `flag_accepted`、`contest_started`）
+    - `payload`：事件负载（BYTEA），记录事件详细数据
+    - `payload_version`：payload 版本号，用于未来兼容性
+    - `route`：分发路由（`handler` / `stream`），决定 dispatcher 如何处理
+    - `dedupe_key`：去重键，保证同一事件只入库一次
+    - `status`：事件状态（`pending` / `dispatched` / `failed`）
+    - `next_attempt_at`：下次重试时间，失败后按 backoff 延后
+    - `locked_by`、`locked_until`：分布式锁字段，避免多 dispatcher 重复处理
+    - `stream_message_id`：已投递到 stream 的消息 ID
+    - `last_error`：最后一次失败的错误信息
+    - `occurred_at`：事件发生时间
+  - **索引**：
+    - `idx_platform_event_outbox_dedupe_key`：唯一索引，保证 dedupe_key 去重
+    - `idx_platform_event_outbox_pending_due`：复合索引 `(status, next_attempt_at, id)`，用于 dispatcher 领取待处理事件
+    - `idx_platform_event_outbox_locked_until`：用于锁租约过期检查
+  - **`notifications` 表新增字段**：
+    - `source_event_key`：关联事件键，保证同一事件只生成一次通知
+    - `idx_notifications_source_event_key`：唯一索引，用于幂等落库
+  - **使用场景**：
+    - 练习模块：`flag_accepted` 事件触发通知、成就解锁
+    - 竞赛模块：比赛状态变化触发通知、榜单刷新
+    - 运维模块：系统事件投递到通知 fanout
+  - **代码位置**：
+    - Outbox repository：`code/backend/internal/platform/events/outbox_repository.go`
+    - Outbox dispatcher：`code/backend/internal/platform/events/outbox_dispatcher.go`
+    - 通知服务：`code/backend/internal/module/ops/application/commands/notification_service.go`
+  - **专题文档引用**：完整事件发布与降级策略 → `docs/architecture/features/事件发布与降级策略.md`
+
+### Migration 000019: Runtime Node 健康心跳
+
+- **表：`runtime_nodes`**
+  - **新增字段**：`last_seen_at TIMESTAMPTZ`
+  - **业务语义**：记录 runtime node 最后一次健康探测成功的时间，用于判断节点是否过期
+  - **索引**：
+    - `idx_runtime_nodes_health_schedulable_seen`：复合索引 `(schedulable, health_status, last_seen_at)`，用于调度器选择健康节点
+  - **使用场景**：
+    - 调度器选择节点：只选择 `last_seen_at >= now - stale_after` 的节点
+    - 节点离线判断：心跳超时后标记 `health_status=offline`
+    - Failover 触发：node offline 后把该 node 上的实例放回 `pending` 重建
+  - **代码位置**：
+    - 健康服务：`code/backend/internal/module/container_runtime/application/node_health_service.go`
+    - Node repository：`code/backend/internal/module/container_runtime/infrastructure/node_repository.go`
+  - **专题文档引用**：完整容器调度与并发控制 → `docs/architecture/features/容器调度与并发控制.md`
+
+### Migration 000020: Instance Runtime Node ID 重命名与 AWD Runtime Placement
+
+- **`instances` 表字段重命名**：
+  - `node_id` → `runtime_node_id`
+  - **业务语义**：明确 `runtime_node_id` 是执行路由 authority，指向 `runtime_nodes.id` 主键
+  - **新增索引**：
+    - `idx_instances_runtime_node_container_id`：复合索引 `(runtime_node_id, container_id)`，用于按 node 查找容器
+    - `idx_instances_runtime_node_network_id`：复合索引 `(runtime_node_id, network_id)`，用于按 node 查找网络
+  - **使用场景**：
+    - 容器操作：按 `runtime_node_id + container_id` 路由到对应 runtime node 执行 Docker 操作
+    - Failover：node offline 后按 `runtime_node_id` 查找该 node 上的实例
+
+- **新表：`contest_runtime_placements`**
+  - **业务语义**：记录 AWD 竞赛的 runtime node placement 事实，保证同一 contest 的所有队伍服务实例固定到同一个 runtime node
+  - **关键字段**：
+    - `contest_id`：竞赛 ID
+    - `runtime_node_id`：绑定的 runtime node ID
+    - `status`：状态（`active` / `released`）
+    - `released_at`：释放时间，状态变为 `released` 时记录
+  - **约束**：
+    - `idx_contest_runtime_placements_active_contest`：唯一索引 `(contest_id) WHERE status = 'active'`，保证同一 contest 只有一个 active placement
+    - 外键：`contest_id` 引用 `contests(id)`，`runtime_node_id` 引用 `runtime_nodes(id)`
+  - **使用场景**：
+    - AWD 开赛：为 contest 分配 runtime node placement
+    - AWD 实例创建：只在 placement 指定的 `runtime_node_id` 上创建实例
+    - AWD 攻击链路：同 contest 的所有队伍服务实例在同一 Docker 宿主机上，共享 Docker network，确保二层互通
+  - **代码位置**：
+    - Placement repository：`code/backend/internal/module/contest/infrastructure/contest_runtime_placement_repository.go`
+    - AWD desired reconcile：`code/backend/internal/module/practice/application/commands/awd_desired_runtime_reconciler.go`
+  - **专题文档引用**：完整 AWD 模式设计 → `docs/architecture/features/校园级CTF-AWD模式完整设计.md`
+
+### GORM 模型与 Repository Owner
   - 负责：声明当前 GORM 模型、状态枚举、默认值和关键关系，例如 `instance_sharing`、`share_scope`、`service_id`、`contest.status`、`contest_awd_services` 和 `awd_defense_workspaces`
   - 不负责：在 API 层泄漏 persistence 内部字段，或把查询聚合结果反向定义成底层表 schema
 
@@ -32,7 +122,9 @@
 
 ## 接口或数据影响
 
-- 当前数据库事实由 `code/backend/migrations/` 和 `code/backend/internal/model/` 联合定义，`contest_status_transitions`、`awd_service_operations`、`image_build_jobs`、`awd_defense_workspaces` 是已采用的增量专题表，而不是文档草案。
+- 当前数据库事实由 `code/backend/migrations/` 和 `code/backend/internal/model/` 联合定义，`contest_status_transitions`、`platform_event_outbox`、`contest_runtime_placements`、`awd_service_operations`、`image_build_jobs`、`awd_defense_workspaces` 是已采用的增量专题表，而不是文档草案。
+- `runtime_nodes.last_seen_at` 参与 runtime node 健康筛选；`instances.runtime_node_id` 是当前执行路由 authority，替代旧 `node_id` 命名。
+- `contest_runtime_placements` 通过 `contest_id` active 唯一索引保证同一 AWD contest 只有一个 active runtime node placement。
 - API 只暴露 DTO 与对象标识，不直接暴露底层路径或内部 JSON 结构；契约以 `docs/contracts/openapi-v1.yaml`、`docs/contracts/api-contract-v1.md`、`docs/contracts/challenge-pack-v1.md` 为准。
 - `instances.share_scope` / `service_id`、`challenges.instance_sharing`、`contests.status`、`contest_awd_services.runtime_config`、`awd_attack_logs.submitted_by_user_id` 等字段直接影响实例复用、状态机、AWD 计分和画像回流链路。
 
@@ -972,6 +1064,44 @@ CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read, cr
 CREATE INDEX idx_notifications_user_type ON notifications(user_id, type, created_at DESC);
   -- 用途：按通知类型筛选
 ```
+
+### 10.3 platform_event_outbox — 平台事件 outbox 表
+
+`platform_event_outbox` 保存需要可靠投递的平台事件。当前 owner 是 `code/backend/internal/platform/events/`，业务模块通过 `EnqueueOutboxEvent()` 在事务内写入。
+
+关键字段：
+
+- `event_name`：事件名。
+- `payload`、`payload_version`：事件载荷和版本。
+- `route`：分发路径，当前为 `handler` 或 `stream`。
+- `dedupe_key`：非空时受唯一索引保护，用于幂等入队。
+- `status`、`attempt_count`、`next_attempt_at`、`locked_by`、`locked_until`：dispatcher 领取、租约和重试状态。
+- `stream_message_id`、`dispatched_at`、`last_error`：分发结果和最近失败原因。
+- `occurred_at`、`created_at`、`updated_at`：事件发生和记录更新时间。
+
+索引：
+
+- `idx_platform_event_outbox_dedupe_key`：非空 `dedupe_key` 唯一。
+- `idx_platform_event_outbox_pending_due`：按 `status / next_attempt_at / id` 领取 due pending 事件。
+- `idx_platform_event_outbox_locked_until`：扫描 pending 且锁过期事件。
+
+### 10.4 runtime_nodes / contest_runtime_placements — 运行节点路由事实
+
+`runtime_nodes.last_seen_at` 来自 `000019`，用于区分健康但心跳过期的 runtime node。调度 selector 只选择 schedulable、健康且心跳新鲜的节点。
+
+`000020` 把 `instances.node_id` 重命名为 `instances.runtime_node_id`，并新增执行面辅助索引：
+
+- `idx_instances_runtime_node_container_id`
+- `idx_instances_runtime_node_network_id`
+
+`contest_runtime_placements` 保存 AWD contest 到 runtime node 的 active placement：
+
+- `contest_id`：比赛。
+- `runtime_node_id`：绑定的 runtime node。
+- `status`：`active` 或 `released`。
+- `released_at`：释放时间。
+
+`idx_contest_runtime_placements_active_contest` 确保同一比赛只有一条 active placement。AWD scope 调度先读这张表；绑定 node 不可用时等待 / backoff，不改用默认 selector。
 
 ---
 
