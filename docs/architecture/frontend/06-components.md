@@ -4,6 +4,19 @@
 > 事实源：`code/frontend/src/shared/ui/`、`code/frontend/src/shared/model/`、`code/frontend/src/pages/`、`code/frontend/src/__tests__/`、`code/frontend/src/features/**/{model,ui}/`
 > 替代：无
 
+## 本文档范围
+
+| 覆盖 | 不覆盖 |
+|------|--------|
+| `shared/ui/common/` 共享展示原语和通用交互壳 | 单个页面的数据流细节（见 `07-pages-dataflow.md`） |
+| `shared/ui/common/modal-templates/` Overlay 行为层、居中弹窗、侧边抽屉和后台工作区模板 | 后端接口语义（见 `docs/contracts/`） |
+| `shared/ui/layout/` 应用总布局、侧栏、顶栏、全局通知实时连接、route transition | 页面内部业务查询、目录筛选或详情页状态机 |
+| `shared/model/common/` 共享 UI 原语状态（Toast、危险确认、工作区导航、后台面包屑细节） | 业务数据加载、领域流程编排或页面级异步状态机 |
+| `features/**/model` 页面行为 owner、请求编排、路由参数解析、分页、导出和局部状态机 | 承担大段模板和展示样式壳 |
+| `features/**/ui` 只服务单一 feature 的 workspace、editor、panel 或 page-sized surface | 跨 feature 复用、直接调用非 contract API |
+| `widgets/**` 跨 feature 的 page-sized workspace 组合 | 直接持有业务 API owner、导入 `pages/**` |
+| `shared/model/navigation/` route-aware transport、query/tab 同步和工作区导航桥接 | 替具体页面决定业务 tab、筛选语义或 API 请求 |
+
 ## 定位
 
 本文档只说明前端组件应该放在哪一层、共享原语有哪些、弹窗模板怎么复用，以及布局壳和共享 UI 状态的 owner。
@@ -45,6 +58,28 @@
   - 负责：管理员端 `/platform/*` 路由下按能力分组的 feature 命名空间，例如 `overview`、`user-management`、`class-management`、`student-management`、`instance-management`、`challenges`、`challenge-detail`、`contests`、`awd-challenges`
   - 不负责：继续维持 `platform-*` 扁平 feature 命名或 page shell 与 feature shell 双份 owner
 
+- `code/frontend/src/widgets/**`
+  - 负责：跨 feature 的 page-sized workspace 组合，例如 `contest-detail-workspace`、`awd-review-workspace`、`challenge-detail-workspace`、`notification-*` 和 `scoreboard-detail-workspace`
+  - 不负责：直接持有业务 API owner、导入 `pages/**`，或把单一 feature 的内部 UI 提升成跨 feature 共享层
+
+边界：
+
+- `widgets/**` 承接跨 feature 的页面级工作台组合，不直接拥有 API owner
+- 若组件只服务单一 feature 且直接消费同 feature model 的 UI，应落在 `features/**/ui` 而不是 `widgets/**`
+- 若组件是共享原语、布局壳或跨业务复用的展示块，应落在 `shared/ui/**` 而不是 `widgets/**`
+- `widgets/**` 通常由多个 `features/**/ui`、`entities/**/ui`、`shared/ui/**` 组合而成，自己不承担 API 调用和业务状态机
+
+- `code/frontend/src/shared/model/navigation/`、`code/frontend/src/shared/model/layout/useWorkspaceShellNavigation.ts`
+  - 负责：route-aware transport、query/tab 同步和工作区导航桥接，供 feature model / layout view state 组合
+  - 不负责：替具体页面决定业务 tab、筛选语义或 API 请求
+
+边界：
+
+- `shared/model/navigation/` 承接 route-aware 能力，例如 `useRouteNavigationTransport` 把 router push / replace 抽成可注入 transport，`useRouteQueryTransport` 读写 route query，`useRouteQueryTabs` 将 route query 映射为 tab 状态，`useUrlSyncedTabs` 为 feature model 提供 URL 同步 tab 状态
+- route page 不直接持有 `useRouteQueryTabs()`；`routePageArchitectureBoundary.test.ts` 会拦截普通 route page 对 route hooks 的直接使用
+- navigation composables 不负责业务 tab 的名称、权限和请求；这些由 feature model 或 widget owner 决定
+- `useWorkspaceShellNavigation` 为 layout shell 提供工作区导航状态桥接，例如面包屑、tab 状态、返回按钮等，但不替页面决定具体导航目标和业务语义
+
 ## 1. 组件层次
 
 当前前端组件按下面的 owner 分层：
@@ -54,6 +89,7 @@
 | 共享原语 | `shared/ui/common/` | 空状态、Toast、Skeleton、目录表格、删除确认、通用局部承载器 |
 | Overlay 模板 | `shared/ui/common/modal-templates/` | Teleport、滚动锁、Escape/backdrop 关闭、经典弹窗和抽屉模板 |
 | 布局壳 | `shared/ui/layout/` | `AppLayout`、`Sidebar`、`TopNav` 等全局承载 |
+| Widgets | `widgets/*/` | 跨 feature 的 page-sized workspace 组合，不直接拥有 API |
 | Feature UI | `features/*/ui/`、`features/platform/*/ui/` | 只服务单一 feature 的工作区、编辑器、目录面板与 page-sized surface |
 | 页面入口 | `pages/**` | 运行时 route entry、页面结构组合与最外层事件桥接 |
 | 全局前端守卫 | `src/__tests__` | 架构、route page 与跨页面稳定策略测试 |
@@ -63,6 +99,7 @@
 - 能在多个页面复用且不绑业务 owner 的，进 `shared/ui/common/`
 - 只解决 overlay 行为和模板骨架的，进 `shared/ui/common/modal-templates/`
 - 只服务单一 feature，且直接消费同 feature model 的 UI，进 `features/*/ui/`
+- 需要把多个 feature / entity / shared UI 组合成一个页面级工作台，且不会直接拥有 API owner 的，进 `widgets/*/`
 - 强业务语义的展示组件默认跟随 feature UI / feature model，不回流到新的 `components/**` 历史目录
 - 页面数据编排和路由交互不放进共享组件
 
@@ -175,6 +212,21 @@
 - 不把各个页面的数据加载前置到 layout
 - 不在 layout 内维护每个页面的查询条件或详情选中状态
 
+### 4.1 Navigation composables
+
+| 文件 | 当前负责 |
+| --- | --- |
+| `shared/model/navigation/useRouteNavigationTransport.ts` | 把 router push / replace 抽成可注入 transport，降低 feature model 对 router concrete 的依赖 |
+| `shared/model/navigation/useRouteQueryTransport.ts` | 读写 route query 的 transport owner |
+| `shared/model/navigation/useRouteQueryTabs.ts` | 将 route query 映射为 tab 状态 |
+| `shared/model/navigation/useUrlSyncedTabs.ts` | 为 feature model 提供 URL 同步 tab 状态 |
+| `shared/model/layout/useWorkspaceShellNavigation.ts` | layout shell 消费的工作区导航状态桥接 |
+
+边界：
+
+- route page 不直接持有 `useRouteQueryTabs()`；`routePageArchitectureBoundary.test.ts` 会拦截普通 route page 对 route hooks 的直接使用。
+- navigation composables 不负责业务 tab 的名称、权限和请求；这些由 feature model 或 widget owner 决定。
+
 ## 5. 组件边界与迁移方向
 
 历史 `components/` 目录已经清空；原先挂在这里的共享原语、布局壳和 feature-owned 大块 UI 已分别迁到 `shared/ui/**`、`shared/model/**`、`features/**/ui`。
@@ -219,3 +271,5 @@
 - Toast 样式与交互：`code/frontend/src/shared/ui/common/__tests__/AppToast.test.ts`
 - 布局壳与 backoffice/student 内容壳切换：`code/frontend/src/shared/ui/layout/__tests__/AppLayout.test.ts`
 - 分层约束：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
+- route page 导航 hook 边界：`code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
+- 工作区导航状态：`code/frontend/src/shared/model/layout/__tests__/useWorkspaceShellNavigation.test.ts`
