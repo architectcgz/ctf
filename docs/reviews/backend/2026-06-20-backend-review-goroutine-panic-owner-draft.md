@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-20-backend-goroutine-panic-owner`
 - Branch: `task/2026-06-20-backend-goroutine-panic-owner`
 - Commit: 未提交工作区 diff
-- Task / Plan: `2026-06-20-backend-goroutine-panic-owner`, `docs/plan/impl-plan/2026-06-20-backend-goroutine-panic-owner-implementation-plan.md`
+- Task / Plan: `2026-06-20-backend-goroutine-panic-owner`, `docs/plan/archive/impl-plan/2026-06/2026-06-20-backend-goroutine-panic-owner-implementation-plan.md`
 - Reviewer mode: draft review on current worktree diff
 - Diff basis: `git diff` + untracked files listed by `git status --short --branch`
 - Files reviewed:

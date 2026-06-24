@@ -9,7 +9,7 @@ Scope: current uncommitted diff against `HEAD`
 ## Review Inputs
 
 - Plan read before review:
-  - `docs/plan/impl-plan/2026-06-09-runtime-instance-port-alias-cleanup-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-instance-port-alias-cleanup-implementation-plan.md`
 - Architecture references:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `docs/design/backend-module-boundary-target.md`

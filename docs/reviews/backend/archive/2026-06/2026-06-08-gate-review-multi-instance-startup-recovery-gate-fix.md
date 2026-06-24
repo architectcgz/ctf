@@ -8,7 +8,7 @@
     - `code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
     - `code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service_test.go`
     - `code/backend/internal/app/http_server_test.go`
-    - `docs/plan/impl-plan/2026-06-08-multi-instance-startup-recovery-gate-fix-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-08-multi-instance-startup-recovery-gate-fix-implementation-plan.md`
   - Related call chain checked:
     - `code/backend/internal/app/http_server.go`
     - `code/backend/internal/app/router.go`

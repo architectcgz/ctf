@@ -7,7 +7,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-11-challenge-command-service-decomposition`
 - Branch: `task/2026-06-11-challenge-command-service-decomposition`
 - Task: `2026-06-11-challenge-command-service-decomposition`
-- Plan: `docs/plan/impl-plan/2026-06-11-challenge-command-service-decomposition-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-11-challenge-command-service-decomposition-implementation-plan.md`
 - Diff source: 当前 worktree 未提交 diff
 - Files reviewed:
   - `code/backend/internal/module/challenge/application/challengecatalog/published_catalog_event.go`

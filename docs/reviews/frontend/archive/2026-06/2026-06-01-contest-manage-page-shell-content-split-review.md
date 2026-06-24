@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `contest-manage-page-shell-content-split`
 - Files reviewed:
   - `.harness/reuse-decisions/contest-manage-page-shell-content-split.md`
-  - `docs/plan/impl-plan/2026-06-01-contest-manage-page-shell-content-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-01-contest-manage-page-shell-content-split-plan.md`
   - `docs/reviews/frontend/2026-06-01-contest-manage-page-shell-content-split-review.md`
   - `code/frontend/src/features/platform/contests/ui/ContestOrchestrationPage.vue`
   - `code/frontend/src/features/platform/contests/ui/ContestManageOverviewPanel.vue`
@@ -45,7 +45,7 @@
 
 - `bash scripts/check-task-intake.sh --reuse-decision contest-manage-page-shell-content-split`
 - `cd code/frontend && npm run test:run -- src/pages/platform/contests/__tests__/ContestManage.test.ts src/features/platform/contests/ui/contestAdminUiStrategy.test.ts`
-- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/contest-manage-page-shell-content-split.md docs/plan/impl-plan/2026-06-01-contest-manage-page-shell-content-split-plan.md docs/reviews/frontend/2026-06-01-contest-manage-page-shell-content-split-review.md code/frontend/src/features/platform/contests/ui/ContestOrchestrationPage.vue code/frontend/src/features/platform/contests/ui/ContestManageOverviewPanel.vue code/frontend/src/features/platform/contests/ui/ContestManageCreatePanel.vue code/frontend/src/features/platform/contests/ui/contestOrchestrationPage.css code/frontend/src/features/platform/contests/ui/contestOrchestrationPage.types.ts code/frontend/src/features/platform/contests/ui/contestAdminUiStrategy.test.ts code/frontend/src/pages/platform/contests/__tests__/ContestManage.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/contest-manage-page-shell-content-split.md docs/plan/archive/impl-plan/2026-06/2026-06-01-contest-manage-page-shell-content-split-plan.md docs/reviews/frontend/2026-06-01-contest-manage-page-shell-content-split-review.md code/frontend/src/features/platform/contests/ui/ContestOrchestrationPage.vue code/frontend/src/features/platform/contests/ui/ContestManageOverviewPanel.vue code/frontend/src/features/platform/contests/ui/ContestManageCreatePanel.vue code/frontend/src/features/platform/contests/ui/contestOrchestrationPage.css code/frontend/src/features/platform/contests/ui/contestOrchestrationPage.types.ts code/frontend/src/features/platform/contests/ui/contestAdminUiStrategy.test.ts code/frontend/src/pages/platform/contests/__tests__/ContestManage.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-workflow-complete.sh`
 

@@ -4,7 +4,7 @@
 
 - Commit: 未提交，当前 worktree diff
 - Branch: `task/2026-06-21-backend-application-service-boundary-convergence`
-- Task / Plan: `2026-06-21-backend-application-service-boundary-convergence`；`docs/plan/impl-plan/2026-06-21-backend-application-service-boundary-convergence-implementation-plan.md`
+- Task / Plan: `2026-06-21-backend-application-service-boundary-convergence`；`docs/plan/archive/impl-plan/2026-06/2026-06-21-backend-application-service-boundary-convergence-implementation-plan.md`
 - Reviewer mode: same-context self-check
 - Diff basis: `git diff`
 

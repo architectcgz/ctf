@@ -22,8 +22,8 @@
     - `code/backend/tests/architecture/test_architecture_test.go`
     - `docs/architecture/backend/02-database-design.md`
     - `docs/architecture/backend/design/awd-engine-migration.md`
-    - `docs/plan/impl-plan/2026-06-05-ctf-api-auto-migrate-implementation-plan.md`
-    - `docs/plan/impl-plan/2026-06-08-backend-migration-squash-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-05-ctf-api-auto-migrate-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-migration-squash-implementation-plan.md`
     - `docs/requirements/local-dev-test-credentials.md`
     - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
 
@@ -35,8 +35,8 @@
 
 - Re-review update:
   - `2026-06-08` 复核已确认原 blocker 解除。
-  - `docs/plan/impl-plan/2026-06-05-ctf-api-auto-migrate-implementation-plan.md` 已把 `000012` 改成历史背景 / 已吸收到 baseline 的备注，不再作为活动 owner 或复用目标。
-  - `docs/plan/impl-plan/2026-06-08-backend-migration-squash-implementation-plan.md` 已把 goal 改成“把旧链直到 `000012` 才补齐的问题吸收到 baseline”，不再把 `000012` 当成当前 replay 目标。
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-05-ctf-api-auto-migrate-implementation-plan.md` 已把 `000012` 改成历史背景 / 已吸收到 baseline 的备注，不再作为活动 owner 或复用目标。
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-migration-squash-implementation-plan.md` 已把 goal 改成“把旧链直到 `000012` 才补齐的问题吸收到 baseline”，不再把 `000012` 当成当前 replay 目标。
   - 复核 `rg` 结果后，剩余命中均属于现行 reset/recreate 提示、当前 task plan 的删除清单 / 兼容性 / rollback 说明，或明确声明“已吸收到 baseline、不再作为活动 runtime migration 文件存在”的历史备注。
 
 ## Findings

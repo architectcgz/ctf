@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-module-dependency-baseline`
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-module-dependency-baseline`
 - Task slug: `2026-06-08-module-dependency-baseline`
-- Plan: `docs/plan/impl-plan/2026-06-08-module-dependency-baseline-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-08-module-dependency-baseline-implementation-plan.md`
 - Diff source: 当前 worktree 相对 `HEAD` 的未提交改动（含未跟踪文件）
 - Files reviewed:
   - `code/backend/internal/app/composition/runtime_module.go`
@@ -18,7 +18,7 @@
   - `code/backend/internal/module/runtime/runtime/module.go`
   - `docs/architecture/backend/01-system-architecture.md`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
-  - `docs/plan/impl-plan/2026-06-08-module-dependency-baseline-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-module-dependency-baseline-implementation-plan.md`
 
 ## Classification Check
 

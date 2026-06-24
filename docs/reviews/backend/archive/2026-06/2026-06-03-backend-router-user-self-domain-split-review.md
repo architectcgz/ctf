@@ -9,7 +9,7 @@
   - `code/backend/internal/app/router_user_practice_routes.go`
   - `code/backend/internal/app/router_user_self_service_routes.go`
   - `code/backend/internal/app/router_user_self_domain_routes_test.go`
-  - `docs/plan/impl-plan/2026-06-03-backend-router-user-self-domain-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-router-user-self-domain-split-plan.md`
   - `.harness/reuse-decisions/backend-router-user-self-domain-split.md`
 
 ## Classification Check

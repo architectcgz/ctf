@@ -7,7 +7,7 @@
 - `ctf/docs/architecture/backend/01-system-architecture.md`
 - `ctf/docs/architecture/backend/03-container-architecture.md`
 - `ctf/docs/architecture/backend/05-key-flows.md`
-- `ctf/docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`
+- `ctf/docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`
 
 ---
 

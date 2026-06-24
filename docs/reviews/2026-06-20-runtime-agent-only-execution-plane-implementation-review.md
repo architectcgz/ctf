@@ -2,7 +2,7 @@
 
 **Review 日期**: 2026-06-20
 **实现分支**: `task/2026-06-20-runtime-agent-only-execution-plane`
-**实现计划**: `docs/plan/impl-plan/2026-06-20-runtime-agent-only-execution-plane-implementation-plan.md`
+**实现计划**: `docs/plan/archive/impl-plan/2026-06/2026-06-20-runtime-agent-only-execution-plane-implementation-plan.md`
 **Review 人员**: Claude (Opus 4.8)
 
 ---

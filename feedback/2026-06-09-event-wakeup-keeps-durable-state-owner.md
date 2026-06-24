@@ -32,4 +32,4 @@
 
 - 状态：仅项目保留
 - Owner：`feedback/` 与本次 runtime cleanup implementation plan
-- 链接：`docs/plan/impl-plan/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md`
+- 链接：`docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md`

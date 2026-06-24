@@ -7,7 +7,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-11-teaching-query-infra-split`
 - Branch: `task/2026-06-11-teaching-query-infra-split`
 - Task: `2026-06-11-teaching-query-infra-split`
-- Plan: `docs/plan/impl-plan/2026-06-11-teaching-query-infra-split-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-11-teaching-query-infra-split-implementation-plan.md`
 - Diff source: 当前 worktree 未提交 diff
 - Files reviewed:
   - `code/backend/internal/module/teaching_query/runtime/module.go`

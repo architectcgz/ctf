@@ -593,7 +593,7 @@ flowchart LR
 
 - 有主导 owner（查询主导语义属某业务模块，只是顺带读其他模块的表字段）：放该 owner 模块实现。owner 可只读 join 其他模块的物理表，但用自己的 row struct scan，不 import 对方的 GORM model。
 - 跨模块协作优先依赖倒置（DIP）：消费方在自己的 `ports` 定义最小接口，owner 在自己的 `infrastructure` 实现，由 `app/composition` 注入，从而保持合规的依赖方向（对应 5.3 表格“端口由消费方定义，适配器在 provider 侧实现”）。
-  - 例：AWD 代理准入查询（准入判定 + 实例访问信息）主导 owner 是 `contest`。instance proxy 入口经 `instance/ports` 定义的 resolver 接口消费，`contest` 实现该接口（一条 SQL 同时 join contest 自有 AWD 表与 `instances` 表），composition 注入；依赖方向是 `contest -> instance`，instance 不反向 import contest。详见 `docs/plan/impl-plan/2026-06-10-module-reverse-dependency-convergence-plan.md`。
+  - 例：AWD 代理准入查询（准入判定 + 实例访问信息）主导 owner 是 `contest`。instance proxy 入口经 `instance/ports` 定义的 resolver 接口消费，`contest` 实现该接口（一条 SQL 同时 join contest 自有 AWD 表与 `instances` 表），composition 注入；依赖方向是 `contest -> instance`，instance 不反向 import contest。详见 `docs/plan/archive/impl-plan/2026-06/2026-06-10-module-reverse-dependency-convergence-plan.md`。
 - 无单一 owner（跨多个 owner 的教师视角、复盘、统计报表）：进 `teaching_analysis` 查询聚合模块，不挂在任一业务 owner，也不反向回写 owner 表。
 
 服务化演进接缝：

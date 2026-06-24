@@ -6,7 +6,7 @@
 - Branch: `task/2026-06-12-distributed-event-bus-and-outbox-relay`
 - Diff source: current uncommitted diff
 - Task slug: `2026-06-12-distributed-event-bus-and-outbox-relay`
-- Implementation plan: `docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md`
+- Implementation plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md`
 - Reviewer: independent `codex exec` read-only context
 
 ## 结论
@@ -122,14 +122,14 @@
   - `cd code/backend && go test ./internal/platform/events ./internal/module/ops/... ./internal/module/practice/... ./internal/module/challenge/... -run 'Outbox|Stream|Notification|FlagAccepted|PublishCheck|Progress' -count=1`: PASS
   - `bash scripts/check-architecture.sh --full`: PASS
   - `python3 scripts/check-docs-consistency.py`: PASS
-  - `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`: PASS
+  - `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/archive/impl-plan/2026-06/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`: PASS
 - Re-review focus:
   - 复核上述五个 blocker 的修复是否完整。
 - Final independent re-review:
   - Command: `codex exec --sandbox read-only --cd /home/azhi/workspace/projects/.worktrees/ctf/2026-06-12-distributed-event-bus-and-outbox-relay --output-last-message /tmp/t4-outbox-rereview-after-fix.md`
   - Result: `Gate verdict: pass`
   - Findings: no material findings.
-  - Reviewer check: `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`: PASS
+  - Reviewer check: `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/archive/impl-plan/2026-06/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`: PASS
 - Final composition-root re-review:
   - Command: `codex exec --sandbox read-only --cd /home/azhi/workspace/projects/.worktrees/ctf/2026-06-12-distributed-event-bus-and-outbox-relay --output-last-message /tmp/t4-outbox-final-rereview.md`
   - Result: `Gate verdict: pass`
@@ -144,13 +144,13 @@
 - `cd code/backend && go test ./internal/platform/events ./internal/module/ops/... ./internal/module/practice/... ./internal/module/challenge/... -run 'Outbox|Stream|Notification|FlagAccepted|PublishCheck|Progress' -count=1`
 - `bash scripts/check-architecture.sh --full`
 - `python3 scripts/check-docs-consistency.py`
-- `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/impl-plan/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`
+- `git diff --check -- docs/reviews/backend/2026-06-12-backend-review-distributed-event-bus-and-outbox-relay.md docs/architecture/backend/01-system-architecture.md docs/architecture/backend/05-key-flows.md docs/plan/archive/impl-plan/2026-06/2026-06-12-distributed-event-bus-and-outbox-relay-implementation-plan.md code/backend/internal/platform/events code/backend/internal/module/ops code/backend/internal/module/practice code/backend/internal/module/challenge code/backend/internal/testutil/systemapp code/backend/internal/app code/backend/migrations`
 
 ## 残余风险
 
 - 真实多副本 WebSocket fanout 仍缺环境演练证据；该项属于后续集成验收风险，不是本次 code-review gate blocker。
 - stream consumer cursor identity 当前基于 hostname；一宿主机 / 一 pod 一个 API 进程的部署形态下可用，如果同一 hostname 下运行多个 API 进程，需要引入更细的 instance id。
-- parent input `docs/plan/impl-plan/2026-06-12-true-ha-group/distributed-event-bus-and-outbox-relay.md` 在当前 worktree 不存在，本次 review 以当前 implementation plan、后端架构文档和源码 diff 为依据。
+- parent input `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/distributed-event-bus-and-outbox-relay.md` 在当前 worktree 不存在，本次 review 以当前 implementation plan、后端架构文档和源码 diff 为依据。
 
 ## Touched Known-Debt Status
 

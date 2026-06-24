@@ -6,7 +6,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-09-frontend-architecture-boundary-fix`
 - Branch: `task/2026-06-09-frontend-architecture-boundary-fix`
 - Task Slug: `2026-06-09-frontend-architecture-boundary-fix`
-- Plan: `docs/plan/impl-plan/2026-06-09-frontend-architecture-boundary-fix-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-09-frontend-architecture-boundary-fix-implementation-plan.md`
 - Diff source: current uncommitted diff in the worktree
 - Files reviewed:
   - `code/frontend/src/pages/challenges/ChallengeListRoutePage.vue`

@@ -20,7 +20,7 @@
     - `code/backend/internal/module/runtime/infrastructure/cleaner_test.go`
     - `code/backend/internal/module/runtime/service_repository_test.go`
     - `code/backend/internal/module/runtime/service_topology_test.go`
-    - `docs/plan/impl-plan/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md`
     - `feedback/2026-06-09-event-wakeup-keeps-durable-state-owner.md`
 
 - Classification check:
@@ -33,7 +33,7 @@
 
 ### Resolved minor
 
-1. `docs/plan/impl-plan/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md:58-60`
+1. `docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-stopping-cleanup-optimization-implementation-plan.md:58-60`
    - Severity: Minor
    - Issue: plan 里的 migration 文件名仍写成 `000002_instances_stopping_cleanup_index.*`，而实际提交物是 `000014_instances_stopping_cleanup_index.*`。
    - Why it matters: 当前代码和 migration 排序本身没有问题，但 plan 作为本次 task 的审计入口，文件名漂移会降低后续追溯和 review 复盘的准确性。

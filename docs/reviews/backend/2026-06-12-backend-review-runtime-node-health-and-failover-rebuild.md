@@ -19,7 +19,7 @@
   - The health evaluator scans only `ListSchedulableNodes` (`node_health_service.go:91`, `node_repository.go:238`-`246`), so an unschedulable but still alive node will stop receiving heartbeat updates, eventually look stale, and still will not trigger node-offline requeue because it is no longer in the health scan set.
   - That leaves existing instances in a bad middle state: no new scheduling lands there, but existing container access / cleanup / checker / file / SSH operations can fail without the offline failover path rebuilding them elsewhere.
 - Architecture conflict:
-  - The implementation plan says explicit old bindings should continue routing on healthy nodes and fail when the node is offline: `docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md:57`.
+  - The implementation plan says explicit old bindings should continue routing on healthy nodes and fail when the node is offline: `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md:57`.
   - Current docs describe `schedulable` as the eligibility condition for default new scheduling (`docs/architecture/backend/03-container-architecture.md:74`, `docs/operations/runtime-agent-deployment.md:150`), while explicit old operations are documented as failing for offline nodes (`docs/operations/runtime-agent-deployment.md:152`), not for merely unschedulable nodes.
 - Required fix:
   - Split the lookup semantics:
@@ -84,7 +84,7 @@ cd code/backend && timeout 90s go test ./internal/module/container_runtime/appli
 cd code/backend && timeout 90s go test ./internal/app/composition -run 'RuntimeNode.*(Offline|Healthy|Selector|Router)|RuntimeNodeFailover|RuntimeModule' -count=1
 cd code/backend && timeout 180s go test ./internal/module/container_runtime/... ./internal/module/instance/... ./internal/module/practice/application/commands ./internal/app/composition ./internal/config -run 'RuntimeNode|NodeHealth|Requeue|RuntimeMaintenance|Provisioning|DesiredAWD|StartChallenge|Defaults|Validate' -count=1
 timeout 120s python3 scripts/check-docs-consistency.py
-timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md docs/reviews/backend/2026-06-12-backend-review-runtime-node-health-and-failover-rebuild.md
+timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md docs/reviews/backend/2026-06-12-backend-review-runtime-node-health-and-failover-rebuild.md
 ```
 
 `completion-full` 不需要由 reviewer 本轮重跑；实现上下文已有 PASS 证据。修复后如 touched surface 扩大，再由实现上下文按 code-workflow completion gate 判断是否重跑。
@@ -105,7 +105,7 @@ timeout 60s git diff --check -- code/backend docs/architecture/backend docs/oper
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-12-runtime-node-health-and-failover-rebuild`
 - Branch: `task/2026-06-12-runtime-node-health-and-failover-rebuild`
 - Task slug: `2026-06-12-runtime-node-health-and-failover-rebuild`
-- Plan: `docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
 - Diff source: current worktree uncommitted + untracked diff
 - Reviewer mode: independent code-workflow gate review; production code not modified
 - Review archive path: `docs/reviews/backend/2026-06-12-backend-review-runtime-node-health-and-failover-rebuild.md`
@@ -145,8 +145,8 @@ timeout 60s git diff --check -- code/backend docs/architecture/backend docs/oper
 - `docs/architecture/backend/04-api-design.md`
 - `docs/architecture/backend/05-key-flows.md`
 - `docs/operations/runtime-agent-deployment.md`
-- `docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
-- `docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
 
 ## Validation Evidence Reviewed
 
@@ -156,7 +156,7 @@ timeout 60s git diff --check -- code/backend docs/architecture/backend docs/oper
 - `cd code/backend && timeout 90s go test ./internal/module/container_runtime/... -run 'NodeHealth|RuntimeNode' -count=1`: PASS
 - `cd code/backend && timeout 180s go test ./internal/module/container_runtime/... ./internal/module/instance/... ./internal/module/practice/application/commands ./internal/app/composition ./internal/config -run 'RuntimeNode|NodeHealth|Requeue|RuntimeMaintenance|Provisioning|DesiredAWD|StartChallenge|Defaults|Validate' -count=1`: PASS
 - `timeout 120s python3 scripts/check-docs-consistency.py`: PASS
-- `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`: PASS
+- `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`: PASS
 - `timeout 300s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`: PASS
 
 Reviewer did not rerun `completion-full`.

@@ -24,11 +24,11 @@ AWD 的 `docker_bridge_alias` 依赖同一 Docker 宿主内的 bridge network。
 
 ## Tracked By Implementation Plan
 
-- [x] Tracked by `docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：迁移 `instances.node_id` 到 `instances.runtime_node_id`，同步 Go entity、repository、DTO、测试和文档命名；迁移期间明确旧字段只表示平台 `runtime_nodes.id`。
-- [x] Tracked by `docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：为 `instances(runtime_node_id, container_id)` 和 `instances(runtime_node_id, network_id)` 增加辅助索引，确保执行面按 runtime node + Docker 对象定位。
-- [x] Tracked by `docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：新增 AWD contest runtime placement 轻量持久化，记录一场 AWD 比赛绑定的 `runtime_node_id`。
-- [x] Tracked by `docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：调整 AWD 防守重启和 desired reconcile 的 runtime node 选择：已绑定 contest 只能在绑定 node 上重建；绑定 node 不可用时不自动漂移。
-- [x] Tracked by `docs/plan/impl-plan/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：同步更新架构文档和测试，明确 `runtime_node_id + container_id` 复合执行身份、Docker 内部 node id 命名边界、以及 AWD 赛中不自动跨 node 重建的规则。
+- [x] Tracked by `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：迁移 `instances.node_id` 到 `instances.runtime_node_id`，同步 Go entity、repository、DTO、测试和文档命名；迁移期间明确旧字段只表示平台 `runtime_nodes.id`。
+- [x] Tracked by `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：为 `instances(runtime_node_id, container_id)` 和 `instances(runtime_node_id, network_id)` 增加辅助索引，确保执行面按 runtime node + Docker 对象定位。
+- [x] Tracked by `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：新增 AWD contest runtime placement 轻量持久化，记录一场 AWD 比赛绑定的 `runtime_node_id`。
+- [x] Tracked by `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：调整 AWD 防守重启和 desired reconcile 的 runtime node 选择：已绑定 contest 只能在绑定 node 上重建；绑定 node 不可用时不自动漂移。
+- [x] Tracked by `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-runtime-node-identity-and-placement-implementation-plan.md`：同步更新架构文档和测试，明确 `runtime_node_id + container_id` 复合执行身份、Docker 内部 node id 命名边界、以及 AWD 赛中不自动跨 node 重建的规则。
 
 ## Open Items
 

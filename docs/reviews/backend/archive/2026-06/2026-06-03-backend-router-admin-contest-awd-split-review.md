@@ -7,7 +7,7 @@
   - `code/backend/internal/app/router_routes.go`
   - `code/backend/internal/app/router_admin_contest_routes.go`
   - `code/backend/internal/app/router_admin_contest_routes_test.go`
-  - `docs/plan/impl-plan/2026-06-03-backend-router-admin-contest-awd-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-router-admin-contest-awd-split-plan.md`
   - `.harness/reuse-decisions/backend-router-admin-contest-awd-split.md`
 
 ## Classification Check

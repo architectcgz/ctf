@@ -34,7 +34,7 @@
 - Source docs:
   - `AGENTS.md`
   - `.githooks/README.md`
-  - `docs/plan/impl-plan/2026-06-05-workflow-governance-refactor-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-05-workflow-governance-refactor-plan.md`
 - Related architecture/contracts:
   - `.githooks/commit-msg`
   - `scripts/check-commit-message.sh`

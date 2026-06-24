@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `class-insight-entity-panel-owner-cleanup`
 - Files reviewed:
   - `.harness/reuse-decisions/class-insight-entity-panel-owner-cleanup.md`
-  - `docs/plan/impl-plan/2026-06-01-class-insight-entity-panel-owner-cleanup-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-01-class-insight-entity-panel-owner-cleanup-plan.md`
   - `code/frontend/src/entities/class-insight/index.ts`
   - `code/frontend/src/entities/class-insight/ui/index.ts`
   - `code/frontend/src/entities/class-insight/ui/ClassInsightsPanel.vue`
@@ -49,7 +49,7 @@
 ## Required Re-validation
 
 - `cd code/frontend && npm run test:run -- src/pages/teacher/__tests__/TeacherClassStudents.test.ts src/features/teaching/class-report-export/ui/ClassReportExportDialog.test.ts src/pages/teacher/__tests__/teacherEyebrowSharedStyles.test.ts src/pages/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts`
-- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/class-insight-entity-panel-owner-cleanup.md docs/plan/impl-plan/2026-06-01-class-insight-entity-panel-owner-cleanup-plan.md code/frontend/src/entities/class-insight/index.ts code/frontend/src/entities/class-insight/ui/index.ts code/frontend/src/entities/class-insight/ui/ClassInsightsPanel.vue code/frontend/src/entities/class-insight/ui/ClassReviewPanel.vue code/frontend/src/entities/class-insight/ui/ClassTrendPanel.vue code/frontend/src/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue code/frontend/src/features/teaching/class-students-workspace/ui/index.ts code/frontend/src/features/teaching/class-report-export/ui/ClassReportExportPreviewSection.vue code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts code/frontend/src/pages/teacher/__tests__/teacherEyebrowSharedStyles.test.ts code/frontend/src/pages/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts code/frontend/src/features/teaching/class-report-export/ui/ClassReportExportDialog.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/class-insight-entity-panel-owner-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-class-insight-entity-panel-owner-cleanup-plan.md code/frontend/src/entities/class-insight/index.ts code/frontend/src/entities/class-insight/ui/index.ts code/frontend/src/entities/class-insight/ui/ClassInsightsPanel.vue code/frontend/src/entities/class-insight/ui/ClassReviewPanel.vue code/frontend/src/entities/class-insight/ui/ClassTrendPanel.vue code/frontend/src/features/teaching/class-students-workspace/ui/ClassStudentsPage.vue code/frontend/src/features/teaching/class-students-workspace/ui/index.ts code/frontend/src/features/teaching/class-report-export/ui/ClassReportExportPreviewSection.vue code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts code/frontend/src/pages/teacher/__tests__/teacherEyebrowSharedStyles.test.ts code/frontend/src/pages/teacher/__tests__/teacherDetailSurfaceAlignment.test.ts code/frontend/src/features/teaching/class-report-export/ui/ClassReportExportDialog.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-workflow-complete.sh`
 

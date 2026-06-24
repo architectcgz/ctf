@@ -61,8 +61,8 @@
 ## Inputs
 
 - Source docs:
-  - `docs/plan/impl-plan/2026-06-12-backend-error-management-improvement-plan.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-backend-error-management-improvement-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Related architecture/contracts:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `code/backend/tests/README.md`
@@ -92,8 +92,8 @@
   - `code/backend/internal/app/router_routes.go`
   - `code/backend/tests/architecture/test_architecture_test.go`
   - `docs/architecture/backend/04-api-design.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
 - Review:
   - `code/backend/internal/httpresponse/response.go`
   - `code/backend/internal/module/challenge/contracts/errors.go`
@@ -222,8 +222,8 @@
   - Create:
     - `docs/reviews/backend/2026-06-13-backend-review-error-contract-baseline.md`
   - Modify:
-    - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-    - `docs/plan/impl-plan/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
   - Review:
   - Test:
 - Steps:
@@ -330,7 +330,7 @@
 - Command: `cd code/backend && go test ./internal/apperror ./internal/module/challenge/infrastructure ./tests/architecture -run 'Test(AppError|ContractRepository|TransportLayers)' -count=1`
   - Result: PASS
   - Notes: Combined focused validation for this slice.
-- Command: `git diff --check -- code/backend/internal/apperror/error_test.go code/backend/internal/module/challenge/infrastructure/contract_repository.go code/backend/internal/module/challenge/infrastructure/contract_repository_test.go code/backend/internal/app/router_routes.go code/backend/tests/architecture/test_architecture_test.go docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md docs/plan/impl-plan/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
+- Command: `git diff --check -- code/backend/internal/apperror/error_test.go code/backend/internal/module/challenge/infrastructure/contract_repository.go code/backend/internal/module/challenge/infrastructure/contract_repository_test.go code/backend/internal/app/router_routes.go code/backend/tests/architecture/test_architecture_test.go docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
   - Result: PASS
   - Notes: No whitespace errors.
 - Command: `bash scripts/check-startup-gate.sh`
@@ -398,7 +398,7 @@
   - `code/backend/tests/README.md`
   - `code/backend/internal/httpresponse/response.go`
   - `code/backend/internal/apperror/error.go`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Known risks / review focus:
   - Guardrail 是否误伤 app composition root 的 legitimate wiring。
   - `ContractRepository` 映射 public error 是否改变其他跨模块调用期望。

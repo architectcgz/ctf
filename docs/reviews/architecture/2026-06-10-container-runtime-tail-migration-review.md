@@ -6,7 +6,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-10-container-runtime-tail-migration`
 - Branch: `task/2026-06-10-container-runtime-tail-migration`
 - Task slug: `2026-06-10-container-runtime-tail-migration`
-- Plan: `docs/plan/impl-plan/2026-06-10-container-runtime-tail-migration-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-10-container-runtime-tail-migration-implementation-plan.md`
 - Diff source: 当前 worktree 相对 `HEAD` 的未提交改动（含未跟踪 plan/review 文档）
 - Files reviewed:
   - `code/backend/internal/module/container_runtime/**`
@@ -19,7 +19,7 @@
   - `code/backend/tests/system/http/**`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
-  - `docs/plan/impl-plan/2026-06-10-container-runtime-tail-migration-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-10-container-runtime-tail-migration-implementation-plan.md`
 
 ## Classification Check
 

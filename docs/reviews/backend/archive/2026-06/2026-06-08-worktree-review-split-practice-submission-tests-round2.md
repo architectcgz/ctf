@@ -6,7 +6,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/.worktrees/2026-06-08-multi-instance-flag-secret-contract/2026-06-08-split-practice-submission-tests`
 - Branch: `task/2026-06-08-split-practice-submission-tests`
 - Task: `2026-06-08-split-practice-submission-tests`
-- Plan: `docs/plan/impl-plan/2026-06-08-split-practice-submission-tests-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-08-split-practice-submission-tests-implementation-plan.md`
 - Files reviewed:
   - `code/backend/internal/module/practice/application/commands/service_test.go`
   - `code/backend/internal/module/practice/application/commands/submission_manual_review_test.go`

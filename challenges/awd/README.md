@@ -67,6 +67,15 @@ POST /api/v1/authoring/awd-challenge-imports
 POST /api/v1/authoring/awd-challenge-imports/:id/commit
 ```
 
+导入时的服务端存储由这些 owner 承接：
+
+- `AWDChallengeImportPreviewStore`：保存上传 zip、解包预览 workspace 和 preview JSON。
+- `ChallengePackageStorage`：提交导入后持久化 AWD 题包 source、导出 archive 和 image build source。
+- `AWDCheckerArtifactStore`：持久化脚本型 checker 等不应进入选手资源的私有 checker artifact。
+- `ImageBuildService`：对 `platform_build` AWD 题包创建并推进 `images` / `image_build_jobs` 状态机。
+
+仓库内 `<period>/<slug>/` 和 `dist/<slug>.zip` 不参与平台运行时读取；平台运行态只依赖导入后落到数据库和 storage adapter 管理目录里的事实。
+
 导入后，在 AWD 竞赛后台把 AWD 题目添加为 `contest_awd_services`，再由队伍在学生端启动队伍共享实例。
 
 上传预览阶段会校验 `defense_workspace` / `defense_scope` 的结构、路径存在性、workspace roots 覆盖关系、runtime mounts 合法性，以及固定运行入口是否被错误放入学生工作区；不符合约定的包不会进入待确认队列。

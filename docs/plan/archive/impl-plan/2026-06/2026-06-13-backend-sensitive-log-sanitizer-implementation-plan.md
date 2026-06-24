@@ -58,8 +58,8 @@
 ## Inputs
 
 - Source docs:
-  - `docs/plan/impl-plan/2026-06-12-backend-error-management-improvement-plan.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-backend-error-management-improvement-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Related architecture/contracts:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `code/backend/tests/README.md`
@@ -82,8 +82,8 @@
 - Modify:
   - `code/backend/internal/module/ops/infrastructure/dashboard_state_store.go`
   - `code/backend/tests/architecture/test_architecture_test.go`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
 - Review:
   - `code/backend/internal/module/contest/application/jobs/awd_probe_support.go`
   - `code/backend/internal/module/contest/application/jobs/awd_script_checker_runner.go`
@@ -175,12 +175,12 @@
 - Files:
   - Create:
   - Modify:
-    - `docs/plan/impl-plan/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
   - Review:
   - Test:
 - Steps:
   - [x] Step 9: 运行 `cd code/backend && go test ./internal/platform/logsanitize ./tests/architecture -run 'Test(Sanitize|NoRawSensitiveZapFields)' -count=1`。
-  - [x] Step 10: 运行 `git diff --check -- code/backend/internal/platform/logsanitize/sanitize.go code/backend/internal/platform/logsanitize/sanitize_test.go code/backend/internal/module/ops/infrastructure/dashboard_state_store.go code/backend/tests/architecture/test_architecture_test.go docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md docs/plan/impl-plan/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`。
+  - [x] Step 10: 运行 `git diff --check -- code/backend/internal/platform/logsanitize/sanitize.go code/backend/internal/platform/logsanitize/sanitize_test.go code/backend/internal/module/ops/infrastructure/dashboard_state_store.go code/backend/tests/architecture/test_architecture_test.go docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`。
   - [x] Step 11: 运行 `bash scripts/check-startup-gate.sh`。
   - [x] Step 12: 准备 independent review handoff。
 - Validation: 见上。
@@ -257,7 +257,7 @@
 - Command: `cd code/backend && go test ./internal/module/ops/infrastructure -count=1`
   - Result: PASS
   - Notes: Confirms the migrated ops infrastructure package still compiles and tests pass.
-- Command: `git diff --check -- code/backend/internal/platform/logsanitize/sanitize.go code/backend/internal/platform/logsanitize/sanitize_test.go code/backend/internal/module/ops/infrastructure/dashboard_state_store.go code/backend/tests/architecture/test_architecture_test.go docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md docs/plan/impl-plan/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
+- Command: `git diff --check -- code/backend/internal/platform/logsanitize/sanitize.go code/backend/internal/platform/logsanitize/sanitize_test.go code/backend/internal/module/ops/infrastructure/dashboard_state_store.go code/backend/tests/architecture/test_architecture_test.go docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
   - Result: PASS
   - Notes: No whitespace errors.
 - Command: `bash scripts/check-startup-gate.sh`
@@ -301,7 +301,7 @@
 - Architecture / contract inputs:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `code/backend/tests/README.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Known risks / review focus:
   - Guardrail 误伤普通业务 key。
   - `SanitizeKey` 输出仍需足够定位 namespace，但不能保留完整 token。

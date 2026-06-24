@@ -76,7 +76,7 @@
   - `code/backend/internal/module/assessment/application/commands/report_writer_test.go`
   - `code/backend/internal/module/assessment/application/commands/report_awd_review_builder_test.go`
   - `code/backend/internal/module/assessment/application/commands/report_awd_review_render_test.go`
-  - `docs/plan/impl-plan/2026-06-11-assessment-report-pdf-service-split-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-11-assessment-report-pdf-service-split-implementation-plan.md`
 - Review:
   - `code/backend/internal/module/assessment/application/commands/awd_review_export_renderer.go` 是否只保留薄兼容入口。
   - `code/backend/internal/module/assessment/application/reporting/*` 是否只承载输出结构与 renderer，不读取 repository。

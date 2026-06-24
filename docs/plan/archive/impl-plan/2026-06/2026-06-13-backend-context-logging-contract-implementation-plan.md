@@ -56,8 +56,8 @@
 ## Inputs
 
 - Source docs:
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-  - `docs/plan/impl-plan/2026-06-12-backend-error-management-improvement-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-backend-error-management-improvement-plan.md`
 - Related architecture/contracts:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `code/backend/internal/app/backend_context_architecture_test.go`
@@ -88,7 +88,7 @@
   - `code/backend/internal/module/instance/application/commands/maintenance_service.go`
   - `code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
   - `code/backend/tests/architecture/test_architecture_test.go`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Review:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
   - `code/backend/internal/module/practice/application/commands/error_logging.go`
@@ -188,7 +188,7 @@
     - `code/backend/internal/module/instance/application/commands/maintenance_service.go`
     - `code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
     - `code/backend/tests/architecture/test_architecture_test.go`
-    - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
   - Review:
     - `code/backend/internal/module/auth/api/http/handler.go`
     - `code/backend/internal/module/instance/application/commands/startup_runtime_recovery_service.go`
@@ -249,9 +249,9 @@
 
 - Current fact sources to read:
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Fact sources to update after implementation:
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
   - 如 helper owner 需要沉淀，再更新 `docs/architecture/backend/04-api-design.md` 或相关 backend 架构事实源。
 - Plan-only notes that must not become architecture source:
   - “先只试点三条路径”的 rollout 说明属于实施策略，不是长期架构事实。
@@ -313,7 +313,7 @@
  - Architecture / contract inputs:
   - `AGENTS.md`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
-  - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
  - Known risks / review focus:
   - request_id 是否真正进入 downstream `context.Context`
   - helper 是否误绑到 `internal/infrastructure/logger`

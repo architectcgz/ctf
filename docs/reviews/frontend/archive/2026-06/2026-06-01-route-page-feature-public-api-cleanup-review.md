@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `route-page-feature-public-api-cleanup`
 - Files reviewed:
   - `.harness/reuse-decisions/route-page-feature-public-api-cleanup.md`
-  - `docs/plan/impl-plan/2026-06-01-route-page-feature-public-api-cleanup-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-01-route-page-feature-public-api-cleanup-plan.md`
   - `code/frontend/src/pages/teacher/TeacherDashboardRoutePage.vue`
   - `code/frontend/src/pages/platform/PlatformOverviewRoutePage.vue`
   - `code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts`
@@ -41,7 +41,7 @@
 ## Required Re-validation
 
 - `cd code/frontend && npm run test:run -- src/__tests__/routePageArchitectureBoundary.test.ts src/pages/teacher/__tests__/TeacherDashboard.test.ts src/pages/platform/__tests__/PlatformOverview.test.ts`
-- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/route-page-feature-public-api-cleanup.md docs/plan/impl-plan/2026-06-01-route-page-feature-public-api-cleanup-plan.md docs/reviews/frontend/2026-06-01-route-page-feature-public-api-cleanup-review.md code/frontend/src/pages/teacher/TeacherDashboardRoutePage.vue code/frontend/src/pages/platform/PlatformOverviewRoutePage.vue code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts code/frontend/src/pages/teacher/__tests__/TeacherDashboard.test.ts code/frontend/src/pages/platform/__tests__/PlatformOverview.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/route-page-feature-public-api-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-route-page-feature-public-api-cleanup-plan.md docs/reviews/frontend/2026-06-01-route-page-feature-public-api-cleanup-review.md code/frontend/src/pages/teacher/TeacherDashboardRoutePage.vue code/frontend/src/pages/platform/PlatformOverviewRoutePage.vue code/frontend/src/__tests__/routePageArchitectureBoundary.test.ts code/frontend/src/pages/teacher/__tests__/TeacherDashboard.test.ts code/frontend/src/pages/platform/__tests__/PlatformOverview.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-workflow-complete.sh`
 

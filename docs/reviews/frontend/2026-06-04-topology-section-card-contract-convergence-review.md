@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `frontend-topology-section-card-contract-convergence`
 - Files reviewed:
   - `.harness/reuse-decisions/frontend-topology-section-card-contract-convergence.md`
-  - `docs/plan/impl-plan/2026-06-04-topology-section-card-contract-convergence-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-04-topology-section-card-contract-convergence-plan.md`
   - `code/frontend/src/shared/ui/common/SectionCard.vue`
   - `code/frontend/src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue`
   - `code/frontend/src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue`
@@ -44,7 +44,7 @@
 - `cd code/frontend && npm run test:run -- src/features/challenge-topology-studio/ui/ChallengeTopologyStudioPage.test.ts src/features/challenge-topology-studio/model/topologyStudioBoundary.test.ts`
 - `cd code/frontend && npm run typecheck`
 - `bash scripts/check-frontend-architecture.sh --quick`
-- `git diff --check -- code/frontend/src/shared/ui/common/SectionCard.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue code/frontend/scripts/vue-deep-allowlist.json .harness/reuse-decisions/frontend-topology-section-card-contract-convergence.md docs/plan/impl-plan/2026-06-04-topology-section-card-contract-convergence-plan.md docs/reviews/frontend/2026-06-04-topology-section-card-contract-convergence-review.md`
+- `git diff --check -- code/frontend/src/shared/ui/common/SectionCard.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyChallengeWorkbench.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyTemplateWorkbench.vue code/frontend/src/features/challenge-topology-studio/ui/TopologyTemplateSidePanel.vue code/frontend/scripts/vue-deep-allowlist.json .harness/reuse-decisions/frontend-topology-section-card-contract-convergence.md docs/plan/archive/impl-plan/2026-06/2026-06-04-topology-section-card-contract-convergence-plan.md docs/reviews/frontend/2026-06-04-topology-section-card-contract-convergence-review.md`
 
 ## Residual Risk
 

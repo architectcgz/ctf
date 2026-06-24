@@ -5,7 +5,7 @@
   - Branch: `task/2026-06-13-backend-async-safego`
   - Commit range: `ef83105c79728cceabc4e58fe150eca3c28c5e45..working-tree`
   - Diff basis: `ef83105c79728cceabc4e58fe150eca3c28c5e45..working-tree`
-  - Plan: `docs/plan/impl-plan/2026-06-13-backend-async-safego-implementation-plan.md`
+  - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-async-safego-implementation-plan.md`
   - Files reviewed:
     - `code/backend/internal/app/composition/background_job_loop.go`
     - `code/backend/internal/app/composition/root.go`
@@ -17,8 +17,8 @@
     - `code/backend/internal/module/instance/infrastructure/cleaner.go`
     - `code/backend/internal/module/instance/infrastructure/cleaner_safego_test.go`
     - `code/backend/tests/architecture/test_architecture_test.go`
-    - `docs/plan/impl-plan/2026-06-13-backend-async-safego-implementation-plan.md`
-    - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-async-safego-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
 - Reviewer mode: independent gate review
 - Classification check: agree with pipeline classification `非琐碎任务`
 - Gate verdict: `pass`

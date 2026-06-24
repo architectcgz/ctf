@@ -29,9 +29,9 @@
 
 ## 沉淀状态
 
-- 状态：已沉淀
+- 状态：archived
 - Owner：`ctf/AGENTS.md`
 - 链接：
   - `/home/azhi/workspace/projects/ctf/AGENTS.md`
-  - `/home/azhi/workspace/projects/ctf/docs/plan/impl-plan/2026-06-04-embedded-layout-owner-retirement-plan.md`
+  - `/home/azhi/workspace/projects/ctf/docs/plan/archive/impl-plan/2026-06/2026-06-04-embedded-layout-owner-retirement-plan.md`
   - `/home/azhi/workspace/projects/ctf/.harness/reuse-decisions/embedded-layout-owner-retirement.md`

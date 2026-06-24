@@ -43,7 +43,7 @@
 
 - `bash scripts/check-task-intake.sh --reuse-decision teacher-class-students-page-owner-cleanup`
 - `cd code/frontend && npm run test:run -- src/pages/teacher/__tests__/TeacherClassStudents.test.ts`
-- `git diff --check -- .harness/reuse-decisions/teacher-class-students-page-owner-cleanup.md docs/plan/impl-plan/2026-06-01-teacher-class-students-page-owner-cleanup-plan.md code/frontend/src/features/teaching/class-students-workspace/ui/TeacherClassStudentsPage.vue code/frontend/src/features/teaching/class-students-workspace/ui/index.ts code/frontend/src/pages/teacher/TeacherClassStudentsRoutePage.vue code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `git diff --check -- .harness/reuse-decisions/teacher-class-students-page-owner-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-teacher-class-students-page-owner-cleanup-plan.md code/frontend/src/features/teaching/class-students-workspace/ui/TeacherClassStudentsPage.vue code/frontend/src/features/teaching/class-students-workspace/ui/index.ts code/frontend/src/pages/teacher/TeacherClassStudentsRoutePage.vue code/frontend/src/pages/teacher/__tests__/TeacherClassStudents.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 
 ## Review Focus
 

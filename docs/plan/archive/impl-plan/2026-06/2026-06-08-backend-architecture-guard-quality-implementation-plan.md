@@ -65,7 +65,7 @@
   - `docs/architecture/README.md`
   - `docs/architecture/backend/README.md`
   - `docs/architecture/backend/01-system-architecture.md`
-  - `docs/plan/impl-plan/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
 - Review:
   - `code/backend/internal/app/backend_context_architecture_test.go`
   - `code/backend/internal/module/*/architecture_test.go`

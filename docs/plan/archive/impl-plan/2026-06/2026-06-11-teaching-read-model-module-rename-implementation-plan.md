@@ -43,7 +43,7 @@
   - `docs/architecture/features/教学复盘建议生成架构.md`
 - Related prior work:
   - `docs/plan/archive/impl-plan/2026-05/2026-05-24-admin-teaching-query-owner-decoupling-implementation-plan.md`
-  - `docs/plan/impl-plan/2026-06-10-assessment-teaching-query-boundary-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-10-assessment-teaching-query-boundary-implementation-plan.md`
 
 ## Task Classification
 

@@ -50,7 +50,7 @@
 
 - `bash scripts/check-task-intake.sh --reuse-decision student-analysis-page-owner-cleanup`
 - `cd code/frontend && npm run test:run -- src/pages/teacher/__tests__/TeacherStudentAnalysis.test.ts src/pages/platform/__tests__/PlatformStudentAnalysis.test.ts`
-- `git diff --check -- .harness/reuse-decisions/student-analysis-page-owner-cleanup.md docs/plan/impl-plan/2026-06-01-student-analysis-page-owner-cleanup-plan.md code/frontend/src/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspacePage.vue code/frontend/src/features/teaching/student-analysis-workspace/ui/index.ts code/frontend/src/pages/teacher/TeacherStudentAnalysisRoutePage.vue code/frontend/src/pages/platform/PlatformStudentAnalysisRoutePage.vue code/frontend/src/pages/teacher/__tests__/TeacherStudentAnalysis.test.ts code/frontend/src/pages/platform/__tests__/PlatformStudentAnalysis.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `git diff --check -- .harness/reuse-decisions/student-analysis-page-owner-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-student-analysis-page-owner-cleanup-plan.md code/frontend/src/features/teaching/student-analysis-workspace/ui/StudentAnalysisWorkspacePage.vue code/frontend/src/features/teaching/student-analysis-workspace/ui/index.ts code/frontend/src/pages/teacher/TeacherStudentAnalysisRoutePage.vue code/frontend/src/pages/platform/PlatformStudentAnalysisRoutePage.vue code/frontend/src/pages/teacher/__tests__/TeacherStudentAnalysis.test.ts code/frontend/src/pages/platform/__tests__/PlatformStudentAnalysis.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 
 ## Review Focus
 

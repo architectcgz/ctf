@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `teacher-class-management-page-owner-cleanup`
 - Files reviewed:
   - `.harness/reuse-decisions/teacher-class-management-page-owner-cleanup.md`
-  - `docs/plan/impl-plan/2026-06-01-teacher-class-management-page-owner-cleanup-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-01-teacher-class-management-page-owner-cleanup-plan.md`
   - `code/frontend/src/features/teacher/class-management/model/useClassManagementPage.ts`
   - `code/frontend/src/features/teacher/class-management/ui/TeacherClassManagementPage.vue`
   - `code/frontend/src/features/teacher/class-management/ui/index.ts`
@@ -41,7 +41,7 @@
 ## Required Re-validation
 
 - `cd code/frontend && npm run test:run -- src/pages/teacher/__tests__/ClassManagement.test.ts`
-- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/teacher-class-management-page-owner-cleanup.md docs/plan/impl-plan/2026-06-01-teacher-class-management-page-owner-cleanup-plan.md code/frontend/src/features/teacher/class-management/model/useClassManagementPage.ts code/frontend/src/features/teacher/class-management/ui/TeacherClassManagementPage.vue code/frontend/src/features/teacher/class-management/ui/index.ts code/frontend/src/pages/teacher/ClassManagementRoutePage.vue code/frontend/src/pages/teacher/__tests__/ClassManagement.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/teacher-class-management-page-owner-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-teacher-class-management-page-owner-cleanup-plan.md code/frontend/src/features/teacher/class-management/model/useClassManagementPage.ts code/frontend/src/features/teacher/class-management/ui/TeacherClassManagementPage.vue code/frontend/src/features/teacher/class-management/ui/index.ts code/frontend/src/pages/teacher/ClassManagementRoutePage.vue code/frontend/src/pages/teacher/__tests__/ClassManagement.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-workflow-complete.sh`
 

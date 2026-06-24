@@ -18,7 +18,7 @@ Scope: current uncommitted diff against `HEAD`
   - `code/backend/internal/module/runtime/application/commands/runtime_maintenance_service_test.go`
   - `code/backend/internal/module/runtime/service_test.go`
   - `code/backend/internal/module/runtime/service_topology_test.go`
-  - `docs/plan/impl-plan/2026-06-09-runtime-instance-port-alias-cleanup-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-instance-port-alias-cleanup-implementation-plan.md`
 
 ## Classification Check
 

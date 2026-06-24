@@ -37,7 +37,7 @@
   - `code/backend/schema/ctf_schema_submission.sql`
   - `code/backend/internal/app/*migration*_test.go`
 - Related prior work:
-  - `docs/plan/impl-plan/2026-06-05-ctf-api-auto-migrate-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-05-ctf-api-auto-migrate-implementation-plan.md`
 
 ## Task Classification
 
@@ -59,7 +59,7 @@
   - `docs/architecture/backend/design/awd-engine-migration.md`
 - Create:
   - `code/backend/schema/ctf_schema_submission.sql`
-  - `docs/plan/impl-plan/2026-06-08-backend-migration-squash-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-migration-squash-implementation-plan.md`
 - Delete:
   - `code/backend/migrations/000002_create_awd_service_operations.{up,down}.sql`
   - `code/backend/migrations/000003_create_contest_status_transitions.{up,down}.sql`

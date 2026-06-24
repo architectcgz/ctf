@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-13-backend-error-contract-baseline`
 - Branch: `task/2026-06-13-backend-error-contract-baseline`
 - Task slug: `2026-06-13-backend-error-contract-baseline`
-- Implementation plan: `docs/plan/impl-plan/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
+- Implementation plan: `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-contract-baseline-implementation-plan.md`
 - Review target:
   - Independent gate review target: commit `2fee39e9f60cc1040e29efb861b093368feb154d`, diff basis `HEAD~1..HEAD`
   - Post-review branch sync: merge commit `1cf88c8c5` only absorbed `main` 上已落地的 task-group / API design 文档事实，不改变本 slice 的 Go 行为面

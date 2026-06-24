@@ -5,7 +5,7 @@
   - Branch: `task/2026-06-13-backend-context-logging-contract`
   - Commit: `3d3abe1211e0c255c26842371c4eace8c2c5d8e5`
   - Diff basis: `ae161299f4d9db9f6468b037530e831b36d52608..3d3abe1211e0c255c26842371c4eace8c2c5d8e5`
-  - Plan: `docs/plan/impl-plan/2026-06-13-backend-context-logging-contract-implementation-plan.md`
+  - Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-context-logging-contract-implementation-plan.md`
   - Files reviewed:
     - `code/backend/internal/middleware/request_id.go`
     - `code/backend/internal/middleware/request_id_test.go`
@@ -20,8 +20,8 @@
     - `code/backend/internal/module/container_runtime/application/commands/provisioning_service.go`
     - `code/backend/internal/module/container_runtime/application/commands/context_logging_test.go`
     - `code/backend/tests/architecture/test_architecture_test.go`
-    - `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-    - `docs/plan/impl-plan/2026-06-13-backend-context-logging-contract-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-context-logging-contract-implementation-plan.md`
 - Reviewer mode: independent gate review
 - Classification check: agree with pipeline classification `非琐碎任务`
 - Gate verdict: `pass`

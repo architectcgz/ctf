@@ -58,7 +58,7 @@
   - `feedback/AGENTS.md`
   - `docs/文档规范.md`
 - Related architecture/contracts:
-  - `docs/plan/impl-plan/2026-06-13-backend-async-safego-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-async-safego-implementation-plan.md`
   - `docs/reviews/backend/2026-06-13-backend-review-async-safego.md`
 - Related prior work:
   - SafeGo 试点 slice：`2026-06-13-backend-async-safego`

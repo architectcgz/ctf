@@ -8,7 +8,7 @@
   - `code/backend/internal/app/router_admin_ops_routes.go`
   - `code/backend/internal/app/router_admin_identity_routes.go`
   - `code/backend/internal/app/router_admin_identity_ops_routes_test.go`
-  - `docs/plan/impl-plan/2026-06-03-backend-router-admin-identity-ops-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-router-admin-identity-ops-split-plan.md`
   - `.harness/reuse-decisions/backend-router-admin-identity-ops-split.md`
 
 ## Classification Check

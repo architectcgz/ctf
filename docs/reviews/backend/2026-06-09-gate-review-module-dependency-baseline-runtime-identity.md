@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-module-dependency-baseline`
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-module-dependency-baseline`
 - Task slug: `2026-06-08-module-dependency-baseline`
-- Plan input read before review: `docs/plan/impl-plan/2026-06-08-module-dependency-baseline-implementation-plan.md`
+- Plan input read before review: `docs/plan/archive/impl-plan/2026-06/2026-06-08-module-dependency-baseline-implementation-plan.md`
 - Diff source: current uncommitted diff against `HEAD`
 - Files reviewed:
   - `code/backend/internal/module/instance/ports/ports.go`

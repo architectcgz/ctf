@@ -144,6 +144,6 @@
 ## 交叉链接
 
 - `code/backend/tests/README.md`
-- `docs/plan/impl-plan/2026-06-03-backend-test-architecture-phase1-plan.md`
-- `docs/plan/impl-plan/2026-06-03-backend-test-architecture-phase10-plan.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-test-architecture-phase1-plan.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-test-architecture-phase10-plan.md`
 - `feedback/2026-06-03-backend-test-layering-and-pdf-assertion-ownership.md`

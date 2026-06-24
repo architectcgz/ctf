@@ -5,10 +5,10 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-09-container-runtime-module-boundary`
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-09-container-runtime-module-boundary`
 - Task slug: `2026-06-09-container-runtime-module-boundary`
-- Plan: `docs/plan/impl-plan/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
 - Diff source: 当前 worktree 相对 `HEAD` 的未提交改动（含未跟踪文件）
 - Files reviewed:
-  - `docs/plan/impl-plan/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
   - `code/backend/internal/module/container_runtime/runtime/module.go`
   - `code/backend/internal/module/container_runtime/runtime/module_test.go`
   - `code/backend/internal/module/container_runtime/architecture_test.go`
@@ -36,7 +36,7 @@
 
 ### P1. 旧 `runtime/runtime` 并没有保持兼容转发，导出的 `Module` 字段面已经被破坏
 
-- 计划在 `docs/plan/impl-plan/2026-06-09-container-runtime-module-boundary-implementation-plan.md:154-156` 明确要求“Keep old package API compiling by aliasing `Module`, `Deps`, and `BackgroundJob`, and forwarding `Build`”。
+- 计划在 `docs/plan/archive/impl-plan/2026-06/2026-06-09-container-runtime-module-boundary-implementation-plan.md:154-156` 明确要求“Keep old package API compiling by aliasing `Module`, `Deps`, and `BackgroundJob`, and forwarding `Build`”。
 - 但当前 `code/backend/internal/module/runtime/runtime/module.go:3-10` 直接把 `Module` alias 到 `containerruntime.Module`，而新类型在 `code/backend/internal/module/container_runtime/runtime/module.go:20-33` 只导出 `ContainerFiles`，不再导出旧表面的 `ContestContainerFiles`。
 - 这不是纯内部重命名，因为旧包的兼容层正是为“保留旧 import path 继续可编译”而存在；现在任何仍按旧字段名访问 `runtimemodule.Module.ContestContainerFiles` 的遗留调用方都会直接编译失败。连当前回归测试也被同步改成了新字段名 `module.ContainerFiles`（`code/backend/internal/module/runtime/runtime/module_test.go:18`），说明 compat surface 已经实际收缩。
 - 影响：这会把“旧包只兼容转发”的承诺变成“旧包路径还在，但 exported shape 已变”，后续如果还有未迁完的旧调用点或外部 review 以为这里是稳定 compat layer，就会在再次接入或 cherry-pick 时踩到静态编译错误。
@@ -44,7 +44,7 @@
 
 ### P1. 新增的 `container_runtime` guardrail 对 Docker SDK 的封锁不成立，文档和计划存在过度声明
 
-- 计划在 `docs/plan/impl-plan/2026-06-09-container-runtime-module-boundary-implementation-plan.md:158-160` 写的是阻止新包导入 “Gin, GORM, Redis, Docker SDK, or module API packages”。
+- 计划在 `docs/plan/archive/impl-plan/2026-06/2026-06-09-container-runtime-module-boundary-implementation-plan.md:158-160` 写的是阻止新包导入 “Gin, GORM, Redis, Docker SDK, or module API packages”。
 - 但当前 `code/backend/internal/module/container_runtime/architecture_test.go:43-46` 只把 `github.com/docker/docker` 这个根路径作为 blocked import；而实际 helper `assertFileDoesNotImport` 在 `code/backend/internal/module/container_runtime/architecture_test.go:63-64` 用的是字符串全等比较。
 - 这意味着最常见的 Docker SDK 具体入口，比如 `github.com/docker/docker/client`、`github.com/docker/docker/api/types`、`github.com/docker/docker/errdefs`，都不会被这条 guard 挡住，测试仍会通过。
 - 影响：这次切片的核心价值之一就是把 `container_runtime` 的底层 builder 边界先用 guardrail 固化下来；如果 Docker concrete import 还能从最常见子包路径直接绕过，当前 guard 就不足以支撑文档里“已阻止 Docker SDK concrete type 回流”的说法。

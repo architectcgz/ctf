@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-backend-architecture-guard-quality`
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-08-backend-architecture-guard-quality`
 - Task slug: `2026-06-08-backend-architecture-guard-quality`
-- Plan: `docs/plan/impl-plan/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
 - Diff source: 当前 worktree 相对 `HEAD b80f95fb5` 的未提交改动
 - Files reviewed:
   - `code/backend/internal/testutil/archtest/archtest.go`
@@ -21,7 +21,7 @@
   - `docs/architecture/README.md`
   - `docs/architecture/backend/README.md`
   - `docs/architecture/backend/01-system-architecture.md`
-  - `docs/plan/impl-plan/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-backend-architecture-guard-quality-implementation-plan.md`
 
 ## Classification Check
 

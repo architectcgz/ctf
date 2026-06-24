@@ -16,7 +16,7 @@
   - `README.md`
   - `docs/architecture/backend/01-system-architecture.md`
   - `docs/operations/awd-host-reboot-recovery-drill.md`
-  - `docs/plan/impl-plan/2026-06-07-awd-defense-ssh-gateway-split-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-07-awd-defense-ssh-gateway-split-implementation-plan.md`
 
 # 分类检查
 

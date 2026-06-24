@@ -9,7 +9,7 @@
   - `code/backend/internal/app/router_authoring_asset_routes.go`
   - `code/backend/internal/app/router_authoring_awd_routes.go`
   - `code/backend/internal/app/router_authoring_routes_test.go`
-  - `docs/plan/impl-plan/2026-06-03-backend-router-authoring-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-router-authoring-split-plan.md`
   - `.harness/reuse-decisions/backend-router-authoring-split.md`
 
 ## Classification Check

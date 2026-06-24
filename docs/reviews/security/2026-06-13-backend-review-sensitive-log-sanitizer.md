@@ -15,8 +15,8 @@
 - `code/backend/internal/platform/logsanitize/sanitize.go`
 - `code/backend/internal/platform/logsanitize/sanitize_test.go`
 - `code/backend/tests/architecture/test_architecture_test.go`
-- `docs/plan/impl-plan/2026-06-13-backend-error-management-group/INDEX.md`
-- `docs/plan/impl-plan/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-error-management-group/INDEX.md`
+- `docs/plan/archive/impl-plan/2026-06/2026-06-13-backend-sensitive-log-sanitizer-implementation-plan.md`
 
 ## Classification Check
 

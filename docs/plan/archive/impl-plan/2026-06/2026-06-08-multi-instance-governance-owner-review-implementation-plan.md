@@ -35,7 +35,7 @@
   - `AGENTS.md`
   - `docs/文档规范.md`
   - `docs/architecture/backend/03-container-architecture.md`
-  - `docs/plan/impl-plan/2026-06-08-multi-instance-distributed-lock-hardening-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-multi-instance-distributed-lock-hardening-implementation-plan.md`
 - Related architecture/contracts:
   - `harness/policies/script-guard.json`
   - `harness/policies/script-layer-manifest.json`
@@ -66,7 +66,7 @@
   - `code/backend/internal/module/contest/application/jobs/lock_keepalive_test.go`
   - `code/backend/internal/module/runtime/infrastructure/cleaner.go`
   - `code/backend/internal/module/runtime/infrastructure/cleaner_test.go`
-  - `docs/plan/impl-plan/2026-06-08-multi-instance-governance-owner-review-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-08-multi-instance-governance-owner-review-implementation-plan.md`
 - Review:
   - `code/backend/internal/module/contest/application/jobs/status_update_runner.go`
   - `code/backend/internal/module/contest/application/jobs/awd_round_scheduler_runtime.go`

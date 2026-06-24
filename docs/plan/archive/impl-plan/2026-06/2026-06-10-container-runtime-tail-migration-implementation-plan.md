@@ -36,7 +36,7 @@
 - Source docs:
   - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
   - `docs/architecture/backend/07-modular-monolith-refactor.md`
-  - `docs/plan/impl-plan/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-09-container-runtime-module-boundary-implementation-plan.md`
 - Related architecture/contracts:
   - `code/backend/internal/module/container_runtime/architecture_test.go`
   - `code/backend/internal/module/architecture_test.go`

@@ -5,7 +5,7 @@
 - Repository: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-20-backend-goroutine-panic-owner`
 - Branch: `task/2026-06-20-backend-goroutine-panic-owner`
 - Commit: `edf54ad5e45d51e8754c1d294aeac3b8c12335a3`
-- Task / Plan: `2026-06-20-backend-goroutine-panic-owner`, `docs/plan/impl-plan/2026-06-20-backend-goroutine-panic-owner-implementation-plan.md`
+- Task / Plan: `2026-06-20-backend-goroutine-panic-owner`, `docs/plan/archive/impl-plan/2026-06/2026-06-20-backend-goroutine-panic-owner-implementation-plan.md`
 - Reviewer mode: same-context commit-bound review
 - Diff basis: `git show edf54ad5e45d51e8754c1d294aeac3b8c12335a3`
 

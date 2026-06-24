@@ -6,7 +6,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-07-awd-defense-ssh-gateway-split`
 - Branch: `task/2026-06-07-awd-defense-ssh-gateway-split`
 - Task slug: `2026-06-07-awd-defense-ssh-gateway-split`
-- Plan: `docs/plan/impl-plan/2026-06-07-awd-defense-ssh-gateway-split-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-07-awd-defense-ssh-gateway-split-implementation-plan.md`
 - Diff source: current uncommitted diff in this worktree
 - Files reviewed:
   - `README.md`

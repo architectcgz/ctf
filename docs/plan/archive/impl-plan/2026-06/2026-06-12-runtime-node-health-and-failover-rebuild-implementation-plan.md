@@ -63,8 +63,8 @@
 ## Inputs
 
 - Source docs:
-  - `docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
-  - `docs/plan/impl-plan/2026-06-12-true-ha-control-plane-and-runtime-recovery-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-control-plane-and-runtime-recovery-implementation-plan.md`
   - `docs/architecture/backend/01-system-architecture.md`
   - `docs/architecture/backend/03-container-architecture.md`
   - `docs/architecture/backend/05-key-flows.md`
@@ -117,7 +117,7 @@
   - `docs/architecture/backend/03-container-architecture.md`
   - `docs/architecture/backend/05-key-flows.md`
   - `docs/operations/runtime-agent-deployment.md`
-  - `docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
 - Review:
   - `code/backend/internal/module/instance/application/commands/runtime_maintenance_service_test.go`
   - `code/backend/internal/module/practice/application/commands/instance_provisioning_test.go`
@@ -338,12 +338,12 @@
     - `docs/architecture/backend/03-container-architecture.md`
     - `docs/architecture/backend/05-key-flows.md`
     - `docs/operations/runtime-agent-deployment.md`
-    - `docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
     - This plan file's `Validation Evidence` / `Independent Review Handoff`
   - Create:
     - `docs/reviews/backend/2026-06-12-backend-review-runtime-node-health-and-failover-rebuild.md`
   - Review:
-    - `docs/plan/impl-plan/2026-06-12-true-ha-control-plane-and-runtime-recovery-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-control-plane-and-runtime-recovery-implementation-plan.md`
   - Test:
     - Architecture/doc/workflow checks.
 - Steps:
@@ -404,7 +404,7 @@
   - `docs/architecture/backend/05-key-flows.md`
   - `docs/operations/runtime-agent-deployment.md`
 - Fact sources to update after implementation:
-  - Same four files, plus `docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md` for task group progress.
+  - Same four files, plus `docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md` for task group progress.
 - Plan-only notes that must not become architecture source:
   - Test names, step ordering, red/green commands, review handoff details.
 - Archive condition:
@@ -422,7 +422,7 @@
   - `cd code/backend && go test ./internal/module/container_runtime/... ./internal/module/instance/... ./internal/module/practice/application/commands ./internal/app/composition -run 'RuntimeNode|NodeHealth|Requeue|RuntimeMaintenance|Provisioning|DesiredAWD' -count=1`
   - `bash scripts/check-architecture.sh --full`
   - `python3 scripts/check-docs-consistency.py`
-  - `git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
+  - `git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
 - Manual checks:
   - Two runtime nodes registered; stop node B's runtime-agent; after stale threshold, node B is `offline` and no new instance selects it.
   - Existing `running` instance on node B becomes `pending`, then practice scheduler rebuilds it on node A.
@@ -490,19 +490,19 @@
 - Command: `timeout 120s python3 scripts/check-docs-consistency.py`
   - Result: PASS
   - Notes: Documentation references, architecture status and diagram source checks.
-- Command: `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
+- Command: `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
   - Result: PASS
   - Notes: No whitespace errors in touched code/docs diff.
 - Command: `timeout 300s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
   - Result: PASS
   - Notes: Implementation-context self-check after review-driven offline handler retry fix.
-- Command: `timeout 30s bash -lc "! rg -n '\\[ \\]' docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md"`
+- Command: `timeout 30s bash -lc "! rg -n '\\[ \\]' docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md"`
   - Result: PASS
   - Notes: Active task plan checklist has no remaining unchecked items after independent review gate and post-review doc follow-up.
 - Command: `timeout 120s python3 scripts/check-docs-consistency.py`
   - Result: PASS
   - Notes: Post-review documentation precision follow-up kept architecture docs and references consistent.
-- Command: `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/reviews docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/impl-plan/2026-06-12-true-ha-group/INDEX.md`
+- Command: `timeout 60s git diff --check -- code/backend docs/architecture/backend docs/operations docs/reviews docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md docs/plan/archive/impl-plan/2026-06/2026-06-12-true-ha-group/INDEX.md`
   - Result: PASS
   - Notes: No whitespace errors after review archive and doc precision follow-up.
 - Command: `timeout 300s bash harness/workflow-plugins/code-workflow/run_workflow_stage.sh completion-full`
@@ -516,7 +516,7 @@
 
 - Review target:
   - Task slug `2026-06-12-runtime-node-health-and-failover-rebuild`
-  - Plan `docs/plan/impl-plan/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
+  - Plan `docs/plan/archive/impl-plan/2026-06/2026-06-12-runtime-node-health-and-failover-rebuild-implementation-plan.md`
   - Diff basis: `main...HEAD`
 - Validation evidence summary:
   - Focused runtime node repository, NodeHealthService, app composition, instance requeue/maintenance and config tests passed.

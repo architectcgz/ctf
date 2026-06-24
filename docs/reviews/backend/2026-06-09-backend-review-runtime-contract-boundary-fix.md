@@ -15,7 +15,7 @@
     - `code/backend/internal/module/practice/application/commands/runtime_port_owner_test.go`
     - `code/backend/internal/module/practice/application/commands/runtime_port_owner_external_test.go`
     - 相关 `practice/application/commands/*_test.go`
-    - `docs/plan/impl-plan/2026-06-09-runtime-contract-boundary-fix-implementation-plan.md`
+    - `docs/plan/archive/impl-plan/2026-06/2026-06-09-runtime-contract-boundary-fix-implementation-plan.md`
   - Related docs checked:
     - `docs/architecture/backend/07-modular-monolith-refactor.md`
     - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`

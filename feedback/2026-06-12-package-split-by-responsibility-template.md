@@ -94,7 +94,7 @@ refactor(backend): 拆分 internal/config 同包职责文件
 ## Related
 
 - 这次重构属于 `非琐碎任务`，走了完整的 code-workflow：plan → implement → validate → review
-- implementation plan: `docs/plan/impl-plan/2026-06-12-backend-config-package-split-implementation-plan.md`
+- implementation plan: `docs/plan/archive/impl-plan/2026-06/2026-06-12-backend-config-package-split-implementation-plan.md`
 - 没有新增或删除任何配置字段，纯结构性收口
 - 触达了已知结构债（单文件过长），在本次切片内完整收口，而不是给 follow-up
 

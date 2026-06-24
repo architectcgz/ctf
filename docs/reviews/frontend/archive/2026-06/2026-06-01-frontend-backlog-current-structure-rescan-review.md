@@ -7,7 +7,7 @@
 - Diff source: working tree changes for `frontend-backlog-current-structure-rescan`
 - Files reviewed:
   - `.harness/reuse-decisions/frontend-backlog-current-structure-rescan.md`
-  - `docs/plan/impl-plan/2026-06-01-frontend-backlog-current-structure-rescan-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-01-frontend-backlog-current-structure-rescan-plan.md`
   - `docs/reviews/frontend/2026-06-01-frontend-backlog-current-structure-rescan-review.md`
   - `docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 
@@ -37,7 +37,7 @@
 ## Required Re-validation
 
 - `bash scripts/check-task-intake.sh --reuse-decision frontend-backlog-current-structure-rescan`
-- `git diff --check -- .harness/reuse-decisions/frontend-backlog-current-structure-rescan.md docs/plan/impl-plan/2026-06-01-frontend-backlog-current-structure-rescan-plan.md docs/reviews/frontend/2026-06-01-frontend-backlog-current-structure-rescan-review.md docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `git diff --check -- .harness/reuse-decisions/frontend-backlog-current-structure-rescan.md docs/plan/archive/impl-plan/2026-06/2026-06-01-frontend-backlog-current-structure-rescan-plan.md docs/reviews/frontend/2026-06-01-frontend-backlog-current-structure-rescan-review.md docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `bash scripts/check-consistency.sh`
 
 ## Residual Risk

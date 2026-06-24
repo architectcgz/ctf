@@ -3,7 +3,7 @@
 - 仓库：`/home/azhi/workspace/projects/.worktrees/ctf/2026-06-07-contest-realtime-relay-externalization`
 - 分支：`task/2026-06-07-contest-realtime-relay-externalization`
 - Task slug：`2026-06-07-contest-realtime-relay-externalization`
-- Plan：`docs/plan/impl-plan/2026-06-07-contest-realtime-relay-externalization-implementation-plan.md`
+- Plan：`docs/plan/archive/impl-plan/2026-06/2026-06-07-contest-realtime-relay-externalization-implementation-plan.md`
 - diff 来源：`main...HEAD`
 - 评审范围：
   - `code/backend/internal/module/contest/**`

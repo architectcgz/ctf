@@ -45,7 +45,7 @@
 
 - `bash scripts/check-task-intake.sh --reuse-decision teacher-instance-page-model-naming-cleanup`
 - `cd code/frontend && npm run test:run -- src/pages/teacher/__tests__/InstanceManagement.test.ts src/features/challenge-detail/model/useChallengeInstance.test.ts`
-- `git diff --check -- .harness/reuse-decisions/teacher-instance-page-model-naming-cleanup.md docs/plan/impl-plan/2026-06-01-teacher-instance-page-model-naming-cleanup-plan.md code/frontend/src/features/teacher/instances/model/useInstances.ts code/frontend/src/features/teacher/instances/model/useInstanceManagementPage.ts code/frontend/src/pages/teacher/InstanceManagementRoutePage.vue code/frontend/src/pages/teacher/__tests__/InstanceManagement.test.ts code/frontend/src/features/challenge-detail/model/useChallengeInstance.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `git diff --check -- .harness/reuse-decisions/teacher-instance-page-model-naming-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-teacher-instance-page-model-naming-cleanup-plan.md code/frontend/src/features/teacher/instances/model/useInstances.ts code/frontend/src/features/teacher/instances/model/useInstanceManagementPage.ts code/frontend/src/pages/teacher/InstanceManagementRoutePage.vue code/frontend/src/pages/teacher/__tests__/InstanceManagement.test.ts code/frontend/src/features/challenge-detail/model/useChallengeInstance.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 
 ## Review Focus
 

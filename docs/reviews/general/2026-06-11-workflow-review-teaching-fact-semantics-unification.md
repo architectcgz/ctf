@@ -2,7 +2,7 @@
 
 - Review Target：`/home/azhi/workspace/projects/.worktrees/ctf/2026-06-11-teaching-fact-semantics-unification`
 - Task Slug：`2026-06-11-teaching-fact-semantics-unification`
-- Plan：`docs/plan/impl-plan/2026-06-11-teaching-fact-semantics-unification-implementation-plan.md`
+- Plan：`docs/plan/archive/impl-plan/2026-06/2026-06-11-teaching-fact-semantics-unification-implementation-plan.md`
 - Review Scope：
   - `code/backend/internal/module/assessment/application/commands/profile_service.go`
   - `code/backend/internal/module/assessment/application/queries/recommendation_service.go`
@@ -12,7 +12,7 @@
   - `code/backend/internal/module/teaching_query/infrastructure/repository.go`
   - `docs/architecture/features/教学复盘建议生成架构.md`
   - `docs/todos/2026-05-17-project-tech-debt-from-migrations.md`
-  - `docs/plan/impl-plan/2026-06-11-teaching-fact-semantics-unification-implementation-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-11-teaching-fact-semantics-unification-implementation-plan.md`
 
 ## Classification Check
 

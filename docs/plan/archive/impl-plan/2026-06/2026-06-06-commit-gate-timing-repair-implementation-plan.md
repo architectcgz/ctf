@@ -44,7 +44,7 @@
   - `scripts/archive-task-artifacts.sh`
   - `harness/checks/check_startup_gate.py`
 - Related prior work:
-  - `docs/plan/impl-plan/2026-06-05-workflow-governance-refactor-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-05-workflow-governance-refactor-plan.md`
   - `docs/plan/archive/impl-plan/2026-06/2026-06-06-commit-message-governance-extract-implementation-plan.md`
 
 ## Task Classification

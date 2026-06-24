@@ -6,7 +6,7 @@
 - Worktree: `/home/azhi/workspace/projects/.worktrees/ctf/2026-06-09-challenge-package-delivery-gc`
 - Branch: `task/2026-06-09-challenge-package-delivery-gc`
 - Task slug: `2026-06-09-challenge-package-delivery-gc`
-- Plan: `docs/plan/impl-plan/2026-06-09-challenge-package-delivery-gc-implementation-plan.md`
+- Plan: `docs/plan/archive/impl-plan/2026-06/2026-06-09-challenge-package-delivery-gc-implementation-plan.md`
 - Diff source: current worktree diff plus newly added files
 - Files reviewed:
   - `code/backend/internal/module/challenge/application/commands/artifact_gc_service.go`

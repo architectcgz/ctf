@@ -8,7 +8,7 @@
   - `code/backend/internal/app/router_user_self_routes.go`
   - `code/backend/internal/app/router_user_teacher_routes.go`
   - `code/backend/internal/app/router_user_teacher_routes_test.go`
-  - `docs/plan/impl-plan/2026-06-03-backend-router-user-teacher-split-plan.md`
+  - `docs/plan/archive/impl-plan/2026-06/2026-06-03-backend-router-user-teacher-split-plan.md`
   - `.harness/reuse-decisions/backend-router-user-teacher-split.md`
 
 ## Classification Check

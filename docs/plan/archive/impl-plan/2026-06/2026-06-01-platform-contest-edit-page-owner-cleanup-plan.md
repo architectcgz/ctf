@@ -48,7 +48,7 @@
 
 - `bash scripts/check-task-intake.sh --reuse-decision platform-contest-edit-page-owner-cleanup`
 - `cd code/frontend && npm run test:run -- src/pages/platform/contests/__tests__/ContestEdit.test.ts`
-- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/platform-contest-edit-page-owner-cleanup.md docs/plan/impl-plan/2026-06-01-platform-contest-edit-page-owner-cleanup-plan.md docs/reviews/frontend/2026-06-01-platform-contest-edit-page-owner-cleanup-review.md code/frontend/src/features/platform/contests/ui/PlatformContestEditPage.vue code/frontend/src/features/platform/contests/ui/index.ts code/frontend/src/pages/platform/contests/ContestEditRoutePage.vue code/frontend/src/pages/platform/contests/__tests__/ContestEdit.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
+- `cd /home/azhi/workspace/projects/ctf && git diff --check -- .harness/reuse-decisions/platform-contest-edit-page-owner-cleanup.md docs/plan/archive/impl-plan/2026-06/2026-06-01-platform-contest-edit-page-owner-cleanup-plan.md docs/reviews/frontend/2026-06-01-platform-contest-edit-page-owner-cleanup-review.md code/frontend/src/features/platform/contests/ui/PlatformContestEditPage.vue code/frontend/src/features/platform/contests/ui/index.ts code/frontend/src/pages/platform/contests/ContestEditRoutePage.vue code/frontend/src/pages/platform/contests/__tests__/ContestEdit.test.ts docs/todos/2026-05-26-frontend-tech-debt-priority-backlog.md`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-consistency.sh`
 - `cd /home/azhi/workspace/projects/ctf && bash scripts/check-workflow-complete.sh`
 
