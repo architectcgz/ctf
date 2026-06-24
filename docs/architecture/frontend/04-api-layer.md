@@ -95,9 +95,124 @@ interface ApiEnvelope<T> {
 - 当前前端不做 refresh token 重试；认证模式已经切到 HttpOnly session cookie。
 - 请求层只返回标准化错误对象，不在这里直接展示 Toast，也不直接决定全局导航。
 
-## 3. 模块边界
+## 3. 模块边界与目录组织规则
 
-### 3.1 共享与学生侧模块
+### 3.1 顶层 vs 子目录放置规则
+
+**顶层 API 模块**（`code/frontend/src/api/*.ts`）：
+- 学生端独有功能（如 `scoreboard.ts` 的练习排行榜）
+- 跨角色共享功能（如 `auth.ts`、`challenge.ts`、`contest.ts`、`notification.ts`）
+- 不区分工作区的通用能力（如 `instance.ts`）
+
+**子目录 API 模块**：
+- `api/teacher/` - 教师工作区独有功能（班级、学生画像、题解审核、AWD 复盘）
+- `api/admin/` - 平台工作区独有功能（用户管理、题目创作、竞赛运维）
+
+**判断规则**：
+1. **按角色可见性判断**：
+   - 只有教师和管理员可见 → `api/teacher/` 或 `api/admin/`
+   - 学生和教师都可见 → 顶层 `api/*.ts`
+   - 所有角色都可见 → 顶层 `api/*.ts`
+
+2. **按功能归属判断**：
+   - 功能明显属于教学工作区（如班级洞察）→ `api/teacher/`
+   - 功能明显属于平台运维（如用户导入）→ `api/admin/`
+   - 功能跨工作区共享（如题目详情）→ 顶层 `api/*.ts`
+
+3. **按命名语义判断**：
+   - 接口名包含 `teacher`、`class`、`student-analysis` → `api/teacher/`
+   - 接口名包含 `admin`、`platform`、`authoring`、`ops` → `api/admin/`
+   - 接口名为领域实体（如 `challenge`、`contest`）→ 顶层 `api/*.ts`
+
+**反例（不应出现）**：
+- 学生端刷题接口放在 `api/admin/`
+- 教师班级管理接口放在顶层 `api/classes.ts`
+- 题目创作接口散落在 `api/challenge.ts`（应在 `api/admin/authoring.ts`）
+
+### 3.2 角色聚合入口使用时机
+
+**聚合入口文件**：
+- `api/teacher.ts` - 重导出 `api/teacher/` 下所有子模块
+- `api/teaching.ts` - 重导出 `api/teacher/` 下所有子模块（别名，保持兼容）
+- `api/admin.ts` - 待创建（当前未实现）
+
+**推荐使用场景**：
+1. **Feature model 需要多个子模块**：
+   ```typescript
+   // 推荐：从聚合入口导入
+   import { getClassStudents, getStudentProfile } from '@/api/teacher'
+   
+   // 不推荐：分别导入子模块
+   import { getClassStudents } from '@/api/teacher/classes'
+   import { getStudentProfile } from '@/api/teacher/students'
+   ```
+
+2. **测试需要 mock 整个工作区 API**：
+   ```typescript
+   import * as teacherApi from '@/api/teacher'
+   vi.mock('@/api/teacher', () => ({
+     getClassStudents: vi.fn(),
+     getStudentProfile: vi.fn()
+   }))
+   ```
+
+**不推荐使用场景**：
+1. **只需要一个子模块的单个函数**：
+   ```typescript
+   // 推荐：直接从子模块导入
+   import { getClassStudents } from '@/api/teacher/classes'
+   
+   // 不推荐：通过聚合入口导入（增加 bundle 体积）
+   import { getClassStudents } from '@/api/teacher'
+   ```
+
+2. **页面直接导入 API**（违反架构边界）：
+   ```typescript
+   // 禁止：route page 不应直接导入 API
+   import { getClassStudents } from '@/api/teacher'
+   
+   // 正确：通过 feature model 调用
+   import { useClassStudentsList } from '@/features/class-students/model'
+   ```
+
+**当前状态**：
+- `api/teacher.ts` 和 `api/teaching.ts` 已实现，重导出所有 `api/teacher/*` 子模块
+- `api/admin.ts` 当前未实现（`api/admin/` 子目录已存在）
+- 未来可考虑为 `api/admin/` 添加聚合入口
+
+### 3.3 新增 API 模块决策树
+
+**决策流程**：
+
+```
+新增 API 接口
+    ↓
+是否跨角色共享？
+    ├─ 是 → 放在顶层 api/*.ts
+    │        例：challenge.ts、contest.ts、notification.ts
+    │
+    └─ 否 → 只有哪些角色可见？
+            ├─ 教师 + 管理员 → api/teacher/
+            │                  例：classes.ts、students.ts、writeups.ts
+            │
+            ├─ 仅管理员 → api/admin/
+            │              例：users.ts、authoring.ts、platform.ts
+            │
+            └─ 仅学生 → 顶层 api/*.ts
+                        例：scoreboard.ts（练习排行榜）
+```
+
+**子模块拆分时机**：
+- 现有模块超过 500 行 → 考虑按领域拆分子模块
+- 现有模块包含多个不相关领域 → 立即拆分
+- 新增功能与现有模块领域不匹配 → 创建新子模块
+
+**命名约定**：
+- 顶层模块：领域实体单数（`challenge.ts`、`contest.ts`）
+- 子目录模块：工作区上下文 + 领域实体复数（`teacher/classes.ts`、`admin/users.ts`）
+- 聚合入口：工作区名称（`teacher.ts`、`teaching.ts`）
+
+### 3.4 共享与学生侧模块
 
 | 文件 | 当前负责 |
 | --- | --- |
@@ -108,7 +223,7 @@ interface ApiEnvelope<T> {
 | `api/notification.ts` | 通知列表、标记已读 |
 | `api/scoreboard.ts` | 练习排行榜等独立排行入口 |
 
-### 3.2 教师工作区模块
+### 3.5 教师工作区模块
 
 `code/frontend/src/api/teacher/index.ts` 当前重导出以下子模块：
 
@@ -120,7 +235,7 @@ interface ApiEnvelope<T> {
 | `teacher/instances.ts` | 教师视角实例目录、销毁、班级报告导出 |
 | `teacher/awd-reviews.ts` | AWD 复盘、轮次、攻击记录、归档导出 |
 
-### 3.3 平台工作区模块
+### 3.6 平台工作区模块
 
 `code/frontend/src/api/admin/index.ts` 当前重导出以下子模块：
 
@@ -134,7 +249,7 @@ interface ApiEnvelope<T> {
 
 说明：
 
-- 当前事实已经不再是“一个 `api/teacher.ts`、一个 `api/admin.ts` 总表”。
+- 当前事实已经不再是”一个 `api/teacher.ts`、一个 `api/admin.ts` 总表”。
 - 平台工作区接口并不都落在 `/admin/*` 下；例如题目创作走 `/authoring/*`，导出能力也会走 `/reports/*`。
 
 ## 4. 数据归一化规则
