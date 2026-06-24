@@ -115,7 +115,82 @@ code/frontend/
 - `04-api-layer.md`
 - `05-websocket-composables.md`
 
-### 3.4 共享原语与样式
+### 3.4 Entities 边界约束
+
+**定位**：`code/frontend/src/entities/` 只放稳定业务对象表达，不放页面流程 owner。
+
+**适合进入 `entities/*` 的内容**：
+- 业务对象的共享展示组件（如 `challenge/ui/ChallengeCard.vue`）
+- 状态/文案映射（如 `contest/model/contestStatus.ts`）
+- 轻量类型定义（如 `user/model/types.ts`）
+- 多个 feature 都会复用且语义仍然明显属于该对象的 UI
+
+**不适合进入 `entities/*` 的内容**：
+- 上传/提交/导入/发布/筛选/保存/跳转等用户动作流程
+- 依赖 route、弹窗编排、异步工作流的页面壳
+- 带明显 feature workflow 的复杂交互
+
+**判断规则**：
+- 如果代码主要在回答"这个业务对象是什么、如何稳定展示" → 优先放 `entities/*`
+- 如果代码主要在回答"用户在这里要完成什么动作" → 优先放 `features/*`
+
+**边界守卫**：
+- `entities/*` 不能反向依赖具体 feature 的 workflow、route state 或页面壳
+- `shared/*` 不承载带明显 challenge / contest / class / image / writeup 等业务语义的展示块
+- 业务语义展示块应优先判断是否属于对应 `entities/*`
+
+**代码位置**：
+- `code/frontend/src/entities/challenge/`
+- `code/frontend/src/entities/contest/`
+- `code/frontend/src/entities/user/`
+- 等
+
+**Guardrail**：
+- `code/frontend/src/__tests__/architectureBoundaries.test.ts` - 检查 entities 不反向依赖 features
+- `code/frontend/scripts/frontend-architecture-policy.json` - 定义 entities 允许的依赖边界
+
+### 3.5 Widgets 层定位
+
+**定位**：`code/frontend/src/widgets/` 负责跨 feature 页面区块组合，承接工作区级完整内容区。
+
+**与 Features 协作模式**：
+- `features/**/ui` - 单一能力 surface，例如题目筛选栏、提交表单
+- `widgets/*` - 组合多个 features 和 entities，例如题目详情工作区、排行榜工作区
+
+**Workspace 命名约定**：
+- 命名格式：`<context>-<entity>-workspace` 或 `<context>-workspace`
+- 例如：
+  - `challenge-detail-workspace` - 题目详情工作区
+  - `contest-detail-workspace` - 竞赛详情工作区
+  - `awd-review-workspace` - AWD 复盘工作区
+  - `notification-list-workspace` - 通知列表工作区
+
+**与 Pages 关系**：
+- `pages/**/` - 路由入口，只负责组合 widgets 或 features
+- `widgets/*` - 工作区级组合，不应反向依赖 pages
+
+**适合进入 `widgets/*` 的内容**：
+- 需要组合多个 feature 的完整工作区（如题目详情 = 题面 + 提交区 + 实例区 + 题解区）
+- 跨 feature 的布局协调和状态桥接
+- 工作区级的 toolbar、tabs、sidebar 组合
+
+**不适合进入 `widgets/*` 的内容**：
+- 单一功能组件（应放 `features/**/ui` 或 `entities/**/ui`）
+- 纯展示卡片（应放 `entities/**/ui`）
+- 与路由强耦合的页面壳（应保持在 `pages/**/`）
+
+**代码位置**：
+- `code/frontend/src/widgets/challenge-detail-workspace/`
+- `code/frontend/src/widgets/contest-detail-workspace/`
+- `code/frontend/src/widgets/awd-review-workspace/`
+- `code/frontend/src/widgets/notification-list-workspace/`
+- 等
+
+**Guardrail**：
+- `code/frontend/src/__tests__/architectureBoundaries.test.ts` - 检查 widgets 不依赖 pages
+- `code/frontend/scripts/frontend-architecture-policy.json` - 定义 widgets 允许的依赖边界
+
+### 3.6 共享原语与样式
 
 - 共享组件集中在 `shared/ui/common/`
 - overlay 模板集中在 `shared/ui/common/modal-templates/`
