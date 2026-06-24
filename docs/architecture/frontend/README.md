@@ -23,6 +23,7 @@
 7. [07-pages-dataflow.md](./07-pages-dataflow.md)
 8. [08-build-deploy.md](./08-build-deploy.md)
 9. [09-spacing-system.md](./09-spacing-system.md)
+10. [10-runtime-error-handling.md](./10-runtime-error-handling.md)
 
 ## 当前活动文档
 
@@ -37,6 +38,7 @@
 | [07-pages-dataflow.md](./07-pages-dataflow.md) | 典型页面的数据流、owner 和交互拆分 |
 | [08-build-deploy.md](./08-build-deploy.md) | Vite 构建、环境变量与部署约束 |
 | [09-spacing-system.md](./09-spacing-system.md) | 间距 token、目录页节奏与工作台布局 guardrail |
+| [10-runtime-error-handling.md](./10-runtime-error-handling.md) | HTTP 401、Vue / Router 崩溃、WebSocket 鉴权关闭和全局错误 owner |
 
 ## Guardrail
 
@@ -47,3 +49,4 @@
 - 前端分层约束：`code/frontend/src/__tests__/architectureBoundaries.test.ts`
 - 导航命名空间：`code/frontend/src/config/__tests__/backofficeNavigation.test.ts`
 - 共享弹窗模板：`code/frontend/src/shared/ui/common/__tests__/ModalTemplates.test.ts`
+- 全局错误 runtime：`code/frontend/src/runtime/__tests__/globalErrorRuntime.test.ts`
