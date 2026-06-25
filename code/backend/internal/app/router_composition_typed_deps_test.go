@@ -372,7 +372,6 @@ func TestContainerRuntimeRepositoryOwnsAllocationPersistence(t *testing.T) {
 		"func NewAllocationRepository(db *gorm.DB) *AllocationRepository",
 		"func (r *AllocationRepository) ReleaseRuntimeAllocationsForInstance",
 		"func (r *AllocationRepository) ReserveAvailablePort",
-		"func (r *AllocationRepository) ReserveAvailableSubnet",
 		"func (r *AllocationRepository) SyncInstanceHostPortForRestart",
 	}
 	for _, marker := range expected {
@@ -384,7 +383,6 @@ func TestContainerRuntimeRepositoryOwnsAllocationPersistence(t *testing.T) {
 	blocked := []string{
 		"ReleaseRuntimeAllocationsForInstance",
 		"ReserveAvailablePort",
-		"ReserveAvailableSubnet",
 		"SyncInstanceHostPortForRestart",
 	}
 	for _, marker := range blocked {
@@ -401,13 +399,17 @@ func TestContestRepositoryOwnsAWDPersistence(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read contest awd_runtime_state_repository.go: %v", err)
 	}
+	repositoryContent, err := os.ReadFile(filepath.Join("..", "module", "contest", "infrastructure", "awd_repository.go"))
+	if err != nil {
+		t.Fatalf("read contest awd_repository.go: %v", err)
+	}
 	operationContent, err := os.ReadFile(filepath.Join("..", "module", "contest", "infrastructure", "awd_service_operation_repository.go"))
 	if err != nil {
 		t.Fatalf("read contest awd_service_operation_repository.go: %v", err)
 	}
 
 	runtimeInfrastructure := runtimeInfrastructureSourceExcept(t)
-	awdSource := string(runtimeStateContent) + "\n" + string(operationContent)
+	awdSource := string(repositoryContent) + "\n" + string(runtimeStateContent) + "\n" + string(operationContent)
 	expected := []string{
 		"type AWDRepository struct",
 		"func NewAWDRepository(db *gorm.DB) *AWDRepository",
@@ -526,7 +528,7 @@ func TestContestAWDPersistenceWiredFromCompositionRoot(t *testing.T) {
 		"awdRepo := contestinfra.NewAWDRepository(root.DB())",
 		"newInstanceMaintenanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo, inventoryRepo)",
 		"newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo)",
-		"proxyTrafficRecorder: awdRepo",
+		"proxyTrafficRecorder:      newInstanceProxyTrafficRecorder(awdRepo)",
 	}
 	for _, marker := range instanceExpected {
 		if !strings.Contains(instanceSource, marker) {
@@ -564,7 +566,7 @@ func TestRuntimeStatePersistenceWiredFromCompositionRoot(t *testing.T) {
 		"newInstanceRuntimeInventoryProvider(instanceinfra.NewContainerInventoryRepository(root.DB()))",
 		"contestinfra.NewAWDContainerInventoryRepository(root.DB())",
 		"aclMigrationRepo := instanceinfra.NewACLMigrationStateRepository(root.DB())",
-		"newRuntimeNodeExecutionRouter(cfg, log.Named(\"runtime_node_router\"), allocationRepo, indexRepo, nodeRepo, defaultNodeName)",
+		"newRuntimeNodeExecutionRouter(cfg, log.Named(\"runtime_node_router\"), nodeAllocationRepo, indexRepo, nodeRepo, defaultNodeName)",
 		"migrateLegacyInstanceACLHandles(root.Context(), aclMigrationRepo, nodeRouter, defaultNodeClient, log.Named(\"runtime_acl_migration\"))",
 	}
 	for _, marker := range runtimeExpected {

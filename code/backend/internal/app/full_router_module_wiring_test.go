@@ -52,8 +52,8 @@ func TestStudentPracticeReadRoutesAreServedByPracticeModule(t *testing.T) {
 	})
 
 	called := false
-	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, instance *composition.InstanceModule) *composition.PracticeModule {
-		module := originalBuildPracticeModule(root, challenge, instance)
+	buildPracticeModule = func(root *composition.Root, challenge *composition.ChallengeModule, instance *composition.InstanceModule, containerRuntime *composition.ContainerRuntimeModule) *composition.PracticeModule {
+		module := originalBuildPracticeModule(root, challenge, instance, containerRuntime)
 		called = true
 		if module == nil || module.Handler == nil {
 			t.Fatal("expected practice module handler")

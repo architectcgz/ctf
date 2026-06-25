@@ -103,11 +103,6 @@ func (r *nodeScopedProvisioningRepo) ReleaseReservedPort(ctx context.Context, po
 	return nil
 }
 
-func (r *nodeScopedProvisioningRepo) ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error) {
-	r.t.Fatalf("unexpected global subnet reservation")
-	return "", nil
-}
-
 func (r *nodeScopedProvisioningRepo) ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
 	r.t.Fatalf("unexpected legacy instance subnet reservation")
 	return "", nil

@@ -9,7 +9,9 @@ import (
 type RuntimeResourcePoolRepository interface {
 	EnsurePoolsForNode(ctx context.Context, nodeID int64, cfg config.ContainerConfig) error
 	ReserveAvailablePortForNode(ctx context.Context, nodeID, instanceID int64) (int, error)
+	ReserveAvailablePortForNodeExcluding(ctx context.Context, nodeID, instanceID int64, excludedPort int) (int, error)
 	ReserveAvailableSubnetForNode(ctx context.Context, nodeID int64, poolKind string, instanceID int64, networkKey string) (string, error)
+	BindReservedPortForNode(ctx context.Context, nodeID int64, port int, instanceID int64) error
 	BindResourcesForInstance(ctx context.Context, instanceID int64) error
 	ReleaseResourcesForInstance(ctx context.Context, instanceID int64) error
 	QuarantinePort(ctx context.Context, nodeID int64, port int, reason string) error

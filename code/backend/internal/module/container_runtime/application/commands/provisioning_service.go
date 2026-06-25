@@ -27,7 +27,6 @@ const (
 type ProvisioningRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	ReleaseReservedPort(ctx context.Context, port int) error
-	ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error)
 	ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error)
 	ReserveAvailableSubnetExcluding(ctx context.Context, baseCIDR string, subnetMask int, excludedSubnets []string) (string, error)
 	ReserveAvailableSubnetForInstanceExcluding(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string, excludedSubnets []string) (string, error)

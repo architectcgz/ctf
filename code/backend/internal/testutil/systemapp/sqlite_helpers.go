@@ -98,6 +98,8 @@ var internalAppTestSchemaModels = []any{
 	&containerruntimeentity.PortAllocation{},
 	&containerruntimeentity.NetworkAllocation{},
 	&containerruntimeentity.RuntimeNode{},
+	&containerruntimeentity.RuntimePortPool{},
+	&containerruntimeentity.RuntimeSubnetPool{},
 	&practiceentity.UserScore{},
 	&opsentity.AuditLog{},
 	&opsentity.NotificationBatch{},

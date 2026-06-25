@@ -9,6 +9,7 @@ import (
 
 	"ctf-platform/internal/config"
 	runtimeentity "ctf-platform/internal/module/container_runtime/entity"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -25,6 +26,10 @@ func NewRuntimeResourcePoolRepository(db *gorm.DB) *RuntimeResourcePoolRepositor
 		return nil
 	}
 	return &RuntimeResourcePoolRepository{db: db}
+}
+
+func (r *RuntimeResourcePoolRepository) WithDB(db *gorm.DB) runtimeports.RuntimeResourcePoolRepository {
+	return NewRuntimeResourcePoolRepository(db)
 }
 
 func (r *RuntimeResourcePoolRepository) dbWithContext(ctx context.Context) *gorm.DB {

@@ -23,7 +23,7 @@ import (
 func newRepositoryWithRuntimePortOwner(db *gorm.DB) *practiceinfra.Repository {
 	return practiceinfra.NewRepositoryWithRuntimePortOwner(db, func(db *gorm.DB) runtimeports.PortReservationOwner {
 		return containerruntimeinfra.NewAllocationRepository(db)
-	})
+	}, nil)
 }
 
 func TestRepositoryReserveAvailablePortSkipsAllocatedPort(t *testing.T) {

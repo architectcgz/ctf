@@ -268,7 +268,7 @@ func TestBuildContainerRuntimeModuleDelegatesToSubBuilders(t *testing.T) {
 	expected := []string{
 		"type ContainerRuntimeModule struct",
 		"func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {",
-		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)",
+		"defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, nodeAllocationRepo, defaultNode)",
 		"nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)",
 		"module := containerruntime.Build(",
 		"containerruntime.Deps{",

@@ -118,10 +118,6 @@ func (r *AllocationRepository) ReleasePortForInstance(ctx context.Context, port 
 		Delete(&runtimeentity.PortAllocation{}).Error
 }
 
-func (r *AllocationRepository) ReserveAvailableSubnet(ctx context.Context, baseCIDR string, subnetMask int) (string, error) {
-	return r.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, nil)
-}
-
 func (r *AllocationRepository) ReserveAvailableSubnetForInstance(ctx context.Context, baseCIDR string, subnetMask int, instanceID int64, networkKey string) (string, error) {
 	return r.ReserveAvailableSubnetForInstanceExcluding(ctx, baseCIDR, subnetMask, instanceID, networkKey, nil)
 }

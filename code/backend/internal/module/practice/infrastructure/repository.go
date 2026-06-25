@@ -23,6 +23,10 @@ const awdServiceOperationSupersededError = "superseded_by_new_operation"
 
 var errRuntimePortReservationOwnerNotConfigured = errors.New("runtime port reservation owner is not configured")
 
+type runtimeResourcePoolDBBinder interface {
+	WithDB(db *gorm.DB) runtimeports.RuntimeResourcePoolRepository
+}
+
 type Repository struct {
 	db                  *gorm.DB
 	runtimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
@@ -61,11 +65,15 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 	if ownerFor != nil {
 		runtimePorts = ownerFor(db)
 	}
+	runtimeResourcePool := r.runtimeResourcePool
+	if binder, ok := runtimeResourcePool.(runtimeResourcePoolDBBinder); ok {
+		runtimeResourcePool = binder.WithDB(db)
+	}
 	return &Repository{
 		db:                  db,
 		runtimePortOwnerFor: ownerFor,
 		runtimePorts:        runtimePorts,
-		runtimeResourcePool: r.runtimeResourcePool,
+		runtimeResourcePool: runtimeResourcePool,
 	}
 }
 
