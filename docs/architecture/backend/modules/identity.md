@@ -8,6 +8,15 @@
 
 `identity` 是用户、角色、资料和基础权限事实 owner，给认证、教师聚合、管理员用户管理和当前用户解析提供稳定用户能力。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| identity 模块的职责边界、HTTP 入口和用例组织 | 认证流程和会话管理 → `auth` 模块文档 |
+| 用户、角色、资料的真相源和基础权限模型 | 权限判定和访问控制实现 → `docs/architecture/backend/design/权限与访问控制.md` |
+| 用户管理命令和查询的实现细节 | 用户画像和评估数据 → `assessment` 模块文档 |
+| 模块内部组件协作和数据流 | 跨模块事件发布策略 → `docs/architecture/features/事件发布与降级策略.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/identity/api/http/handler.go`

@@ -8,6 +8,15 @@
 
 `ops` 是运营支撑 owner，负责审计日志、站内通知、通知 WebSocket、竞赛实时 relay、风险查询和运行时 dashboard。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| ops 模块的职责边界、HTTP 入口和用例组织 | 审计日志策略和日志级别 → `docs/architecture/backend/design/logging-and-audit.md` |
+| 站内通知、WebSocket 推送、实时 relay 的实现 | 事件发布和订阅机制 → `docs/architecture/features/事件发布与降级策略.md` |
+| 风险查询和运行时 dashboard 的 owner | 具体业务模块的操作审计 → 各模块文档 |
+| 模块内部组件协作和数据流 | Redis 键命名规范 → `docs/architecture/backend/design/redis-key-conventions.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/ops/api/http/`

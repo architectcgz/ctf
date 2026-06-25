@@ -8,6 +8,15 @@
 
 `teaching_analysis` 是教师视角只读查询聚合模块，负责教学复盘、班级洞察、学生活动和教师概览等跨 owner 查询拼装。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| teaching_analysis 模块的职责边界、HTTP 入口和查询用例 | 教学复盘优化算法 → `docs/architecture/features/教学复盘优化设计.md` |
+| 教师概览、班级洞察、学生活动的聚合查询 | 教师教学概览聚合架构 → `docs/architecture/features/教师教学概览聚合架构.md` |
+| 跨模块只读查询的拼装和响应 | 训练和竞赛数据源 → `practice` / `contest` 模块文档 |
+| 模块内部组件协作和数据流 | 评估数据源 → `assessment` 模块文档 |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/teaching_analysis/api/http/handler.go`

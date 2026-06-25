@@ -8,6 +8,15 @@
 
 `assessment` 是技能画像、推荐、评估报告和复盘归档导出 owner，负责把练习与竞赛结果转换成可查询、可导出的评估事实。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| assessment 模块的职责边界、HTTP 入口和用例组织 | 技能画像计算算法细节 → `docs/architecture/features/技能画像计算架构.md` |
+| 画像增量更新、推荐生成、报告输出的 owner | AWD 复盘建议生成算法 → `docs/architecture/features/教学复盘建议生成架构.md` |
+| 评估数据表结构和缓存策略 | AWD 归档与报告导出流程 → `docs/architecture/features/AWD教师复盘归档与报告导出设计.md` |
+| 模块内部组件协作和数据流 | 跨模块事件发布策略 → `docs/architecture/features/事件发布与降级策略.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/assessment/api/http/`

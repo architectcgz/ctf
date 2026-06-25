@@ -8,6 +8,15 @@
 
 `practice` 是训练场景 owner，负责普通训练开题、竞赛训练实例编排、AWD desired runtime reconciliation、Flag 提交、人工评阅、得分、个人训练进度和时间线。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| practice 模块的职责边界、HTTP 入口和用例组织 | 实例生命周期和访问控制 → `instance` 模块文档 |
+| 训练开题、提交、评阅、进度、时间线的 owner | 容器运行时能力 → `container_runtime` 模块文档 |
+| AWD 训练实例 reconciliation 的实现细节 | 题目和 Flag 配置 → `challenge` 模块文档 |
+| 模块内部组件协作和数据流 | 跨模块事件发布策略 → `docs/architecture/features/事件发布与降级策略.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/practice/api/http/`

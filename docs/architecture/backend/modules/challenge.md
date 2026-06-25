@@ -8,6 +8,15 @@
 
 `challenge` 是题目、题包、附件、镜像、Flag、拓扑、题解和发布检查 owner，负责把题目作者侧与运行前校验相关能力收口到一个模块。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| challenge 模块的职责边界、HTTP 入口和用例组织 | 题包格式规范 → `docs/contracts/challenge-pack-v1.md` |
+| 题目、Flag、附件、镜像、拓扑的 owner | 题包 Registry 交付流程 → `docs/architecture/features/题包Registry交付架构.md` |
+| 题包导入/导出、发布检查的实现细节 | 题包拓扑同步与导出 → `docs/architecture/features/题包拓扑同步与导出架构.md` |
+| 模块内部组件协作和数据流 | 容器镜像运行时调度 → `container_runtime` 模块文档 |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/challenge/api/http/`

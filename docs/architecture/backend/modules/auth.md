@@ -8,6 +8,15 @@
 
 `auth` 是认证、会话和登录入口 owner，负责把账号凭证、CAS 票据、Session Cookie、JWT / WebSocket ticket 等认证能力收口到一个模块。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| auth 模块的职责边界、HTTP 入口和用例组织 | 用户资料和角色的真相源 → `identity` 模块文档 |
+| 注册、登录、登出、改密、CAS 集成的 owner | Session / JWT 存储的 Redis 键规范 → `docs/architecture/backend/design/redis-key-conventions.md` |
+| 认证日志和审计要求 | 日志级别和审计策略 → `docs/architecture/backend/design/logging-and-audit.md` |
+| 模块内部组件协作和数据流 | 跨模块事件发布策略 → `docs/architecture/features/事件发布与降级策略.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/auth/api/http/handler.go`
