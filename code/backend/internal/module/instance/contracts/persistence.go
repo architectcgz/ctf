@@ -12,6 +12,8 @@ const (
 
 type Instance = instanceentity.Instance
 
+type ProvisioningEvent = instanceentity.ProvisioningEvent
+
 const (
 	InstanceStatusPending  = instanceentity.InstanceStatusPending
 	InstanceStatusCreating = instanceentity.InstanceStatusCreating
@@ -20,4 +22,10 @@ const (
 	InstanceStatusStopped  = instanceentity.InstanceStatusStopped
 	InstanceStatusExpired  = instanceentity.InstanceStatusExpired
 	InstanceStatusFailed   = instanceentity.InstanceStatusFailed
+)
+
+const (
+	ProvisioningEventSeverityInfo    = instanceentity.ProvisioningEventSeverityInfo
+	ProvisioningEventSeverityWarning = instanceentity.ProvisioningEventSeverityWarning
+	ProvisioningEventSeverityError   = instanceentity.ProvisioningEventSeverityError
 )

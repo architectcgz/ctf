@@ -199,17 +199,20 @@ func (s *InstanceService) toInstanceResp(inst *instancecontracts.Instance) *inst
 	}
 	accessURL := instancecontracts.ResolveInstancePublicAccessURL(inst.AccessURL, s.config.PublicHost, s.config.AccessHost)
 	return &instancecontracts.InstanceResp{
-		ID:               inst.ID,
-		ChallengeID:      inst.ChallengeID,
-		Status:           inst.Status,
-		ShareScope:       inst.ShareScope,
-		AccessURL:        accessURL,
-		Access:           instancecontracts.BuildInstanceAccessInfo(accessURL),
-		ExpiresAt:        inst.ExpiresAt,
-		ExtendCount:      inst.ExtendCount,
-		MaxExtends:       inst.MaxExtends,
-		RemainingExtends: instancedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
-		CreatedAt:        inst.CreatedAt,
+		ID:                  inst.ID,
+		ChallengeID:         inst.ChallengeID,
+		Status:              inst.Status,
+		ProvisioningStage:   inst.ProvisioningStage,
+		ProvisioningMessage: instancecontracts.ResolveProvisioningMessage(inst.ProvisioningStage, ""),
+		ProvisioningAttempt: inst.ProvisioningAttempt,
+		ShareScope:          inst.ShareScope,
+		AccessURL:           accessURL,
+		Access:              instancecontracts.BuildInstanceAccessInfo(accessURL),
+		ExpiresAt:           inst.ExpiresAt,
+		ExtendCount:         inst.ExtendCount,
+		MaxExtends:          inst.MaxExtends,
+		RemainingExtends:    instancedomain.RemainingExtends(inst.MaxExtends, inst.ExtendCount),
+		CreatedAt:           inst.CreatedAt,
 	}
 }
 

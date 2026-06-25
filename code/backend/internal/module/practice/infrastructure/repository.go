@@ -27,6 +27,7 @@ type Repository struct {
 	db                  *gorm.DB
 	runtimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
 	runtimePorts        runtimeports.PortReservationOwner
+	runtimeResourcePool runtimeports.RuntimeResourcePoolRepository
 }
 
 type sharedChallengeLockRecord struct {
@@ -38,10 +39,10 @@ func (sharedChallengeLockRecord) TableName() string {
 }
 
 func NewRepository(db *gorm.DB) *Repository {
-	return NewRepositoryWithRuntimePortOwner(db, nil)
+	return NewRepositoryWithRuntimePortOwner(db, nil, nil)
 }
 
-func NewRepositoryWithRuntimePortOwner(db *gorm.DB, ownerFor func(*gorm.DB) runtimeports.PortReservationOwner) *Repository {
+func NewRepositoryWithRuntimePortOwner(db *gorm.DB, ownerFor func(*gorm.DB) runtimeports.PortReservationOwner, resourcePool runtimeports.RuntimeResourcePoolRepository) *Repository {
 	var runtimePorts runtimeports.PortReservationOwner
 	if ownerFor != nil {
 		runtimePorts = ownerFor(db)
@@ -50,6 +51,7 @@ func NewRepositoryWithRuntimePortOwner(db *gorm.DB, ownerFor func(*gorm.DB) runt
 		db:                  db,
 		runtimePortOwnerFor: ownerFor,
 		runtimePorts:        runtimePorts,
+		runtimeResourcePool: resourcePool,
 	}
 }
 
@@ -63,6 +65,7 @@ func (r *Repository) WithDB(db *gorm.DB) *Repository {
 		db:                  db,
 		runtimePortOwnerFor: ownerFor,
 		runtimePorts:        runtimePorts,
+		runtimeResourcePool: r.runtimeResourcePool,
 	}
 }
 
@@ -581,6 +584,34 @@ func (r *Repository) BindReservedPort(ctx context.Context, port int, instanceID 
 		return errRuntimePortReservationOwnerNotConfigured
 	}
 	return r.runtimePorts.BindReservedPort(ctx, port, instanceID)
+}
+
+func (r *Repository) ReserveAvailablePortForNode(ctx context.Context, nodeID int64) (int, error) {
+	if r.runtimeResourcePool == nil {
+		return 0, errRuntimePortReservationOwnerNotConfigured
+	}
+	return r.runtimeResourcePool.ReserveAvailablePortForNode(ctx, nodeID, 0)
+}
+
+func (r *Repository) ReserveAvailablePortForNodeExcluding(ctx context.Context, nodeID int64, excludedPort int) (int, error) {
+	if r.runtimeResourcePool == nil {
+		return 0, errRuntimePortReservationOwnerNotConfigured
+	}
+	return r.runtimeResourcePool.ReserveAvailablePortForNodeExcluding(ctx, nodeID, 0, excludedPort)
+}
+
+func (r *Repository) BindReservedPortForNode(ctx context.Context, nodeID int64, port int, instanceID int64) error {
+	if r.runtimeResourcePool == nil {
+		return errRuntimePortReservationOwnerNotConfigured
+	}
+	return r.runtimeResourcePool.BindReservedPortForNode(ctx, nodeID, port, instanceID)
+}
+
+func (r *Repository) QuarantinePortForNode(ctx context.Context, nodeID int64, port int, reason string) error {
+	if r.runtimeResourcePool == nil {
+		return errRuntimePortReservationOwnerNotConfigured
+	}
+	return r.runtimeResourcePool.QuarantinePort(ctx, nodeID, port, reason)
 }
 
 func (r *Repository) ReleaseReservedPort(ctx context.Context, port int) error {

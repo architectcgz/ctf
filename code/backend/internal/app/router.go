@@ -169,7 +169,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		opsModule.WebSocketManager,
 		log.Named("contest_realtime_handler"),
 	)
-	practiceModule := buildPracticeModule(root, challengeModule, instanceModule)
+	practiceModule := buildPracticeModule(root, challengeModule, instanceModule, containerRuntimeModule)
 	composition.WireRuntimeNodeFailover(containerRuntimeModule, instanceModule, practiceModule)
 	instanceModule.BuildHandler(root, opsModule)
 

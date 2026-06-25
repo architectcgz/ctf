@@ -53,12 +53,13 @@ type Deps struct {
 		practiceports.PracticePendingInstanceRepository
 		practiceports.PracticeInstanceStatsRepository
 	}
-	RuntimeService      practiceports.RuntimeInstanceService
-	RuntimeNodeSelector practiceports.RuntimeNodeSelector
-	RuntimePortOwnerFor func(*gorm.DB) runtimeports.PortReservationOwner
-	ChallengeRepo       challengecontracts.PracticeChallengeContract
-	ImageStore          challengecontracts.ImageStore
-	OutboxHandlers      *platformevents.OutboxHandlerRegistry
+	RuntimeService       practiceports.RuntimeInstanceService
+	RuntimeNodeSelector  practiceports.RuntimeNodeSelector
+	RuntimePortOwnerFor  func(*gorm.DB) runtimeports.PortReservationOwner
+	RuntimeResourcePool  runtimeports.RuntimeResourcePoolRepository
+	ChallengeRepo        challengecontracts.PracticeChallengeContract
+	ImageStore           challengecontracts.ImageStore
+	OutboxHandlers       *platformevents.OutboxHandlerRegistry
 }
 
 type moduleDeps struct {
@@ -150,7 +151,7 @@ func Build(deps Deps) *Module {
 }
 
 func newModuleDeps(deps Deps) moduleDeps {
-	repo := practiceinfra.NewRepositoryWithRuntimePortOwner(deps.DB, deps.RuntimePortOwnerFor)
+	repo := practiceinfra.NewRepositoryWithRuntimePortOwner(deps.DB, deps.RuntimePortOwnerFor, deps.RuntimeResourcePool)
 	return moduleDeps{
 		input:               deps,
 		commandRepo:         repo,

@@ -20,7 +20,7 @@
     :format-instance-access-display="formatInstanceAccessDisplay"
     :format-remaining-time="formatInstanceRemainingTime"
     :get-instance-status-class="getInstanceStatusDotClass"
-    :get-instance-status-label="getInstanceStatusLabel"
+    :get-instance-provisioning-label="getInstanceProvisioningLabel"
     :get-instance-waiting-hint="getInstanceWaitingHint"
     :is-instance-manual-action-allowed="isInstanceManualActionAllowed"
   />
@@ -32,8 +32,8 @@ import { ref, type ComponentPublicInstance } from 'vue'
 import {
   formatInstanceAccessDisplay,
   formatInstanceRemainingTime,
+  getInstanceProvisioningLabel,
   getInstanceStatusDotClass,
-  getInstanceStatusLabel,
   getInstanceWaitingHint,
 } from '@/entities/instance'
 import {

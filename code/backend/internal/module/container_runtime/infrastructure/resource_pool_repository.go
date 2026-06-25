@@ -103,16 +103,26 @@ func (r *RuntimeResourcePoolRepository) createRuntimeSubnetPoolRows(ctx context.
 }
 
 func (r *RuntimeResourcePoolRepository) ReserveAvailablePortForNode(ctx context.Context, nodeID, instanceID int64) (int, error) {
+	return r.reserveAvailablePortForNodeExcluding(ctx, nodeID, instanceID, 0)
+}
+
+func (r *RuntimeResourcePoolRepository) ReserveAvailablePortForNodeExcluding(ctx context.Context, nodeID, instanceID int64, excludedPort int) (int, error) {
+	return r.reserveAvailablePortForNodeExcluding(ctx, nodeID, instanceID, excludedPort)
+}
+
+func (r *RuntimeResourcePoolRepository) reserveAvailablePortForNodeExcluding(ctx context.Context, nodeID, instanceID int64, excludedPort int) (int, error) {
 	if r == nil || r.db == nil || nodeID <= 0 {
 		return 0, fmt.Errorf("runtime node resource pool is unavailable")
 	}
 	var reservedPort int
 	err := r.dbWithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		var row runtimeentity.RuntimePortPool
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
-			Where("runtime_node_id = ? AND status = ?", nodeID, runtimeentity.RuntimeResourceStatusAvailable).
-			Order("port ASC").
-			First(&row).Error; err != nil {
+		query := tx.Clauses(clause.Locking{Strength: "UPDATE", Options: "SKIP LOCKED"}).
+			Where("runtime_node_id = ? AND status = ?", nodeID, runtimeentity.RuntimeResourceStatusAvailable)
+		if excludedPort > 0 {
+			query = query.Where("port <> ?", excludedPort)
+		}
+		if err := query.Order("port ASC").First(&row).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return fmt.Errorf("no available port for runtime node %d", nodeID)
 			}
@@ -202,6 +212,26 @@ func (r *RuntimeResourcePoolRepository) BindResourcesForInstance(ctx context.Con
 			Where("instance_id = ? AND status = ?", instanceID, runtimeentity.RuntimeResourceStatusReserved).
 			Updates(map[string]any{"status": runtimeentity.RuntimeResourceStatusBound, "updated_at": now}).Error
 	})
+}
+
+func (r *RuntimeResourcePoolRepository) BindReservedPortForNode(ctx context.Context, nodeID int64, port int, instanceID int64) error {
+	if r == nil || r.db == nil || nodeID <= 0 || port <= 0 || instanceID <= 0 {
+		return nil
+	}
+	result := r.dbWithContext(ctx).Model(&runtimeentity.RuntimePortPool{}).
+		Where("runtime_node_id = ? AND port = ? AND status = ?", nodeID, port, runtimeentity.RuntimeResourceStatusReserved).
+		Updates(map[string]any{
+			"status":      runtimeentity.RuntimeResourceStatusBound,
+			"instance_id": instanceID,
+			"updated_at":  time.Now().UTC(),
+		})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("reserved port %d for runtime node %d is unavailable", port, nodeID)
+	}
+	return nil
 }
 
 func (r *RuntimeResourcePoolRepository) ReleaseResourcesForInstance(ctx context.Context, instanceID int64) error {

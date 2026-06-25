@@ -4,6 +4,7 @@ import type {
   ContestChallengeItem,
   ID,
 } from '@/api/contracts'
+import { getInstanceProvisioningLabel } from '@/entities/instance'
 import { isAwdRuntimeChallenge } from './awdChallengeIdentity'
 
 export type AWDDefenseRiskLevel = 'critical' | 'warning' | 'watch' | 'stable'
@@ -129,8 +130,24 @@ export function getDefenseInstanceStatusLabel(service?: ContestAWDWorkspaceServi
   const workspaceStatus = service?.defense_connection?.workspace_status
   switch (service?.instance_status) {
     case 'pending':
+      if (service.provisioning_stage || service.provisioning_message) {
+        const label = getInstanceProvisioningLabel({
+          status: service.instance_status,
+          provisioning_stage: service.provisioning_stage,
+          provisioning_message: service.provisioning_message,
+        })
+        return workspaceStatus === 'running' ? `工作区可用，${label}` : label
+      }
       return workspaceStatus === 'running' ? '工作区可用，服务重启中' : '重启队列中'
     case 'creating':
+      if (service.provisioning_stage || service.provisioning_message) {
+        const label = getInstanceProvisioningLabel({
+          status: service.instance_status,
+          provisioning_stage: service.provisioning_stage,
+          provisioning_message: service.provisioning_message,
+        })
+        return workspaceStatus === 'running' ? `工作区可用，${label}` : label
+      }
       return workspaceStatus === 'running' ? '工作区可用，服务启动中' : '正在启动'
     case 'running':
       if (service.service_status === 'down') {

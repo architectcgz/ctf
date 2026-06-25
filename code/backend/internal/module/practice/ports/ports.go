@@ -217,6 +217,10 @@ type PracticePortReservationRepository interface {
 	ReserveAvailablePort(ctx context.Context, start, end int) (int, error)
 	ReserveAvailablePortExcluding(ctx context.Context, start, end, excludedPort int) (int, error)
 	BindReservedPort(ctx context.Context, port int, instanceID int64) error
+	ReserveAvailablePortForNode(ctx context.Context, nodeID int64) (int, error)
+	ReserveAvailablePortForNodeExcluding(ctx context.Context, nodeID int64, excludedPort int) (int, error)
+	BindReservedPortForNode(ctx context.Context, nodeID int64, port int, instanceID int64) error
+	QuarantinePortForNode(ctx context.Context, nodeID int64, port int, reason string) error
 	ReleaseReservedPort(ctx context.Context, port int) error
 	ReleasePortForInstance(ctx context.Context, port int, instanceID int64) error
 }

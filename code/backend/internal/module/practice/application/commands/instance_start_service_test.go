@@ -5,6 +5,7 @@ import (
 	"ctf-platform/internal/config"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	challengeinfra "ctf-platform/internal/module/challenge/infrastructure"
+	containerruntimeentity "ctf-platform/internal/module/container_runtime/entity"
 	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	instanceentity "ctf-platform/internal/module/instance/entity"
@@ -139,6 +140,7 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 	if err := db.Create(&identitycontracts.User{ID: 52, Username: "student-52", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
 		t.Fatalf("create user: %v", err)
 	}
+	seedRuntimePortPool(t, db, 901, 30000)
 
 	service := wirePracticeScopeAdapters(newServiceCore(
 		newPracticeRepositoryWithRuntimePortOwner(db),
@@ -184,6 +186,165 @@ func TestStartChallengePersistsSelectedRuntimeNodeID(t *testing.T) {
 	}
 	if stored.RuntimeNodeID == nil || *stored.RuntimeNodeID != 901 {
 		t.Fatalf("expected persisted runtime node id 901, got %+v", stored.RuntimeNodeID)
+	}
+}
+
+func TestStartChallengeReservesHostPortFromSelectedRuntimeNodePool(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	nodeAID := int64(9101)
+	nodeBID := int64(9102)
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        113,
+		Name:      "ctf/web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         213,
+		Title:      "Node Pool Web",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		ImageID:    int64Ptr(113),
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create challenge: %v", err)
+	}
+	if err := db.Create(&practiceCommandChallengeRow{
+		ID:         214,
+		Title:      "Node Pool Web B",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		Points:     100,
+		ImageID:    int64Ptr(113),
+		Status:     challengecontracts.ChallengeStatusPublished,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		FlagHash:   "flag{static}",
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	}).Error; err != nil {
+		t.Fatalf("create second challenge: %v", err)
+	}
+	if err := db.Create(&identitycontracts.User{ID: 55, Username: "student-55", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create user: %v", err)
+	}
+	if err := db.Create(&identitycontracts.User{ID: 56, Username: "student-56", Role: identitycontracts.RoleStudent, CreatedAt: now, UpdatedAt: now}).Error; err != nil {
+		t.Fatalf("create second user: %v", err)
+	}
+	poolRows := []containerruntimeentity.RuntimePortPool{
+		{RuntimeNodeID: nodeAID, Port: 30000, Status: containerruntimeentity.RuntimeResourceStatusAvailable, CreatedAt: now, UpdatedAt: now},
+		{RuntimeNodeID: nodeBID, Port: 30000, Status: containerruntimeentity.RuntimeResourceStatusAvailable, CreatedAt: now, UpdatedAt: now},
+	}
+	if err := db.Create(&poolRows).Error; err != nil {
+		t.Fatalf("seed runtime port pools: %v", err)
+	}
+
+	var selectCalls atomic.Int32
+	service := wirePracticeScopeAdapters(newServiceCore(
+		newPracticeRepositoryWithRuntimePortOwner(db),
+		challengeinfra.NewImageRepository(db),
+		newPracticeTestInstanceRepository(db),
+		&stubPracticeRuntimeService{},
+		nil,
+		nil,
+		&config.Config{
+			Container: config.ContainerConfig{
+				PortRangeStart:       30000,
+				PortRangeEnd:         30001,
+				DefaultExposedPort:   8080,
+				PublicHost:           "public.example",
+				AccessHost:           "access.example",
+				DefaultTTL:           time.Hour,
+				MaxConcurrentPerUser: 3,
+				CreateTimeout:        time.Second,
+				Scheduler: config.ContainerSchedulerConfig{
+					Enabled:             true,
+					PollInterval:        10 * time.Millisecond,
+					BatchSize:           1,
+					MaxConcurrentStarts: 1,
+					MaxActiveInstances:  10,
+				},
+			},
+		},
+		nil).
+		SetRuntimeNodeSelector(&stubPracticeRuntimeNodeSelector{
+			selectRuntimeNodeFn: func(ctx context.Context, scope practiceports.InstanceScope) (*practiceports.RuntimeNodeBinding, error) {
+				if selectCalls.Add(1) == 1 {
+					return &practiceports.RuntimeNodeBinding{RuntimeNodeID: nodeBID, NodeName: "node-b"}, nil
+				}
+				return &practiceports.RuntimeNodeBinding{RuntimeNodeID: nodeAID, NodeName: "node-a"}, nil
+			},
+		}),
+		newPracticeRepositoryWithRuntimePortOwner(db), challengeinfra.NewRepository(db))
+
+	resp, err := service.StartChallenge(context.Background(), 55, 213)
+	if err != nil {
+		t.Fatalf("StartChallenge() error = %v", err)
+	}
+
+	var stored instanceentity.Instance
+	if err := db.First(&stored, resp.ID).Error; err != nil {
+		t.Fatalf("load pending instance: %v", err)
+	}
+	if stored.RuntimeNodeID == nil || *stored.RuntimeNodeID != nodeBID {
+		t.Fatalf("expected runtime node id %d, got %+v", nodeBID, stored.RuntimeNodeID)
+	}
+	if stored.HostPort != 30000 {
+		t.Fatalf("expected node-scoped host port 30000, got %d", stored.HostPort)
+	}
+
+	var nodeAPort containerruntimeentity.RuntimePortPool
+	if err := db.Where("runtime_node_id = ? AND port = ?", nodeAID, 30000).First(&nodeAPort).Error; err != nil {
+		t.Fatalf("load node A port pool: %v", err)
+	}
+	if nodeAPort.Status != containerruntimeentity.RuntimeResourceStatusAvailable || nodeAPort.InstanceID != nil {
+		t.Fatalf("expected node A port to remain available, got %+v", nodeAPort)
+	}
+
+	var nodeBPort containerruntimeentity.RuntimePortPool
+	if err := db.Where("runtime_node_id = ? AND port = ?", nodeBID, 30000).First(&nodeBPort).Error; err != nil {
+		t.Fatalf("load node B port pool: %v", err)
+	}
+	if nodeBPort.Status != containerruntimeentity.RuntimeResourceStatusBound {
+		t.Fatalf("expected node B port bound, got %+v", nodeBPort)
+	}
+	if nodeBPort.InstanceID == nil || *nodeBPort.InstanceID != stored.ID {
+		t.Fatalf("expected node B port bound to instance %d, got %+v", stored.ID, nodeBPort.InstanceID)
+	}
+
+	secondResp, err := service.StartChallenge(context.Background(), 56, 214)
+	if err != nil {
+		t.Fatalf("second StartChallenge() error = %v", err)
+	}
+	var secondStored instanceentity.Instance
+	if err := db.First(&secondStored, secondResp.ID).Error; err != nil {
+		t.Fatalf("load second pending instance: %v", err)
+	}
+	if secondStored.RuntimeNodeID == nil || *secondStored.RuntimeNodeID != nodeAID {
+		t.Fatalf("expected second runtime node id %d, got %+v", nodeAID, secondStored.RuntimeNodeID)
+	}
+	if secondStored.HostPort != 30000 {
+		t.Fatalf("expected second node-scoped host port 30000, got %d", secondStored.HostPort)
+	}
+	if err := db.Where("runtime_node_id = ? AND port = ?", nodeAID, 30000).First(&nodeAPort).Error; err != nil {
+		t.Fatalf("reload node A port pool: %v", err)
+	}
+	if nodeAPort.Status != containerruntimeentity.RuntimeResourceStatusBound {
+		t.Fatalf("expected node A port bound after second start, got %+v", nodeAPort)
+	}
+	if nodeAPort.InstanceID == nil || *nodeAPort.InstanceID != secondStored.ID {
+		t.Fatalf("expected node A port bound to instance %d, got %+v", secondStored.ID, nodeAPort.InstanceID)
 	}
 }
 

@@ -220,6 +220,9 @@ export interface InstanceData {
   queue_position?: number
   eta_seconds?: number
   progress?: number
+  provisioning_stage?: string
+  provisioning_message?: string
+  provisioning_attempt?: number
 }
 
 export interface InstanceExtendData {
@@ -501,6 +504,9 @@ export interface ContestAWDWorkspaceServiceData {
   awd_challenge_id: ID
   instance_id?: ID
   instance_status?: InstanceStatus
+  provisioning_stage?: string
+  provisioning_message?: string
+  provisioning_attempt?: number
   access_url?: string
   service_status?: AWDServiceStatus
   operation_status?:

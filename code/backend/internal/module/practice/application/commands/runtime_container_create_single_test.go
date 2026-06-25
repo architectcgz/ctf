@@ -134,6 +134,122 @@ func TestCreateSingleContainerRebindsHostPortAfterPublishConflict(t *testing.T) 
 	}
 }
 
+func TestCreateSingleContainerRebindsNodeScopedHostPortAfterPublishConflict(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now()
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        412,
+		Name:      "ctf/node-web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+
+	const nodeID int64 = 701
+	createContainerCalls := 0
+	quarantinedOldPort := false
+	boundReboundPort := false
+	service := &serviceCore{
+		repo: &stubPracticeRepository{
+			reserveAvailablePortExcludingFn: func(ctx context.Context, start, end, excludedPort int) (int, error) {
+				t.Fatalf("expected node-scoped port pool rebind, got global excluded reservation")
+				return 0, nil
+			},
+			reserveAvailablePortForNodeExcludingFn: func(ctx context.Context, gotNodeID int64, excludedPort int) (int, error) {
+				if gotNodeID != nodeID {
+					t.Fatalf("expected node %d, got %d", nodeID, gotNodeID)
+				}
+				if excludedPort != 30021 {
+					t.Fatalf("expected conflicted host port 30021 to be excluded, got %d", excludedPort)
+				}
+				return 30022, nil
+			},
+			bindReservedPortForNodeFn: func(ctx context.Context, gotNodeID int64, port int, instanceID int64) error {
+				boundReboundPort = true
+				if gotNodeID != nodeID || port != 30022 || instanceID != 9103 {
+					t.Fatalf("unexpected node port bind: node=%d port=%d instance=%d", gotNodeID, port, instanceID)
+				}
+				return nil
+			},
+			quarantinePortForNodeFn: func(ctx context.Context, gotNodeID int64, port int, reason string) error {
+				quarantinedOldPort = true
+				if gotNodeID != nodeID || port != 30021 {
+					t.Fatalf("unexpected quarantined port: node=%d port=%d", gotNodeID, port)
+				}
+				if reason == "" {
+					t.Fatal("expected quarantine reason to be recorded")
+				}
+				return nil
+			},
+			releasePortForInstanceFn: func(ctx context.Context, port int, instanceID int64) error {
+				t.Fatalf("expected node-scoped conflict to quarantine old port, got release port=%d instance=%d", port, instanceID)
+				return nil
+			},
+		},
+		imageRepo: challengeinfra.NewImageRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, gotNodeID int64) (string, string, int, int, error) {
+				createContainerCalls++
+				if gotNodeID != nodeID {
+					t.Fatalf("expected runtime create on node %d, got %d", nodeID, gotNodeID)
+				}
+				switch createContainerCalls {
+				case 1:
+					if reservedHostPort != 30021 {
+						t.Fatalf("expected first attempt to use host port 30021, got %d", reservedHostPort)
+					}
+					return "", "", 0, 0, runtimeports.ErrPublishedHostPortConflict
+				case 2:
+					if reservedHostPort != 30022 {
+						t.Fatalf("expected retry to use rebound host port 30022, got %d", reservedHostPort)
+					}
+					return "node-rebound-ctr", "node-rebound-net", 30022, 8080, nil
+				default:
+					t.Fatalf("unexpected CreateContainer call #%d", createContainerCalls)
+					return "", "", 0, 0, nil
+				}
+			},
+		},
+		config: &config.Config{
+			Container: config.ContainerConfig{
+				PublicHost: "127.0.0.1",
+			},
+		},
+	}
+	instance := &instanceentity.Instance{
+		ID:            9103,
+		ChallengeID:   412,
+		RuntimeNodeID: int64Ptr(nodeID),
+		HostPort:      30021,
+	}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
+		ID:       412,
+		ImageID:  int64Ptr(412),
+		FlagType: challengecontracts.FlagTypeStatic,
+	}
+
+	if err := service.createSingleContainer(context.Background(), instance, toPracticeChallenge(challenge), "flag{demo}"); err != nil {
+		t.Fatalf("createSingleContainer() error = %v cause=%v", err, errors.Unwrap(err))
+	}
+	if createContainerCalls != 2 {
+		t.Fatalf("expected one retry after publish conflict, got %d calls", createContainerCalls)
+	}
+	if !boundReboundPort {
+		t.Fatal("expected rebound host port to be bound in node-scoped pool")
+	}
+	if !quarantinedOldPort {
+		t.Fatal("expected conflicted node-scoped port to be quarantined")
+	}
+	if instance.HostPort != 30022 {
+		t.Fatalf("expected instance host port to update to rebound port, got %d", instance.HostPort)
+	}
+}
+
 func TestCreateSingleContainerUsesSingleContainerSubnetPool(t *testing.T) {
 	t.Parallel()
 

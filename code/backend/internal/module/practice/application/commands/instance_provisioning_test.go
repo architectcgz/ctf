@@ -503,6 +503,95 @@ func TestProcessPendingInstanceReturnsToPendingWhenNoRuntimeNodeAvailable(t *tes
 	}
 }
 
+func TestProvisionInstanceRecordsReschedulingForRetryableRuntimeFailure(t *testing.T) {
+	t.Parallel()
+
+	db := newPracticeCommandTestDB(t)
+	now := time.Now().UTC()
+	nodeID := int64(8501)
+	if err := db.Create(&practiceCommandImageRow{
+		ID:        126,
+		Name:      "ctf/retry-web",
+		Tag:       "v1",
+		Status:    challengecontracts.ImageStatusAvailable,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}).Error; err != nil {
+		t.Fatalf("create image: %v", err)
+	}
+	instance := &instanceentity.Instance{
+		ID:                  326,
+		UserID:              48,
+		ChallengeID:         126,
+		RuntimeNodeID:       &nodeID,
+		HostPort:            30081,
+		Status:              instanceentity.InstanceStatusCreating,
+		ProvisioningAttempt: 1,
+		Nonce:               "nonce-runtime-retry",
+		FlagKeyID:           "active",
+		ExpiresAt:           now.Add(time.Hour),
+		MaxExtends:          2,
+		CreatedAt:           now,
+		UpdatedAt:           now,
+	}
+	if err := db.Create(instance).Error; err != nil {
+		t.Fatalf("create instance: %v", err)
+	}
+
+	cleanupCalls := 0
+	service := &serviceCore{
+		imageRepo:    challengeinfra.NewImageRepository(db),
+		instanceRepo: newPracticeTestInstanceRepository(db),
+		runtimeService: &stubPracticeRuntimeService{
+			cleanupRuntimeFn: func(ctx context.Context, got *instanceentity.Instance) error {
+				cleanupCalls++
+				if got == nil || got.ID != instance.ID {
+					t.Fatalf("unexpected cleanup instance: %+v", got)
+				}
+				return nil
+			},
+			createContainerFn: func(ctx context.Context, imageName string, env map[string]string, reservedHostPort int, gotNodeID int64) (string, string, int, int, error) {
+				if gotNodeID != nodeID {
+					t.Fatalf("expected runtime create on node %d, got %d", nodeID, gotNodeID)
+				}
+				return "", "", 0, 0, runtimeports.ErrRuntimeNodeUnavailable
+			},
+		},
+		config: &config.Config{Container: config.ContainerConfig{PublicHost: "127.0.0.1", CreateTimeout: time.Second}},
+		logger: zap.NewNop(),
+	}
+	challenge := &challengecontracts.PracticeRuntimeChallenge{
+		ID:       126,
+		ImageID:  int64Ptr(126),
+		FlagType: challengecontracts.FlagTypeStatic,
+	}
+
+	err := service.provisionInstance(context.Background(), instance, toPracticeChallenge(challenge), nil, "flag{demo}")
+	if err == nil {
+		t.Fatal("expected retryable runtime failure")
+	}
+	if cleanupCalls != 1 {
+		t.Fatalf("expected cleanup once before rescheduling, got %d", cleanupCalls)
+	}
+	var stored instanceentity.Instance
+	if err := db.First(&stored, instance.ID).Error; err != nil {
+		t.Fatalf("load instance: %v", err)
+	}
+	if stored.Status != instanceentity.InstanceStatusCreating {
+		t.Fatalf("expected instance to remain creating for reschedule, got %s", stored.Status)
+	}
+	if stored.ProvisioningStage != instancecontracts.ProvisioningStageRescheduling {
+		t.Fatalf("expected provisioning stage rescheduling, got %q", stored.ProvisioningStage)
+	}
+	var events []instanceentity.ProvisioningEvent
+	if err := db.Where("instance_id = ? AND stage = ?", instance.ID, instancecontracts.ProvisioningStageRescheduling).Find(&events).Error; err != nil {
+		t.Fatalf("load provisioning events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("expected one rescheduling event, got %+v", events)
+	}
+}
+
 func TestProcessPendingAWDInstancePassesPlacementScopeWhenRuntimeNodeUnavailable(t *testing.T) {
 	t.Parallel()
 

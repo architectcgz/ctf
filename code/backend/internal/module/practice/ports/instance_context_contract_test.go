@@ -124,6 +124,22 @@ func (ctxOnlyPracticeCommandTxRepository) BindReservedPort(context.Context, int,
 	return nil
 }
 
+func (ctxOnlyPracticeCommandTxRepository) ReserveAvailablePortForNode(context.Context, int64) (int, error) {
+	return 0, nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) ReserveAvailablePortForNodeExcluding(context.Context, int64, int) (int, error) {
+	return 0, nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) BindReservedPortForNode(context.Context, int64, int, int64) error {
+	return nil
+}
+
+func (ctxOnlyPracticeCommandTxRepository) QuarantinePortForNode(context.Context, int64, int, string) error {
+	return nil
+}
+
 func (ctxOnlyPracticeCommandTxRepository) ReleaseReservedPort(context.Context, int) error {
 	return nil
 }

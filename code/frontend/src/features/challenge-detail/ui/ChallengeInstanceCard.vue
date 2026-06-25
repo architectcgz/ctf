@@ -33,7 +33,7 @@
       </div>
 
       <div v-if="isWaiting" class="instance-callout instance-callout--warning">
-        <div>实例正在排队创建，系统会自动刷新状态。</div>
+        <div>{{ waitingStatusLabel }}，系统会自动刷新状态。</div>
         <div>{{ queueLabel }}</div>
         <div>{{ etaLabel }}</div>
         <div v-if="progressLabel">
@@ -340,6 +340,7 @@ import { computed } from 'vue'
 import type { InstanceData, InstanceSharing, InstanceStatus } from '@/api/contracts'
 import {
   formatInstanceAccessDisplay,
+  getInstanceProvisioningLabel,
   getInstanceStatusLabel,
   getInstanceStatusTone,
   getInstanceWaitingEtaLabel,
@@ -378,6 +379,7 @@ const effectiveStatus = computed<InstanceStatus | null>(() => {
 const statusLabel = computed(() => {
   if (!effectiveStatus.value) return '未创建'
   if (effectiveStatus.value === 'expired') return '已自动回收'
+  if (props.instance && isWaiting.value) return getInstanceProvisioningLabel(props.instance)
   return getInstanceStatusLabel(effectiveStatus.value)
 })
 
@@ -431,6 +433,14 @@ const etaLabel = computed(() => {
 
 const progressLabel = computed(() => {
   return getInstanceWaitingProgressLabel(props.instance)
+})
+
+const waitingStatusLabel = computed(() => {
+  if (!props.instance) return '实例正在排队创建'
+  if (!props.instance.provisioning_stage && !props.instance.provisioning_message) {
+    return '实例正在排队创建'
+  }
+  return getInstanceProvisioningLabel(props.instance)
 })
 
 const accessLabel = computed(() => {

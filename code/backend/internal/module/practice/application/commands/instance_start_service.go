@@ -501,33 +501,46 @@ func (s *serviceCore) startChallengeWithScope(ctx context.Context, userID, chall
 		}
 
 		hostPort := 0
+		runtimeNodeID := runtimeNodeIDValue(runtimeNodeIDFromBinding(nodeBinding))
 		if requiresPublishedHostPort(scope, s.config.Container.AccessHost) {
 			var err error
-			hostPort, err = txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+			if runtimeNodeID > 0 {
+				hostPort, err = txRepo.ReserveAvailablePortForNode(ctx, runtimeNodeID)
+			} else {
+				hostPort, err = txRepo.ReserveAvailablePort(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd)
+			}
 			if err != nil {
 				return apperror.ErrInternal.WithCause(err)
 			}
 		}
 
 		instance = &instancecontracts.Instance{
-			UserID:        userID,
-			ContestID:     scope.ContestID,
-			TeamID:        scope.TeamID,
-			ChallengeID:   challengeID,
-			ServiceID:     scope.ServiceID,
-			RuntimeNodeID: runtimeNodeIDFromBinding(nodeBinding),
-			HostPort:      hostPort,
-			ShareScope:    scope.ShareScope,
-			Status:        initialStatus,
-			Nonce:         nonce,
-			FlagKeyID:     flagKeyID,
-			ExpiresAt:     expiresAt,
-			MaxExtends:    s.config.Container.MaxExtends,
+			UserID:              userID,
+			ContestID:           scope.ContestID,
+			TeamID:              scope.TeamID,
+			ChallengeID:         challengeID,
+			ServiceID:           scope.ServiceID,
+			RuntimeNodeID:       runtimeNodeIDFromBinding(nodeBinding),
+			HostPort:            hostPort,
+			ShareScope:          scope.ShareScope,
+			Status:              initialStatus,
+			ProvisioningStage:   instancecontracts.ProvisioningStageAllocatingPort,
+			ProvisioningAttempt: 1,
+			Nonce:               nonce,
+			FlagKeyID:           flagKeyID,
+			ExpiresAt:           expiresAt,
+			MaxExtends:          s.config.Container.MaxExtends,
 		}
 		if err := txRepo.CreateInstance(ctx, instance); err != nil {
 			return apperror.ErrInternal.WithCause(err)
 		}
 		if hostPort > 0 {
+			if runtimeNodeID > 0 {
+				if err := txRepo.BindReservedPortForNode(ctx, runtimeNodeID, hostPort, instance.ID); err != nil {
+					return apperror.ErrInternal.WithCause(err)
+				}
+				return nil
+			}
 			if err := txRepo.BindReservedPort(ctx, hostPort, instance.ID); err != nil {
 				return apperror.ErrInternal.WithCause(err)
 			}

@@ -13,6 +13,11 @@ func InstanceRespFromModel(inst *instancecontracts.Instance, publicHost, accessH
 	if inst != nil && inst.Status == instancecontracts.InstanceStatusStopping {
 		resp.Status = "destroying"
 	}
+	if inst != nil {
+		resp.ProvisioningStage = inst.ProvisioningStage
+		resp.ProvisioningMessage = instancecontracts.ResolveProvisioningMessage(inst.ProvisioningStage, "")
+		resp.ProvisioningAttempt = inst.ProvisioningAttempt
+	}
 	if resp.Status == instancecontracts.InstanceStatusRunning {
 		resp.AccessURL = runtimecontracts.ResolveRuntimePublicAccessURL(inst.AccessURL, publicHost, accessHost)
 		resp.Access = instancecontracts.BuildInstanceAccessInfo(resp.AccessURL)

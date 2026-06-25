@@ -53,6 +53,23 @@ func ResolveRuntimePublishedAccessHost(publicHost, accessHost string) string {
 	return strings.TrimSpace(publicHost)
 }
 
+func ResolveRuntimeNodePublicHost(nodePublicHost, globalPublicHost string) string {
+	if trimmed := strings.TrimSpace(nodePublicHost); trimmed != "" {
+		return trimmed
+	}
+	return strings.TrimSpace(globalPublicHost)
+}
+
+func ResolveRuntimeNodeAccessHost(nodePublicHost, nodeAccessHost, globalPublicHost, globalAccessHost string) string {
+	if trimmed := strings.TrimSpace(nodeAccessHost); trimmed != "" {
+		return trimmed
+	}
+	if trimmed := strings.TrimSpace(nodePublicHost); trimmed != "" {
+		return trimmed
+	}
+	return ResolveRuntimePublishedAccessHost(globalPublicHost, globalAccessHost)
+}
+
 func rewriteAccessURLHost(accessURL, fromHost, toHost string) string {
 	trimmed := strings.TrimSpace(accessURL)
 	fromHost = strings.TrimSpace(fromHost)

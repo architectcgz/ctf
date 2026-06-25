@@ -14,11 +14,32 @@ type KnownInstanceStatus =
 
 type InstancePresentationStatus = KnownInstanceStatus | string
 
+type KnownProvisioningStage =
+  | 'queued'
+  | 'selecting_node'
+  | 'allocating_port'
+  | 'allocating_network'
+  | 'creating_network'
+  | 'creating_container'
+  | 'starting_container'
+  | 'probing_readiness'
+  | 'cleaning_previous'
+  | 'rescheduling'
+  | 'failed'
+
 interface InstanceWaitingPresentationInput {
   status: InstancePresentationStatus
   queue_position?: number | null
   eta_seconds?: number | null
   progress?: number | null
+  provisioning_stage?: string | null
+  provisioning_message?: string | null
+}
+
+interface InstanceProvisioningPresentationInput {
+  status: InstancePresentationStatus
+  provisioning_stage?: string | null
+  provisioning_message?: string | null
 }
 
 interface InstanceAccessPresentationInput {
@@ -75,12 +96,30 @@ const instanceStatusPillClasses: Record<InstanceStatusTone, string> = {
   muted: 'instance-status-pill--inactive',
 }
 
+const provisioningStageLabels: Record<KnownProvisioningStage, string> = {
+  queued: '排队中',
+  selecting_node: '正在选择运行节点',
+  allocating_port: '正在分配访问端口',
+  allocating_network: '正在分配隔离网络',
+  creating_network: '正在创建隔离网络',
+  creating_container: '正在创建靶机容器',
+  starting_container: '正在启动靶机',
+  probing_readiness: '正在检查服务可用性',
+  cleaning_previous: '正在清理上一次启动残留',
+  rescheduling: '正在重新调度',
+  failed: '启动失败',
+}
+
 function normalizeText(value: string | null | undefined): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
 function isInstanceStatus(value: string): value is KnownInstanceStatus {
   return value in instanceStatusLabels
+}
+
+function isProvisioningStage(value: string): value is KnownProvisioningStage {
+  return value in provisioningStageLabels
 }
 
 function formatEtaSeconds(seconds?: number | null): string {
@@ -122,6 +161,22 @@ export function getInstanceStatusDotClass(status: InstancePresentationStatus): s
 
 export function getInstanceStatusPillClass(status: InstancePresentationStatus): string {
   return instanceStatusPillClasses[getInstanceStatusTone(status)]
+}
+
+export function getInstanceProvisioningLabel(
+  instance: InstanceProvisioningPresentationInput
+): string {
+  const message = normalizeText(instance.provisioning_message)
+  if (message) {
+    return message
+  }
+
+  const stage = normalizeText(instance.provisioning_stage)
+  if (stage && isProvisioningStage(stage)) {
+    return provisioningStageLabels[stage]
+  }
+
+  return getInstanceStatusLabel(instance.status)
 }
 
 export function getInstanceRemainingSeconds(expiresAt: string, nowMs = Date.now()): number {
@@ -181,7 +236,12 @@ export function getInstanceWaitingHint(instance: InstanceWaitingPresentationInpu
     return ''
   }
 
-  const details: string[] = ['实例正在排队创建']
+  const stage = normalizeText(instance.provisioning_stage)
+  const baseLabel =
+    normalizeText(instance.provisioning_message) ||
+    (stage && isProvisioningStage(stage) ? provisioningStageLabels[stage] : '') ||
+    '实例正在排队创建'
+  const details: string[] = [baseLabel]
 
   if (typeof instance.queue_position === 'number' && instance.queue_position > 0) {
     details.push(`队列第 ${instance.queue_position} 位`)

@@ -53,6 +53,7 @@ func TestPracticeRuntimeTopologyAdapterPreservesAWDNetworkFields(t *testing.T) {
 
 func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.T) {
 	req := &practiceports.TopologyCreateRequest{
+		RuntimeNodeID: 701,
 		SubnetPool:    practiceports.SubnetPoolSingleContainer,
 		ContainerName: "workspace-companion",
 		Nodes: []practiceports.TopologyCreateNode{
@@ -81,6 +82,9 @@ func TestPracticeRuntimeTopologyAdapterPreservesWorkspaceShellFields(t *testing.
 	}
 	if got.SubnetPool != runtimecontracts.SubnetPoolSingleContainer {
 		t.Fatalf("expected subnet pool preserved, got %q", got.SubnetPool)
+	}
+	if got.RuntimeNodeID != 701 {
+		t.Fatalf("expected runtime node id preserved, got %d", got.RuntimeNodeID)
 	}
 	if len(got.Nodes) != 1 {
 		t.Fatalf("expected one node, got %+v", got.Nodes)

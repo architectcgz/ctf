@@ -35,14 +35,15 @@ var (
 )
 
 type ContainerRuntimeModule struct {
-	ChallengeImageRuntime   challengeports.ImageRuntime
-	ChallengeRuntimeProbe   challengeports.ChallengeRuntimeProbe
-	OpsRuntimeQuery         opsports.RuntimeQuery
-	OpsRuntimeStatsProvider opsports.RuntimeStatsProvider
-	ContestContainerFiles   contestports.AWDContainerFileWriter
-	ContestCheckerRunner    contestports.CheckerRunner
-	RuntimeNodeSelector     runtimeports.RuntimeNodeSelector
-	LifecycleCloser         runtimeLifecycleCloser
+	ChallengeImageRuntime      challengeports.ImageRuntime
+	ChallengeRuntimeProbe      challengeports.ChallengeRuntimeProbe
+	OpsRuntimeQuery            opsports.RuntimeQuery
+	OpsRuntimeStatsProvider    opsports.RuntimeStatsProvider
+	ContestContainerFiles      contestports.AWDContainerFileWriter
+	ContestCheckerRunner       contestports.CheckerRunner
+	RuntimeNodeSelector        runtimeports.RuntimeNodeSelector
+	ResourcePoolRepository     runtimeports.RuntimeResourcePoolRepository
+	LifecycleCloser            runtimeLifecycleCloser
 
 	nodeRouter        *runtimeNodeExecutionRouter
 	nodeRepo          *containerruntimeinfra.RuntimeNodeRepository
@@ -71,8 +72,9 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 			return nil, err
 		}
 	}
+	nodeAllocationRepo := newRuntimeNodeResourceRepository(allocationRepo, resourcePoolRepo)
 
-	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
+	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, nodeAllocationRepo, defaultNode)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +93,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ManagedContainerStats:     executor,
 		InteractiveExecutor:       executor,
 	})
-	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), allocationRepo, indexRepo, nodeRepo, defaultNodeName)
+	nodeRouter := newRuntimeNodeExecutionRouter(cfg, log.Named("runtime_node_router"), nodeAllocationRepo, indexRepo, nodeRepo, defaultNodeName)
 	if nodeRouter != nil && defaultNode != nil && defaultNode.ID > 0 {
 		nodeRouter.rememberClient(defaultNode.ID, defaultNodeClient)
 	}
@@ -129,6 +131,7 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 		ContestContainerFiles:   contestContainerFiles,
 		ContestCheckerRunner:    contestCheckerRunner,
 		RuntimeNodeSelector:     nodeSelector,
+		ResourcePoolRepository:  resourcePoolRepo,
 		LifecycleCloser:         lifecycleCloser,
 		nodeRouter:              nodeRouter,
 		nodeRepo:                nodeRepo,

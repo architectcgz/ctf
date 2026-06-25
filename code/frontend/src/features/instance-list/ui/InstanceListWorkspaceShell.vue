@@ -157,7 +157,7 @@
                 <div class="instance-row-status">
                   <span class="workspace-directory-status-pill instance-state-chip">
                     <span :class="getInstanceStatusClass(instance.status)">●</span>
-                    <span>{{ getInstanceStatusLabel(instance.status) }}</span>
+                    <span>{{ getInstanceProvisioningLabel(instance) }}</span>
                   </span>
                 </div>
 
@@ -166,7 +166,9 @@
                     v-if="instance.status === 'running'"
                     class="workspace-directory-mono instance-row-mono"
                     :class="
-                      instance.remaining < warningThresholdSeconds ? 'instance-row-mono-warning' : ''
+                      instance.remaining < warningThresholdSeconds
+                        ? 'instance-row-mono-warning'
+                        : ''
                     "
                   >
                     {{ formatRemainingTime(instance.remaining) }}
@@ -445,11 +447,7 @@ import type { ComponentPublicInstance } from 'vue'
 
 import { Activity, Clock3, Server } from 'lucide-vue-next'
 
-import type {
-  ChallengeDifficulty,
-  InstanceListItem,
-  InstanceStatus,
-} from '@/api/contracts'
+import type { ChallengeDifficulty, InstanceListItem, InstanceStatus } from '@/api/contracts'
 import {
   ChallengeCategoryPill,
   ChallengeDifficultyText,
@@ -483,9 +481,19 @@ interface Props {
   ) => string
   formatRemainingTime: (seconds: number) => string
   getInstanceStatusClass: (status: InstanceStatus) => string
-  getInstanceStatusLabel: (status: InstanceStatus) => string
+  getInstanceProvisioningLabel: (
+    instance: Pick<InstanceListItem, 'status' | 'provisioning_stage' | 'provisioning_message'>
+  ) => string
   getInstanceWaitingHint: (
-    instance: Pick<InstanceListItem, 'status' | 'queue_position' | 'eta_seconds' | 'progress'>
+    instance: Pick<
+      InstanceListItem,
+      | 'status'
+      | 'queue_position'
+      | 'eta_seconds'
+      | 'progress'
+      | 'provisioning_stage'
+      | 'provisioning_message'
+    >
   ) => string
   isInstanceManualActionAllowed: (
     instance: Pick<InstanceListItem, 'contest_mode' | 'share_scope'>

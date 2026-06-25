@@ -483,6 +483,57 @@ func TestInstanceServiceGetUserInstancesIncludesPendingInstance(t *testing.T) {
 	}
 }
 
+func TestInstanceServiceGetUserInstancesIncludesProvisioningProgress(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceServiceTestDB(t)
+	now := time.Now()
+
+	seedInstanceServiceChallenge(t, db, &runtimeApplicationChallengeRow{
+		ID:         108,
+		Title:      "Provisioning Challenge",
+		Category:   taxonomy.DimensionWeb,
+		Difficulty: taxonomy.DifficultyEasy,
+		FlagType:   challengecontracts.FlagTypeStatic,
+		Status:     challengecontracts.ChallengeStatusPublished,
+		Points:     120,
+		CreatedAt:  now,
+		UpdatedAt:  now,
+	})
+	seedInstanceServiceInstance(t, db, &instanceentity.Instance{
+		ID:                  1008,
+		UserID:              2,
+		ChallengeID:         108,
+		Status:              instanceentity.InstanceStatusCreating,
+		ProvisioningStage:   instancecontracts.ProvisioningStageAllocatingPort,
+		ProvisioningAttempt: 3,
+		ExpiresAt:           now.Add(time.Hour),
+		MaxExtends:          2,
+		CreatedAt:           now,
+		UpdatedAt:           now,
+	})
+
+	service := instanceqry.NewInstanceService(instanceinfra.NewRepository(db), &config.ContainerConfig{})
+
+	items, err := service.GetUserInstances(context.Background(), 2)
+	if err != nil {
+		t.Fatalf("GetUserInstances() error = %v", err)
+	}
+	if len(items) != 1 {
+		t.Fatalf("expected one instance, got %+v", items)
+	}
+	item := items[0]
+	if item.ProvisioningStage != instancecontracts.ProvisioningStageAllocatingPort {
+		t.Fatalf("provisioning stage = %q, want %q", item.ProvisioningStage, instancecontracts.ProvisioningStageAllocatingPort)
+	}
+	if item.ProvisioningMessage != "正在分配访问端口" {
+		t.Fatalf("provisioning message = %q, want allocating port label", item.ProvisioningMessage)
+	}
+	if item.ProvisioningAttempt != 3 {
+		t.Fatalf("provisioning attempt = %d, want 3", item.ProvisioningAttempt)
+	}
+}
+
 func TestInstanceServiceGetUserInstancesIncludesFailedInstance(t *testing.T) {
 	t.Parallel()
 

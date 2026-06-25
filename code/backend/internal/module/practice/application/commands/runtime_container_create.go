@@ -265,6 +265,9 @@ func (s *serviceCore) createRuntimeWithHostPortRebind(ctx context.Context, insta
 	if err := create(); err != nil {
 		return err
 	}
+	if runtimeNodeIDValue(instance.RuntimeNodeID) > 0 {
+		return nil
+	}
 	if err := s.repo.ReleasePortForInstance(ctx, conflictedPort, instance.ID); err != nil && s.logger != nil {
 		s.logger.Warn("释放冲突旧端口占用失败",
 			zap.Int64("instance_id", instance.ID),
@@ -280,6 +283,21 @@ func (s *serviceCore) reserveReboundProvisioningHostPort(ctx context.Context, in
 	}
 	if s.config == nil {
 		return fmt.Errorf("practice config is nil")
+	}
+	if nodeID := runtimeNodeIDValue(instance.RuntimeNodeID); nodeID > 0 {
+		hostPort, err := s.repo.ReserveAvailablePortForNodeExcluding(ctx, nodeID, excludedPort)
+		if err != nil {
+			return err
+		}
+		if err := s.repo.BindReservedPortForNode(ctx, nodeID, hostPort, instance.ID); err != nil {
+			_ = s.repo.QuarantinePortForNode(ctx, nodeID, hostPort, "node scoped rebound bind failed")
+			return err
+		}
+		if err := s.repo.QuarantinePortForNode(ctx, nodeID, excludedPort, runtimeports.ErrPublishedHostPortConflict.Error()); err != nil {
+			return err
+		}
+		instance.HostPort = hostPort
+		return nil
 	}
 	hostPort, err := s.repo.ReserveAvailablePortExcluding(ctx, s.config.Container.PortRangeStart, s.config.Container.PortRangeEnd, excludedPort)
 	if err != nil {

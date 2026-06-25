@@ -9,6 +9,7 @@ import {
   getInstanceStatusLabel,
   getInstanceStatusPillClass,
   getInstanceStatusTone,
+  getInstanceProvisioningLabel,
   getInstanceStudentDisplayName,
   getInstanceStudentIdentityLabel,
   getInstanceStudentSecondaryLabel,
@@ -33,9 +34,9 @@ describe('instance presentation', () => {
   })
 
   it('formats remaining time and expired fallback consistently', () => {
-    expect(getInstanceRemainingSeconds('2099-01-01T00:01:05Z', Date.parse('2099-01-01T00:00:00Z'))).toBe(
-      65
-    )
+    expect(
+      getInstanceRemainingSeconds('2099-01-01T00:01:05Z', Date.parse('2099-01-01T00:00:00Z'))
+    ).toBe(65)
     expect(getInstanceRemainingTone(0)).toBe('muted')
     expect(getInstanceRemainingTone(240)).toBe('danger')
     expect(getInstanceRemainingTone(480)).toBe('warning')
@@ -64,6 +65,41 @@ describe('instance presentation', () => {
     expect(getInstanceWaitingQueueLabel({ status: 'running' })).toBe('')
   })
 
+  it('maps provisioning stages and prefers backend provisioning message', () => {
+    expect(
+      getInstanceProvisioningLabel({
+        status: 'creating',
+        provisioning_stage: 'rescheduling',
+      })
+    ).toBe('正在重新调度')
+    expect(
+      getInstanceProvisioningLabel({
+        status: 'creating',
+        provisioning_stage: 'allocating_port',
+      })
+    ).toBe('正在分配访问端口')
+    expect(
+      getInstanceProvisioningLabel({
+        status: 'creating',
+        provisioning_stage: 'allocating_network',
+      })
+    ).toBe('正在分配隔离网络')
+    expect(
+      getInstanceProvisioningLabel({
+        status: 'creating',
+        provisioning_stage: 'creating_container',
+      })
+    ).toBe('正在创建靶机容器')
+    expect(
+      getInstanceProvisioningLabel({
+        status: 'creating',
+        provisioning_stage: 'allocating_port',
+        provisioning_message: '节点端口分配中',
+      })
+    ).toBe('节点端口分配中')
+    expect(getInstanceProvisioningLabel({ status: 'creating' })).toBe('创建中')
+  })
+
   it('formats access and student meta through entity owner', () => {
     expect(
       formatInstanceAccessDisplay({
@@ -76,9 +112,9 @@ describe('instance presentation', () => {
         ssh_info: { host: '127.0.0.1', port: 2222 },
       })
     ).toBe('127.0.0.1:2222')
-    expect(getInstanceStudentDisplayName({ student_name: 'Alice', student_username: 'alice' })).toBe(
-      'Alice'
-    )
+    expect(
+      getInstanceStudentDisplayName({ student_name: 'Alice', student_username: 'alice' })
+    ).toBe('Alice')
     expect(getInstanceStudentDisplayName({ student_username: 'alice' })).toBe('alice')
     expect(
       getInstanceStudentIdentityLabel({ student_no: 'S-1001', student_username: 'alice' })

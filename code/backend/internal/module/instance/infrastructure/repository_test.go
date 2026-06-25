@@ -38,7 +38,80 @@ func newInstanceRepositoryTestDB(t *testing.T) *gorm.DB {
 	if err := db.AutoMigrate(&instancecontracts.Instance{}); err != nil {
 		t.Fatalf("migrate instance: %v", err)
 	}
+	if err := db.AutoMigrate(&instancecontracts.ProvisioningEvent{}); err != nil {
+		t.Fatalf("migrate provisioning event: %v", err)
+	}
 	return db
+}
+
+func TestRecordProvisioningProgressUpdatesStageAndAppendsEventInOneTransaction(t *testing.T) {
+	t.Parallel()
+
+	db := newInstanceRepositoryTestDB(t)
+	repo := NewRepository(db)
+	runtimeNodeID := int64(7101)
+	now := time.Now().UTC()
+	instance := instancecontracts.Instance{
+		ID:          71001,
+		UserID:      7,
+		ChallengeID: 41,
+		Status:      instancecontracts.InstanceStatusCreating,
+		ExpiresAt:   now.Add(time.Hour),
+	}
+	if err := db.Create(&instance).Error; err != nil {
+		t.Fatalf("seed instance: %v", err)
+	}
+
+	changed, err := repo.RecordProvisioningProgress(context.Background(), instancecontracts.ProvisioningProgress{
+		InstanceID:    instance.ID,
+		Attempt:       2,
+		Stage:         instancecontracts.ProvisioningStageAllocatingPort,
+		Message:       "正在分配访问端口",
+		Severity:      instancecontracts.ProvisioningEventSeverityInfo,
+		RuntimeNodeID: &runtimeNodeID,
+		Detail:        `{"port":30000}`,
+	})
+	if err != nil {
+		t.Fatalf("RecordProvisioningProgress() error = %v", err)
+	}
+	if !changed {
+		t.Fatal("expected creating instance provisioning progress to be recorded")
+	}
+
+	var updated instancecontracts.Instance
+	if err := db.First(&updated, instance.ID).Error; err != nil {
+		t.Fatalf("load updated instance: %v", err)
+	}
+	if updated.ProvisioningStage != instancecontracts.ProvisioningStageAllocatingPort {
+		t.Fatalf("provisioning stage = %q, want %q", updated.ProvisioningStage, instancecontracts.ProvisioningStageAllocatingPort)
+	}
+	if updated.ProvisioningAttempt != 2 {
+		t.Fatalf("provisioning attempt = %d, want 2", updated.ProvisioningAttempt)
+	}
+	if updated.LastProvisioningError != "" {
+		t.Fatalf("last provisioning error = %q, want empty", updated.LastProvisioningError)
+	}
+
+	var events []instancecontracts.ProvisioningEvent
+	if err := db.Order("id ASC").Find(&events).Error; err != nil {
+		t.Fatalf("load provisioning events: %v", err)
+	}
+	if len(events) != 1 {
+		t.Fatalf("event count = %d, want 1", len(events))
+	}
+	event := events[0]
+	if event.InstanceID != instance.ID || event.Attempt != 2 || event.Stage != instancecontracts.ProvisioningStageAllocatingPort {
+		t.Fatalf("unexpected event core fields: %+v", event)
+	}
+	if event.Message != "正在分配访问端口" || event.Severity != instancecontracts.ProvisioningEventSeverityInfo {
+		t.Fatalf("unexpected event message/severity: %+v", event)
+	}
+	if event.RuntimeNodeID == nil || *event.RuntimeNodeID != runtimeNodeID {
+		t.Fatalf("event runtime node id = %v, want %d", event.RuntimeNodeID, runtimeNodeID)
+	}
+	if event.Detail != `{"port":30000}` {
+		t.Fatalf("event detail = %q, want port detail", event.Detail)
+	}
 }
 
 func TestRepositoryUsesRuntimeNodeIDColumnForBindingAndRequeue(t *testing.T) {

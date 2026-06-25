@@ -35,6 +35,7 @@ type TopologyCreateRequest struct {
 	Nodes                      []TopologyCreateNode
 	Policies                   []TopologyTrafficPolicy
 	SubnetPool                 SubnetPoolKind
+	RuntimeNodeID              int64
 	OwnerInstanceID            int64
 	ReservedHostPort           int
 	DisableEntryPortPublishing bool

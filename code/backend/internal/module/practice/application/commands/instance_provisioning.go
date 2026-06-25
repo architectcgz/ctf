@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"ctf-platform/internal/apperror"
+	runtimeports "ctf-platform/internal/module/container_runtime/ports"
 	contestcontracts "ctf-platform/internal/module/contest/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
 	practiceentity "ctf-platform/internal/module/practice/entity"
@@ -49,12 +51,40 @@ func (s *serviceCore) markInstanceFailed(ctx context.Context, instance *instance
 	}
 }
 
+func (s *serviceCore) markInstanceRescheduling(ctx context.Context, instance *instancecontracts.Instance, cause error) {
+	if instance == nil {
+		return
+	}
+	ctx = bestEffortFailureContext(ctx)
+	if err := s.runtimeService.CleanupRuntime(ctx, instance); err != nil {
+		s.logger.Warn("清理待重新调度实例运行时资源失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+	attempt := instance.ProvisioningAttempt + 1
+	if attempt <= 0 {
+		attempt = 1
+	}
+	if err := s.recordProvisioningProgress(ctx, instancecontracts.ProvisioningProgress{
+		InstanceID:            instance.ID,
+		Attempt:               attempt,
+		Stage:                 instancecontracts.ProvisioningStageRescheduling,
+		Severity:              instancecontracts.ProvisioningEventSeverityWarning,
+		RuntimeNodeID:         instance.RuntimeNodeID,
+		LastProvisioningError: safeProvisioningError(cause),
+	}); err != nil {
+		s.logger.Warn("记录实例重新调度进度失败", zap.Int64("instance_id", instance.ID), zap.Error(err))
+	}
+}
+
 func (s *serviceCore) provisionInstance(ctx context.Context, instance *instancecontracts.Instance, chal *practiceentity.Challenge, topology *practiceports.RuntimeChallengeTopology, flag string) error {
 	createCtx, cancel := context.WithTimeout(ctx, s.config.Container.CreateTimeout)
 	defer cancel()
 
 	if err := s.createContainer(createCtx, instance, chal, topology, flag); err != nil {
 		s.logger.Error("容器创建失败", zap.Error(err), wrappedErrorCauseField(err), zap.Int64("instance_id", instance.ID))
+		if shouldRescheduleProvisioningFailure(instance, err) {
+			s.markInstanceRescheduling(ctx, instance, err)
+			return err
+		}
 		s.markInstanceFailed(ctx, instance)
 		return err
 	}
@@ -100,6 +130,22 @@ func (s *serviceCore) provisionInstance(ctx context.Context, instance *instancec
 		zap.Int64("challenge_id", instance.ChallengeID),
 		zap.Int64("instance_id", instance.ID))
 	return nil
+}
+
+func shouldRescheduleProvisioningFailure(instance *instancecontracts.Instance, err error) bool {
+	if instance == nil || isAWDInstance(instance) {
+		return false
+	}
+	return errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) ||
+		errors.Is(err, runtimeports.ErrRuntimeNetworkSubnetConflict) ||
+		errors.Is(err, runtimeports.ErrPublishedHostPortConflict)
+}
+
+func safeProvisioningError(err error) string {
+	if err == nil {
+		return ""
+	}
+	return err.Error()
 }
 
 func (s *serviceCore) waitForInstanceReadiness(ctx context.Context, accessURL string) error {

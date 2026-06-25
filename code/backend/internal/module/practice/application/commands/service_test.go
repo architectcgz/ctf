@@ -808,18 +808,42 @@ func newPracticeCommandTestDB(t *testing.T) *gorm.DB {
 		&identitycontracts.User{},
 		&contestentity.Team{},
 		&instanceentity.Instance{},
+		&instanceentity.ProvisioningEvent{},
 		&runtimeentity.AWDServiceOperation{},
 		&runtimeentity.AWDScopeControl{},
 		&runtimeentity.AWDDefenseWorkspace{},
 		&containerruntimeentity.PortAllocation{},
 		&containerruntimeentity.NetworkAllocation{},
 		&containerruntimeentity.RuntimeNode{},
+		&containerruntimeentity.RuntimePortPool{},
+		&containerruntimeentity.RuntimeSubnetPool{},
 		&contestentity.Submission{},
 		&events.OutboxRecord{},
 	); err != nil {
 		t.Fatalf("migrate practice command tables: %v", err)
 	}
 	return db
+}
+
+func seedRuntimePortPool(t *testing.T, db *gorm.DB, nodeID int64, ports ...int) {
+	t.Helper()
+	now := time.Now().UTC()
+	rows := make([]containerruntimeentity.RuntimePortPool, 0, len(ports))
+	for _, port := range ports {
+		rows = append(rows, containerruntimeentity.RuntimePortPool{
+			RuntimeNodeID: nodeID,
+			Port:          port,
+			Status:        containerruntimeentity.RuntimeResourceStatusAvailable,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		})
+	}
+	if len(rows) == 0 {
+		return
+	}
+	if err := db.Create(&rows).Error; err != nil {
+		t.Fatalf("seed runtime port pool: %v", err)
+	}
 }
 
 func TestPracticeCommandDBMigratesRuntimeNodeSchema(t *testing.T) {

@@ -70,20 +70,22 @@ type TeacherInstancePage struct {
 }
 
 type UserVisibleInstanceRow struct {
-	ID             int64
-	ContestMode    string
-	ChallengeID    int64
-	ChallengeTitle string
-	Category       string
-	Difficulty     string
-	FlagType       string
-	Status         string
-	ShareScope     instanceentity.ShareScope
-	AccessURL      string
-	ExpiresAt      time.Time
-	ExtendCount    int
-	MaxExtends     int
-	CreatedAt      time.Time
+	ID                  int64
+	ContestMode         string
+	ChallengeID         int64
+	ChallengeTitle      string
+	Category            string
+	Difficulty          string
+	FlagType            string
+	Status              string
+	ProvisioningStage   string
+	ProvisioningAttempt int
+	ShareScope          instanceentity.ShareScope
+	AccessURL           string
+	ExpiresAt           time.Time
+	ExtendCount         int
+	MaxExtends          int
+	CreatedAt           time.Time
 }
 
 type TeacherInstanceRow struct {

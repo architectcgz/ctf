@@ -46,6 +46,35 @@ type runtimeNodeAllocationRepository interface {
 	runtimecmd.RuntimeCleanupRepository
 }
 
+type runtimeNodeResourceRepository struct {
+	runtimeNodeAllocationRepository
+	resourcePool *containerruntimeinfra.RuntimeResourcePoolRepository
+}
+
+func newRuntimeNodeResourceRepository(allocationRepo runtimeNodeAllocationRepository, resourcePool *containerruntimeinfra.RuntimeResourcePoolRepository) runtimeNodeAllocationRepository {
+	if allocationRepo == nil || resourcePool == nil {
+		return allocationRepo
+	}
+	return &runtimeNodeResourceRepository{
+		runtimeNodeAllocationRepository: allocationRepo,
+		resourcePool:                    resourcePool,
+	}
+}
+
+func (r *runtimeNodeResourceRepository) ReserveAvailableSubnetForNode(ctx context.Context, nodeID int64, poolKind string, instanceID int64, networkKey string) (string, error) {
+	if r == nil || r.resourcePool == nil {
+		return "", runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return r.resourcePool.ReserveAvailableSubnetForNode(ctx, nodeID, poolKind, instanceID, networkKey)
+}
+
+func (r *runtimeNodeResourceRepository) QuarantineSubnet(ctx context.Context, nodeID int64, subnet string, reason string) error {
+	if r == nil || r.resourcePool == nil {
+		return runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return r.resourcePool.QuarantineSubnet(ctx, nodeID, subnet, reason)
+}
+
 type runtimeNodeStateRepository interface {
 	FindRuntimeNodeIDByContainerID(ctx context.Context, containerID string) (*int64, error)
 }
@@ -113,38 +142,53 @@ func buildRuntimeNodeClientFromNode(
 	if logger == nil {
 		logger = zap.NewNop()
 	}
-	if runtimeUsesTestEngine(cfg) {
+	nodeCfg := runtimeNodeScopedConfig(cfg, node)
+	if runtimeUsesTestEngine(nodeCfg) {
 		executor := newTestRuntimeEngine(logger.Named("runtime_test_engine"))
-		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, nil, nil), nil
+		return newNodeRuntimeClient(nodeCfg, logger, allocationRepo, executor, nil, nil), nil
 	}
 	if node == nil {
 		return nil, runtimeports.ErrRuntimeNodeUnavailable
 	}
 
 	if usesLocalRuntimeNode(node) {
-		if !runtimeAllowsLocalFallback(cfg) {
+		if !runtimeAllowsLocalFallback(nodeCfg) {
 			return nil, errLocalRuntimeFallbackDisabled
 		}
-		executor, err := newLocalRuntimeHostRunner(&cfg.Container)
+		executor, err := newLocalRuntimeHostRunner(&nodeCfg.Container)
 		if err != nil {
 			return nil, err
 		}
-		sandboxExecutor, err := newLocalSandboxExecutor(cfg.Contest.AWD.CheckerSandbox)
+		sandboxExecutor, err := newLocalSandboxExecutor(nodeCfg.Contest.AWD.CheckerSandbox)
 		if err != nil {
 			return nil, err
 		}
-		return newNodeRuntimeClient(cfg, logger, allocationRepo, executor, contestinfra.NewSandboxCheckerRunner(sandboxExecutor), nil), nil
+		return newNodeRuntimeClient(nodeCfg, logger, allocationRepo, executor, contestinfra.NewSandboxCheckerRunner(sandboxExecutor), nil), nil
 	}
 
-	client, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(cfg.RuntimeAgent, node))
+	client, err := dialRuntimeAgent(ctx, runtimeAgentConfigForNode(nodeCfg.RuntimeAgent, node))
 	if err != nil {
 		return nil, err
 	}
-	if err := verifyRuntimeAgentNodeIdentity(ctx, node, client, strings.TrimSpace(cfg.RuntimeAgent.NodeName) != "", cfg.RuntimeAgent.DialTimeout); err != nil {
+	if err := verifyRuntimeAgentNodeIdentity(ctx, node, client, strings.TrimSpace(nodeCfg.RuntimeAgent.NodeName) != "", nodeCfg.RuntimeAgent.DialTimeout); err != nil {
 		_ = client.Close(ctx)
 		return nil, err
 	}
-	return newNodeRuntimeClient(cfg, logger, allocationRepo, client, contestinfra.NewSandboxCheckerRunner(client), client), nil
+	return newNodeRuntimeClient(nodeCfg, logger, allocationRepo, client, contestinfra.NewSandboxCheckerRunner(client), client), nil
+}
+
+func runtimeNodeScopedConfig(cfg *config.Config, node *runtimeentity.RuntimeNode) *config.Config {
+	if cfg == nil {
+		cfg = &config.Config{}
+	}
+	scoped := *cfg
+	containerCfg := cfg.Container
+	if node != nil {
+		containerCfg.PublicHost = runtimecontracts.ResolveRuntimeNodePublicHost(node.PublicHost, cfg.Container.PublicHost)
+		containerCfg.AccessHost = runtimecontracts.ResolveRuntimeNodeAccessHost(node.PublicHost, node.AccessHost, cfg.Container.PublicHost, cfg.Container.AccessHost)
+	}
+	scoped.Container = containerCfg
+	return &scoped
 }
 
 func verifyRuntimeAgentNodeIdentity(ctx context.Context, node *runtimeentity.RuntimeNode, client *agentclient.Client, strict bool, timeout time.Duration) error {

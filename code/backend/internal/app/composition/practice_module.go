@@ -9,7 +9,7 @@ import (
 
 type PracticeModule = practiceruntime.Module
 
-func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule) *PracticeModule {
+func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *InstanceModule, containerRuntime *ContainerRuntimeModule) *PracticeModule {
 	module := practiceruntime.Build(practiceruntime.Deps{
 		AppContext:          root.Context(),
 		Config:              root.Config(),
@@ -21,6 +21,7 @@ func BuildPracticeModule(root *Root, challenge *ChallengeModule, instance *Insta
 		RuntimeService:      instance.PracticeRuntimeService,
 		RuntimeNodeSelector: instance.PracticeRuntimeNodeSelector,
 		RuntimePortOwnerFor: runtimePortOwnerFor,
+		RuntimeResourcePool: containerRuntime.ResourcePoolRepository,
 		ChallengeRepo:       challenge.Catalog,
 		ImageStore:          challenge.ImageStore,
 		OutboxHandlers:      root.OutboxHandlerRegistry(),

@@ -26,6 +26,7 @@
 - 靶机宿主运行 `runtime-agent`
 - API 侧 `runtime_agent.enabled: true`
 - 建议显式配置同一个稳定名称：API 侧 `runtime_agent.node_name`、agent 侧 `runtime_agent.server.node_name`、数据库 `runtime_nodes.name`
+- 数据库 `runtime_nodes.endpoint` 写 API 访问 runtime-agent 的控制面地址；`runtime_nodes.public_host/access_host` 写该 node 发布端口的数据面访问地址
 - 未配置 `runtime_agent.node_name` 时，`runtime_nodes` 默认写入 `agent-default`
 - 实例创建、清理、checker、AWD 文件写入和容器 maintenance 都按 `node_id` 路由到对应 `runtime_nodes.name`
 
@@ -34,10 +35,10 @@
 适用：多个靶机宿主共同承载实例和 AWD service。
 
 - 每台靶机宿主运行一个 `runtime-agent`
-- API 侧在 `runtime_nodes` 表中登记多个 schedulable node
+- API 侧在 `runtime_nodes` 表中登记多个 schedulable node，并为每个 node 维护 `endpoint`、`public_host`、`access_host`
 - 每个 `runtime_nodes.name` 必须对应一个 runtime-agent 的 `runtime_agent.server.node_name`
 - `runtime_node_health` 后台任务会探测每个 runtime node，默认新调度只选择 `schedulable + ready / degraded` 且心跳未过期的 node
-- node 离线后，该 node 上未过期的 `creating / running` 实例会重新进入 `pending`，由现有 scheduler / AWD desired reconciler 在健康节点上重建
+- node 离线后，该 node 上未过期的普通 `creating / running` 实例会重新进入 `pending`，由现有 scheduler 在健康节点上重建；AWD service instance 遵守 `contest_runtime_placements`，绑定 node 不可用时等待 / backoff，不静默漂移到其他 node
 - 当前不声明容量智能分配、live migration 或已有 SSH/WebSocket 会话透明迁移已经落地
 
 ## 打包和启动 runtime-agent
@@ -169,6 +170,35 @@ runtime_agent:
 - API 仍负责签发 AWD defense SSH ticket，但 `2222` listener 由独立的 `awd-defense-ssh-gateway` 进程持有
 - 如果部署了多个 `awd-defense-ssh-gateway` 副本，LB 只需要把新连接导向健康副本；已有 SSH 会话在某个 gateway 或 runtime node 故障时允许中断，客户端后续重连会重新走 ticket + scope 校验
 
+## runtime node 访问地址与资源池
+
+当前 v1 没有 runtime node management UI/API。operator 通过配置 bootstrap、数据库 seed、迁移脚本或受控 ops seed path 维护 `runtime_nodes` 行，不在学生侧或管理员 Web 页面里直接编辑 node host 字段。
+
+字段语义：
+
+- `runtime_nodes.endpoint`：控制面地址，API 用它拨号到对应 `runtime-agent`。
+- `runtime_nodes.public_host`：学生访问该 node 发布端口时使用的 host。
+- `runtime_nodes.access_host`：API、gateway、checker 或 readiness probe 访问该 node 发布端口时使用的 host。
+
+访问 host fallback：
+
+- public：node `public_host` -> global `container.public_host`
+- access：node `access_host` -> node `public_host` -> global `container.access_host` -> global `container.public_host`
+
+运维建议：
+
+- 单 remote agent 环境也建议填写 node `public_host/access_host`，避免未来扩到多 node 后学生侧 URL 仍落到全局 host。
+- `endpoint` 可以是内网 DNS、IP 或 agent TLS 地址；不要把它当作学生访问靶机的地址。
+- `public_host` 通常是学生浏览器可达的域名 / LB / 公网地址；`access_host` 通常是 API / gateway 容器可达的内网地址。
+- 如果某个 node 暂时不接收新实例，优先把 `schedulable=false`；不要删除 node row，否则会影响仍绑定该 node 的 runtime 清理和排障。
+
+端口和子网资源池按 node 管理：
+
+- `runtime_port_pool(runtime_node_id, port)` 控制宿主发布端口，`runtime_subnet_pool(runtime_node_id, subnet)` 控制 Docker bridge 子网。
+- 同一个端口号或子网可以出现在不同 node；同一 node 内不能重复绑定。
+- 启动时会按 `container.port_range_*` 和 `container.network.*` 为 node seed pool rows；已 `reserved/bound/quarantined` 的行不会被 seed 覆盖。
+- Docker 返回 host port conflict 或 subnet overlap 时，冲突资源会留在对应 node pool 的 `quarantined` 状态，不释放回 `available`；operator 排查宿主机占用、Docker 残留 network 或配置冲突后，再通过受控运维脚本恢复资源状态。
+
 ### runtime node health
 
 API 侧默认开启 runtime node 健康探测：
@@ -215,6 +245,7 @@ container:
   - `true` 且配置 `runtime_agent.node_name` -> 该配置值
   - `true` 且未配置 `runtime_agent.node_name` -> `agent-default`
 - `runtime_nodes.name` 是部署期稳定节点身份；`runtime_nodes.id` 和各业务表里的 `node_id` 仍是数据库内部路由键，不应配置到 runtime-agent
+- `runtime_nodes.endpoint` 是 API 到 runtime-agent 的控制面地址；`runtime_nodes.public_host/access_host` 是发布端口的数据面访问地址，不改变 node identity
 - runtime-agent 的 Health 会返回自报 `node_name` 和宿主 `hostname`。当远端 self-report 与 API 正在拨号的 `runtime_nodes.name` 不一致时，API 会在缓存 client 前失败，错误信息会包含 expected / reported node、endpoint 和 hostname
 - 新实例启动时会把选中的 `node_id` 持久化到实例记录
 - checker job metadata、AWD service instance 和容器文件写入路径都会显式携带或反查 `node_id`

@@ -74,6 +74,13 @@ func (r *practiceTestInstanceRepository) PersistProvisionedRuntime(ctx context.C
 	return r.instanceRepo.PersistProvisionedRuntime(ctx, instance)
 }
 
+func (r *practiceTestInstanceRepository) RecordProvisioningProgress(ctx context.Context, progress instancecontracts.ProvisioningProgress) (bool, error) {
+	if r == nil || r.instanceRepo == nil {
+		return false, nil
+	}
+	return r.instanceRepo.RecordProvisioningProgress(ctx, progress)
+}
+
 func (r *practiceTestInstanceRepository) RefreshInstanceExpiry(ctx context.Context, instanceID int64, expiresAt time.Time) error {
 	if r == nil || r.instanceRepo == nil {
 		return nil
@@ -199,6 +206,10 @@ type stubPracticeRepository struct {
 	reserveAvailablePortFn                 func(ctx context.Context, start, end int) (int, error)
 	reserveAvailablePortExcludingFn        func(ctx context.Context, start, end, excludedPort int) (int, error)
 	bindReservedPortFn                     func(ctx context.Context, port int, instanceID int64) error
+	reserveAvailablePortForNodeFn          func(ctx context.Context, nodeID int64) (int, error)
+	reserveAvailablePortForNodeExcludingFn func(ctx context.Context, nodeID int64, excludedPort int) (int, error)
+	bindReservedPortForNodeFn              func(ctx context.Context, nodeID int64, port int, instanceID int64) error
+	quarantinePortForNodeFn                func(ctx context.Context, nodeID int64, port int, reason string) error
 	releaseReservedPortFn                  func(ctx context.Context, port int) error
 	releasePortForInstanceFn               func(ctx context.Context, port int, instanceID int64) error
 	createSubmissionFn                     func(ctx context.Context, submission *practiceports.SubmissionRecord) error
@@ -803,6 +814,34 @@ func (s *stubPracticeRepository) ReserveAvailablePortExcluding(ctx context.Conte
 func (s *stubPracticeRepository) BindReservedPort(ctx context.Context, port int, instanceID int64) error {
 	if s.bindReservedPortFn != nil {
 		return s.bindReservedPortFn(ctx, port, instanceID)
+	}
+	return nil
+}
+
+func (s *stubPracticeRepository) ReserveAvailablePortForNode(ctx context.Context, nodeID int64) (int, error) {
+	if s.reserveAvailablePortForNodeFn != nil {
+		return s.reserveAvailablePortForNodeFn(ctx, nodeID)
+	}
+	return s.ReserveAvailablePort(ctx, 0, 0)
+}
+
+func (s *stubPracticeRepository) ReserveAvailablePortForNodeExcluding(ctx context.Context, nodeID int64, excludedPort int) (int, error) {
+	if s.reserveAvailablePortForNodeExcludingFn != nil {
+		return s.reserveAvailablePortForNodeExcludingFn(ctx, nodeID, excludedPort)
+	}
+	return s.ReserveAvailablePortForNode(ctx, nodeID)
+}
+
+func (s *stubPracticeRepository) BindReservedPortForNode(ctx context.Context, nodeID int64, port int, instanceID int64) error {
+	if s.bindReservedPortForNodeFn != nil {
+		return s.bindReservedPortForNodeFn(ctx, nodeID, port, instanceID)
+	}
+	return s.BindReservedPort(ctx, port, instanceID)
+}
+
+func (s *stubPracticeRepository) QuarantinePortForNode(ctx context.Context, nodeID int64, port int, reason string) error {
+	if s.quarantinePortForNodeFn != nil {
+		return s.quarantinePortForNodeFn(ctx, nodeID, port, reason)
 	}
 	return nil
 }

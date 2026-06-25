@@ -7,6 +7,7 @@ export {
   getInstanceStatusLabel,
   getInstanceStatusPillClass,
   getInstanceStatusTone,
+  getInstanceProvisioningLabel,
   getInstanceStudentDisplayName,
   getInstanceStudentIdentityLabel,
   getInstanceStudentSecondaryLabel,

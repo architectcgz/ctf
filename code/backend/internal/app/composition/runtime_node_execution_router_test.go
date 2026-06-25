@@ -224,6 +224,30 @@ func TestBuildRuntimeNodeClientRejectsRuntimeAgentNodeNameMismatch(t *testing.T)
 	}
 }
 
+func TestRuntimeNodeScopedConfigUsesRuntimeNodeAccessHostsForProvisioning(t *testing.T) {
+	cfg, _, _ := newRootTestDependencies(t)
+	cfg.Container.PublicHost = "global-public.local"
+	cfg.Container.AccessHost = "global-access.internal"
+	node := &containerruntimeentity.RuntimeNode{
+		ID:         301,
+		Name:       "node-b",
+		Endpoint:   "runtime-agent-b:9443",
+		PublicHost: "node-b.ctf.local",
+		AccessHost: "node-b.internal",
+	}
+
+	scoped := runtimeNodeScopedConfig(cfg, node)
+	if scoped == nil {
+		t.Fatal("expected scoped config")
+	}
+	if scoped.Container.PublicHost != "node-b.ctf.local" {
+		t.Fatalf("provisioning public host = %q, want node public host", scoped.Container.PublicHost)
+	}
+	if scoped.Container.AccessHost != "node-b.internal" {
+		t.Fatalf("provisioning access host = %q, want node access host", scoped.Container.AccessHost)
+	}
+}
+
 func TestBuildRuntimeNodeClientTimesOutRuntimeAgentIdentityCheck(t *testing.T) {
 	cfg, db, _ := newRootTestDependencies(t)
 	cfg.App.Env = "dev"

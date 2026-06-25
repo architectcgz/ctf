@@ -35,6 +35,11 @@ type ProvisioningRepository interface {
 	ReleaseSubnetForInstance(ctx context.Context, subnet string, instanceID int64) error
 }
 
+type nodeScopedSubnetRepository interface {
+	ReserveAvailableSubnetForNode(ctx context.Context, nodeID int64, poolKind string, instanceID int64, networkKey string) (string, error)
+	QuarantineSubnet(ctx context.Context, nodeID int64, subnet string, reason string) error
+}
+
 type createdTopologyNetwork struct {
 	key      string
 	name     string
@@ -219,11 +224,12 @@ func (s *ProvisioningService) CreateTopology(ctx context.Context, req *runtimeco
 			if err == nil {
 				break
 			}
-			s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
 			if errors.Is(err, runtimeports.ErrRuntimeNetworkSubnetConflict) && canRetrySubnetAllocation(network, subnet) {
+				s.quarantineOrReleaseConflictedNetworkSubnet(ctx, req, subnet, err)
 				occupiedSubnets = appendUniqueSubnet(occupiedSubnets, subnet)
 				continue
 			}
+			s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
 			s.cleanupTopologyResources(ctx, nil, createdNetworks, req.OwnerInstanceID)
 			return nil, err
 		}
@@ -537,11 +543,36 @@ func (s *ProvisioningService) allocateNetworkSubnet(ctx context.Context, req *ru
 	if s.repo == nil {
 		return "", fmt.Errorf("runtime provisioning repository is not configured")
 	}
+	if nodeID := runtimeNodeIDValue(req); nodeID > 0 {
+		if nodeRepo, ok := s.repo.(nodeScopedSubnetRepository); ok {
+			return nodeRepo.ReserveAvailableSubnetForNode(ctx, nodeID, string(resolveSubnetPoolKind(req)), ownerInstanceID, network.Key)
+		}
+	}
 	baseCIDR, subnetMask := s.resolveNetworkPool(req)
 	if ownerInstanceID > 0 {
 		return s.repo.ReserveAvailableSubnetForInstanceExcluding(ctx, baseCIDR, subnetMask, ownerInstanceID, network.Key, excludedSubnets)
 	}
 	return s.repo.ReserveAvailableSubnetExcluding(ctx, baseCIDR, subnetMask, excludedSubnets)
+}
+
+func (s *ProvisioningService) quarantineOrReleaseConflictedNetworkSubnet(ctx context.Context, req *runtimecontracts.TopologyCreateRequest, subnet string, cause error) {
+	if s == nil || s.repo == nil {
+		return
+	}
+	if nodeID := runtimeNodeIDValue(req); nodeID > 0 {
+		if nodeRepo, ok := s.repo.(nodeScopedSubnetRepository); ok {
+			_ = nodeRepo.QuarantineSubnet(ctx, nodeID, subnet, cause.Error())
+			return
+		}
+	}
+	s.releaseNetworkSubnet(ctx, req.OwnerInstanceID, subnet)
+}
+
+func runtimeNodeIDValue(req *runtimecontracts.TopologyCreateRequest) int64 {
+	if req == nil {
+		return 0
+	}
+	return req.RuntimeNodeID
 }
 
 func (s *ProvisioningService) resolveNetworkPool(req *runtimecontracts.TopologyCreateRequest) (string, int) {

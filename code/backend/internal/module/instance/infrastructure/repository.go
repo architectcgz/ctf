@@ -24,22 +24,24 @@ type RuntimeAllocationRelease struct {
 }
 
 type userVisibleInstanceRow struct {
-	ID              int64                        `gorm:"column:id"`
-	ContestMode     string                       `gorm:"column:contest_mode"`
-	ChallengeID     int64                        `gorm:"column:challenge_id"`
-	ChallengeTitle  string                       `gorm:"column:challenge_title"`
-	Category        string                       `gorm:"column:category"`
-	Difficulty      string                       `gorm:"column:difficulty"`
-	FlagType        string                       `gorm:"column:flag_type"`
-	ServiceName     string                       `gorm:"column:service_name"`
-	ServiceSnapshot string                       `gorm:"column:service_snapshot"`
-	Status          string                       `gorm:"column:status"`
-	ShareScope      instancecontracts.ShareScope `gorm:"column:share_scope"`
-	AccessURL       string                       `gorm:"column:access_url"`
-	ExpiresAt       time.Time                    `gorm:"column:expires_at"`
-	ExtendCount     int                          `gorm:"column:extend_count"`
-	MaxExtends      int                          `gorm:"column:max_extends"`
-	CreatedAt       time.Time                    `gorm:"column:created_at"`
+	ID                  int64                        `gorm:"column:id"`
+	ContestMode         string                       `gorm:"column:contest_mode"`
+	ChallengeID         int64                        `gorm:"column:challenge_id"`
+	ChallengeTitle      string                       `gorm:"column:challenge_title"`
+	Category            string                       `gorm:"column:category"`
+	Difficulty          string                       `gorm:"column:difficulty"`
+	FlagType            string                       `gorm:"column:flag_type"`
+	ServiceName         string                       `gorm:"column:service_name"`
+	ServiceSnapshot     string                       `gorm:"column:service_snapshot"`
+	Status              string                       `gorm:"column:status"`
+	ProvisioningStage   string                       `gorm:"column:provisioning_stage"`
+	ProvisioningAttempt int                          `gorm:"column:provisioning_attempt"`
+	ShareScope          instancecontracts.ShareScope `gorm:"column:share_scope"`
+	AccessURL           string                       `gorm:"column:access_url"`
+	ExpiresAt           time.Time                    `gorm:"column:expires_at"`
+	ExtendCount         int                          `gorm:"column:extend_count"`
+	MaxExtends          int                          `gorm:"column:max_extends"`
+	CreatedAt           time.Time                    `gorm:"column:created_at"`
 }
 
 type teacherInstanceRow struct {
@@ -172,6 +174,8 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]ins
 			"cas.display_name AS service_name",
 			"cas.service_snapshot AS service_snapshot",
 			"inst.status",
+			"inst.provisioning_stage",
+			"inst.provisioning_attempt",
 			"inst.share_scope",
 			"inst.access_url",
 			"inst.expires_at",
@@ -211,20 +215,22 @@ func (r *Repository) ListVisibleByUser(ctx context.Context, userID int64) ([]ins
 	for idx, row := range rows {
 		metadata := buildInstanceMetadata(row.ContestMode, row.ServiceSnapshot, row.ServiceName, row.ChallengeTitle, row.Category, row.Difficulty, row.FlagType)
 		items[idx] = instanceports.UserVisibleInstanceRow{
-			ID:             row.ID,
-			ContestMode:    row.ContestMode,
-			ChallengeID:    row.ChallengeID,
-			ChallengeTitle: metadata.Title,
-			Category:       metadata.Category,
-			Difficulty:     metadata.Difficulty,
-			FlagType:       metadata.FlagType,
-			Status:         row.Status,
-			ShareScope:     row.ShareScope,
-			AccessURL:      row.AccessURL,
-			ExpiresAt:      row.ExpiresAt,
-			ExtendCount:    row.ExtendCount,
-			MaxExtends:     row.MaxExtends,
-			CreatedAt:      row.CreatedAt,
+			ID:                  row.ID,
+			ContestMode:         row.ContestMode,
+			ChallengeID:         row.ChallengeID,
+			ChallengeTitle:      metadata.Title,
+			Category:            metadata.Category,
+			Difficulty:          metadata.Difficulty,
+			FlagType:            metadata.FlagType,
+			Status:              row.Status,
+			ProvisioningStage:   row.ProvisioningStage,
+			ProvisioningAttempt: row.ProvisioningAttempt,
+			ShareScope:          row.ShareScope,
+			AccessURL:           row.AccessURL,
+			ExpiresAt:           row.ExpiresAt,
+			ExtendCount:         row.ExtendCount,
+			MaxExtends:          row.MaxExtends,
+			CreatedAt:           row.CreatedAt,
 		}
 	}
 	return items, nil
@@ -399,6 +405,44 @@ func (r *Repository) FailProvisioning(ctx context.Context, id int64) (*RuntimeAl
 	)
 }
 
+func (r *Repository) RecordProvisioningProgress(ctx context.Context, progress instancecontracts.ProvisioningProgress) (bool, error) {
+	if progress.InstanceID <= 0 || strings.TrimSpace(progress.Stage) == "" {
+		return false, nil
+	}
+
+	db := r.dbWithContext(ctx)
+	now := time.Now().UTC()
+	result := db.Model(&instancecontracts.Instance{}).
+		Where("id = ?", progress.InstanceID).
+		Updates(map[string]any{
+			"provisioning_stage":      progress.Stage,
+			"provisioning_attempt":    progress.Attempt,
+			"last_provisioning_error": progress.LastProvisioningError,
+			"updated_at":              now,
+		})
+	if result.Error != nil {
+		return false, result.Error
+	}
+	if result.RowsAffected == 0 {
+		return false, nil
+	}
+
+	event := instancecontracts.ProvisioningEvent{
+		InstanceID:    progress.InstanceID,
+		Attempt:       progress.Attempt,
+		Stage:         progress.Stage,
+		Message:       instancecontracts.ResolveProvisioningMessage(progress.Stage, progress.Message),
+		Severity:      normalizeProvisioningEventSeverity(progress.Severity),
+		RuntimeNodeID: progress.RuntimeNodeID,
+		Detail:        normalizeProvisioningEventDetail(progress.Detail),
+		CreatedAt:     now,
+	}
+	if err := db.Create(&event).Error; err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *instancecontracts.Instance) (bool, error) {
 	if instance == nil || instance.ID <= 0 {
 		return false, nil
@@ -421,6 +465,24 @@ func (r *Repository) PersistProvisionedRuntime(ctx context.Context, instance *in
 		return false, result.Error
 	}
 	return result.RowsAffected > 0, nil
+}
+
+func normalizeProvisioningEventSeverity(severity string) string {
+	switch strings.TrimSpace(severity) {
+	case instancecontracts.ProvisioningEventSeverityWarning:
+		return instancecontracts.ProvisioningEventSeverityWarning
+	case instancecontracts.ProvisioningEventSeverityError:
+		return instancecontracts.ProvisioningEventSeverityError
+	default:
+		return instancecontracts.ProvisioningEventSeverityInfo
+	}
+}
+
+func normalizeProvisioningEventDetail(detail string) string {
+	if strings.TrimSpace(detail) == "" {
+		return "{}"
+	}
+	return detail
 }
 
 func (r *Repository) updateStatusWithCurrentStatuses(ctx context.Context, id int64, currentStatuses []string, status string) (*RuntimeAllocationRelease, bool, error) {

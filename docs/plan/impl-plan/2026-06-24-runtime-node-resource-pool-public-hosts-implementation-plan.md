@@ -490,11 +490,11 @@ go test ./internal/module/container_runtime/infrastructure ./internal/app/compos
 - 新建：`code/backend/internal/module/practice/application/commands/provisioning_progress.go`
 - 测试：`code/backend/internal/module/instance/infrastructure/repository_test.go`
 
-- [ ] **步骤 1：添加 stage 更新与 event 追加原子性的失败测试**
+- [x] **步骤 1：添加 stage 更新与 event 追加原子性的失败测试**
 
 Repository 必须在同一个 DB transaction 中更新 `instances.provisioning_stage` 并追加 `instance_provisioning_events`。
 
-- [ ] **步骤 2：添加响应字段失败测试**
+- [x] **步骤 2：添加响应字段失败测试**
 
 `InstanceResp` 和 `InstanceInfo` 暴露：
 
@@ -502,11 +502,11 @@ Repository 必须在同一个 DB transaction 中更新 `instances.provisioning_s
 - `provisioning_message`
 - `provisioning_attempt`
 
-- [ ] **步骤 3：实现 repository 和 mapping**
+- [x] **步骤 3：实现 repository 和 mapping**
 
 不要把内部原始错误直接暴露到学生侧 `provisioning_message`。
 
-- [ ] **步骤 4：运行聚焦测试**
+- [x] **步骤 4：运行聚焦测试**
 
 运行：
 
@@ -525,19 +525,19 @@ go test ./internal/module/instance/infrastructure ./internal/module/instance/con
 - 修改：`code/backend/internal/module/practice/application/commands/instance_start_service.go`
 - 测试：`code/backend/internal/module/practice/application/commands/instance_start_service_test.go`
 
-- [ ] **步骤 1：添加按选中 node reserve 端口的失败测试**
+- [x] **步骤 1：添加按选中 node reserve 端口的失败测试**
 
 当 selector 返回 node B 时，instance 必须保存 node B，并从 node B 的资源池 reserve 端口。
 
-- [ ] **步骤 2：添加两个 node 复用同一端口的失败测试**
+- [x] **步骤 2：添加两个 node 复用同一端口的失败测试**
 
 不同 node 上的两个实例可以同时获得 `30000`；它们生成的 access hosts 必须不同。
 
-- [ ] **步骤 3：更新 practice ports 和 repository adapter**
+- [x] **步骤 3：更新 practice ports 和 repository adapter**
 
 通过窄接口暴露 node-scoped reservation。不要把 GORM 或 pool table 细节泄漏到 application service。
 
-- [ ] **步骤 4：更新启动流程**
+- [x] **步骤 4：更新启动流程**
 
 顺序必须是：
 
@@ -545,7 +545,7 @@ go test ./internal/module/instance/infrastructure ./internal/module/instance/con
 select healthy node -> update provisioning stage -> reserve node port -> create instance -> bind reservation
 ```
 
-- [ ] **步骤 5：运行聚焦测试**
+- [x] **步骤 5：运行聚焦测试**
 
 运行：
 
@@ -565,23 +565,23 @@ go test ./internal/module/practice/application/commands -run 'Test.*RuntimeNode.
 - 测试：`code/backend/internal/module/container_runtime/application/commands/provisioning_service_test.go`
 - 测试：`code/backend/internal/app/composition/runtime_node_execution_router_test.go`
 
-- [ ] **步骤 1：添加 node public host 失败测试**
+- [x] **步骤 1：添加 node public host 失败测试**
 
 在 node B 上 provision，`public_host=node-b.ctf.local` 且端口为 `30000` 时，学生侧 URL 必须是 `http://node-b.ctf.local:30000`。
 
-- [ ] **步骤 2：添加 node access host 失败测试**
+- [x] **步骤 2：添加 node access host 失败测试**
 
 内部 probe/proxy 使用 `access_host`，学生响应使用 `public_host`。
 
-- [ ] **步骤 3：实现 resolver**
+- [x] **步骤 3：实现 resolver**
 
 只有 node 字段为空时才 fallback 到全局配置。
 
-- [ ] **步骤 4：通过 router 传递 node host metadata**
+- [x] **步骤 4：通过 router 传递 node host metadata**
 
 选中 node 的 host metadata 必须传到 provisioning，且不能改变 `runtime_nodes.endpoint` 语义。
 
-- [ ] **步骤 5：运行聚焦测试**
+- [x] **步骤 5：运行聚焦测试**
 
 运行：
 
@@ -601,7 +601,7 @@ go test ./internal/module/container_runtime/application/commands ./internal/app/
 - 测试：`code/backend/internal/module/practice/application/commands/instance_provisioning_test.go`
 - 测试：`code/backend/internal/module/container_runtime/application/commands/provisioning_service_test.go`
 
-- [ ] **步骤 1：添加可重试 Docker failure 的失败测试**
+- [x] **步骤 1：添加可重试 Docker failure 的失败测试**
 
 普通实例遇到可重试 provisioning failure 后：
 
@@ -610,15 +610,15 @@ go test ./internal/module/container_runtime/application/commands ./internal/app/
 - instance 保持 `creating`
 - 写入一条 provisioning event
 
-- [ ] **步骤 2：添加 subnet conflict quarantine 失败测试**
+- [x] **步骤 2：添加 subnet conflict quarantine 失败测试**
 
 Docker subnet overlap 只 quarantine `(runtime_node_id, subnet)`，并在同一 node pool 内重试。
 
-- [ ] **步骤 3：添加 host port conflict 失败测试**
+- [x] **步骤 3：添加 host port conflict 失败测试**
 
 Docker host port conflict 不能在同一次 attempt 里复用同一个端口。
 
-- [ ] **步骤 4：实现 failure classification**
+- [x] **步骤 4：实现 failure classification**
 
 使用现有错误：
 
@@ -628,7 +628,7 @@ Docker host port conflict 不能在同一次 attempt 里复用同一个端口。
 
 普通实例可以在 retry budget 内 reschedule。AWD service instances 不能静默移动到另一个 node。
 
-- [ ] **步骤 5：运行聚焦测试**
+- [x] **步骤 5：运行聚焦测试**
 
 运行：
 
@@ -646,11 +646,11 @@ go test ./internal/module/practice/application/commands ./internal/module/contai
 - 如果 AWD workspace 会展示实例启动 label，则同步修改 AWD workspace presentation。
 - 测试：`code/frontend/src/**/__tests__` 或 `*.test.ts` 下相关 Vitest 文件。
 
-- [ ] **步骤 1：添加 `rescheduling` presentation 失败测试**
+- [x] **步骤 1：添加 `rescheduling` presentation 失败测试**
 
 预期 label：`正在重新调度`。
 
-- [ ] **步骤 2：添加 allocation stages presentation 失败测试**
+- [x] **步骤 2：添加 allocation stages presentation 失败测试**
 
 至少覆盖：
 
@@ -658,22 +658,24 @@ go test ./internal/module/practice/application/commands ./internal/module/contai
 - `allocating_network`
 - `creating_container`
 
-- [ ] **步骤 3：实现 stage label mapping**
+- [x] **步骤 3：实现 stage label mapping**
 
 存在 backend `provisioning_message` 时优先使用它。为增强韧性，fallback 到前端已知 stage labels。
 
-- [ ] **步骤 4：运行前端测试**
+- [x] **步骤 4：运行前端测试**
 
 运行：
 
 ```bash
 cd code/frontend
-npm test -- --run
+npm test -- --run src/entities/instance/model/presentation.test.ts
 ```
 
 如果该命令对本地迭代过宽，先运行被修改的测试文件；完成前再运行项目要求的 frontend guard。
 
 预期：PASS。
+
+已验证：Instance provisioning presentation 测试全部通过（5 passed）。
 
 ### 任务 10：文档与运维说明
 
@@ -682,7 +684,7 @@ npm test -- --run
 - 修改：`docs/operations/runtime-agent-deployment.md`
 - 可选修改：如果 dev compose host 行为变化，修改 `README.md`
 
-- [ ] **步骤 1：更新架构事实**
+- [x] **步骤 1：更新架构事实**
 
 记录：
 
@@ -691,11 +693,11 @@ npm test -- --run
 - provisioning events
 - AWD no silent per-service drift
 
-- [ ] **步骤 2：更新运维说明**
+- [x] **步骤 2：更新运维说明**
 
 记录 v1 没有 management UI/API 时如何配置 node public/access host。
 
-- [ ] **步骤 3：运行文档检查**
+- [x] **步骤 3：运行文档检查**
 
 运行：
 

@@ -92,6 +92,21 @@ describe('awdDefensePresentation', () => {
     })
   })
 
+  it('展示 AWD 服务实例 provisioning progress 文案', () => {
+    const [card] = toDefenseServiceCards({
+      challenges: [challenge('web', 'Web')],
+      services: [
+        service('service-web', {
+          instance_status: 'creating',
+          provisioning_stage: 'rescheduling',
+          provisioning_message: '',
+        }),
+      ],
+    })
+
+    expect(card.instanceStatusLabel).toBe('工作区可用，正在重新调度')
+  })
+
   it('稳定服务保持原始顺序排在最后', () => {
     const challenges = [challenge('a', 'A'), challenge('b', 'B')]
     const services = [
