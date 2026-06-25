@@ -8,6 +8,15 @@
 
 `container_runtime` 是容器执行能力模块，负责 Docker / runtime-agent / sandbox executor / runtime node / allocation 等底层运行时事实和能力，不拥有练习、竞赛、题目或实例业务状态。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| container_runtime 模块的职责边界和运行时能力 | 实例业务状态和生命周期管理 → `instance` 模块文档 |
+| Docker / runtime-agent 协议和容器编排 | 容器调度策略和并发控制 → `docs/architecture/backend/design/容器调度与并发控制.md` |
+| 镜像拉取、容器启动、文件访问的实现 | 实例共享和访问控制 → `docs/architecture/backend/design/instance-sharing.md` |
+| 模块内部组件协作和数据流 | 跨模块事件发布策略 → `docs/architecture/features/事件发布与降级策略.md` |
+
 ## 事实来源
 
 - 用例编排：`code/backend/internal/module/container_runtime/application/`

@@ -8,6 +8,15 @@
 
 `challenge` 是题目、题包、附件、镜像、Flag、拓扑、题解和发布检查 owner，负责把题目作者侧与运行前校验相关能力收口到一个模块。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| challenge 模块的职责边界、HTTP 入口和用例组织 | 题包格式规范 → `docs/contracts/challenge-pack-v1.md` |
+| 题目、Flag、附件、镜像、拓扑的 owner | 题包 Registry 交付流程 → `docs/architecture/features/题包Registry交付架构.md` |
+| 题包导入/导出、发布检查的实现细节 | 题包拓扑同步与导出 → `docs/architecture/features/题包拓扑同步与导出架构.md` |
+| 模块内部组件协作和数据流 | 容器镜像运行时调度 → `container_runtime` 模块文档 |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/challenge/api/http/`
@@ -104,6 +113,90 @@ Redis 仅用于部分缓存或 artifact 辅助状态时由 infrastructure adapte
 - AWD 题目配置、检查器 artifact、拓扑与题包交付。
 - 给 `practice`、`contest`、`assessment` 提供题目目录、运行定义和维度信息。
 
+## Flag 配置与动态生成
+
+### Flag 类型
+
+`challenge` 模块支持三种 Flag 类型，覆盖不同场景：
+
+| Flag 类型 | 代码常量 | 存储形式 | 适用场景 |
+| --- | --- | --- | --- |
+| **Static Flag** | `FlagTypeStatic` | 哈希 + salt 存储在 `challenges.flag_hash` / `flag_salt` | 固定 flag，所有用户提交相同值 |
+| **Dynamic Flag** | `FlagTypeDynamic` | 不存储明文，运行时根据 `{{ .InstanceID }}` 等变量生成 | 每个实例独立 flag，防止直接抄袭 |
+| **Regex Flag** | `FlagTypeRegex` | 正则表达式存储在 `challenges.flag_regex` | 接受符合模式的任意 flag |
+
+### Dynamic Flag 模板变量
+
+动态 Flag 支持以下模板变量，运行时由 `practice` 或 `contest` 模块在创建实例时替换：
+
+- `{{ .InstanceID }}`：训练实例 ID 或竞赛实例 ID
+- `{{ .UserID }}`：当前用户 ID
+- `{{ .ContestID }}`：竞赛 ID（仅竞赛场景）
+
+模板解析与变量替换时机：
+- **训练场景**：`practice` 模块在 `instance_provisioning_service.go` 创建实例时调用 Flag 生成逻辑
+- **竞赛场景**：`contest` 模块在分配题目实例时生成
+- **AWD 场景**：使用确定性算法 `contestdomain.BuildAWDRoundFlag(contestID, roundNumber, teamID, serviceID, flagSecret)`
+
+### Flag 配置与校验
+
+- **Static Flag 配置**：`FlagService.ConfigureStaticFlag()` 校验格式（`prefix{content}` 模式）、长度（≤256 字符），生成随机 salt 并计算哈希存储
+- **Dynamic Flag 配置**：`FlagService.ConfigureDynamicFlag()` 检查实例共享策略，不允许 `InstanceSharingShared` 策略使用动态 Flag
+- **Regex Flag 配置**：`FlagService.ConfigureRegexFlag()` 编译正则表达式验证合法性
+- **Flag 校验**：`practice` 和 `contest` 模块提交判分时调用 `challenge` 模块提供的 Flag validator
+
+**代码位置**：
+- `code/backend/internal/module/challenge/application/commands/flag_service.go`：Flag 配置用例
+- `code/backend/internal/module/challenge/infrastructure/flag_repository.go`：Flag 持久化适配
+- `code/backend/internal/shared/flagcrypto/`：Flag 哈希与动态生成算法
+
+**相关专题**：
+- 动态 Flag 生成算法和 salt 管理 → `docs/architecture/backend/03-container-architecture.md`（容器启动环境变量注入）
+
+## 附件管理
+
+### 附件存储路径结构
+
+题目附件统一存储在 LocalFS，路径结构为：
+
+```
+<storage-root>/challenges/<challenge-id>/attachments/<filename>
+```
+
+- `<storage-root>`：由 `platformstorage.LocalWritableStore` 配置，默认为 `data/challenge-attachments`
+- `<challenge-id>`：题目 ID 或题包 slug（导入时使用 package slug）
+- `<filename>`：附件文件名，经过 `sanitizeImportedAttachmentName()` 清洗，移除路径遍历字符
+
+### 附件元数据
+
+附件元数据存储在 `challenge_attachments` 表，包含：
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | bigint | 附件唯一标识 |
+| `challenge_id` | bigint | 所属题目 ID |
+| `filename` | varchar | 原始文件名 |
+| `storage_key` | varchar | LocalFS 存储路径（相对路径） |
+| `size_bytes` | bigint | 文件大小 |
+| `content_type` | varchar | MIME 类型 |
+
+### 附件访问控制与安全
+
+- **访问控制**：学生端附件下载路由 `GET /api/v1/challenges/attachments/*path` 通过 `Handler.DownloadAttachment()` 处理，只允许下载已发布题目的附件
+- **路径遍历防护**：
+  - 存储时通过 `safePathSegment()` 和 `sanitizeImportedAttachmentName()` 清洗文件名
+  - 读取时通过 `platformstorage.LocalWritableStore.Open()` 校验相对路径，拒绝包含 `..` 的路径
+  - 错误时返回 `platformstorage.ErrUnsafeKey`，映射为 `apperror.ErrInvalidParams`
+- **多附件打包**：题包导入时如果包含多个附件，自动打包为 `<package-slug>-attachments.zip` 单文件存储
+
+**代码位置**：
+- `code/backend/internal/module/challenge/infrastructure/challenge_attachment_store.go`：附件存储适配器
+- `code/backend/internal/module/challenge/api/http/handler_attachment_test.go`：附件下载与路径遍历防护测试
+- `code/backend/internal/platform/storage/local_writable_store.go`：底层 LocalFS 安全封装
+
+**相关专题**：
+- 附件存储与题包交付 → `docs/architecture/features/题包Registry交付架构.md`
+
 ## 数据与副作用
 
 - PostgreSQL：`challenge/entity/*.go` 对应题目、镜像、标签、拓扑、发布检查、题包修订、AWD 题目等持久化事实。
@@ -126,6 +219,9 @@ Redis 仅用于部分缓存或 artifact 辅助状态时由 infrastructure adapte
 - `code/backend/internal/module/challenge/architecture_test.go`：约束 challenge 分层、ports 粒度、contracts 不重导出 taxonomy。
 - `code/backend/internal/module/challenge/ports/*_context_contract_test.go`：约束端口 context 传播。
 - `code/backend/internal/app/challenge_import_integration_test.go`：覆盖题包导入装配。
+- `code/backend/internal/module/challenge/application/commands/flag_service_test.go`：覆盖 Static / Dynamic / Regex Flag 配置用例。
+- `code/backend/internal/module/challenge/api/http/handler_attachment_test.go`：覆盖附件下载与路径遍历防护。
+- `code/backend/internal/module/challenge/infrastructure/challenge_attachment_store_test.go`：覆盖附件存储路径清洗与多附件打包。
 - `docs/contracts/challenge-pack-v1.md`：题包格式事实源。
 
 ## 已知限制

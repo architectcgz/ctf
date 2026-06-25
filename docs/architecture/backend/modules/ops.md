@@ -8,6 +8,15 @@
 
 `ops` 是运营支撑 owner，负责审计日志、站内通知、通知 WebSocket、竞赛实时 relay、风险查询和运行时 dashboard。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| ops 模块的职责边界、HTTP 入口和用例组织 | 审计日志策略和日志级别 → `docs/architecture/backend/design/logging-and-audit.md` |
+| 站内通知、WebSocket 推送、实时 relay 的实现 | 事件发布和订阅机制 → `docs/architecture/features/事件发布与降级策略.md` |
+| 风险查询和运行时 dashboard 的 owner | 具体业务模块的操作审计 → 各模块文档 |
+| 模块内部组件协作和数据流 | Redis 键命名规范 → `docs/architecture/backend/design/redis-key-conventions.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/ops/api/http/`
@@ -84,6 +93,69 @@
 - 竞赛公告、榜单和 AWD preview realtime relay。
 - 管理端 dashboard 聚合在线会话、运行时统计和风险信息。
 
+## 通知推送机制
+
+### WebSocket 实时推送与数据库持久化双写
+
+通知系统采用 **数据库持久化 + WebSocket 实时推送** 双写模式：
+
+1. **数据库持久化**（主路径）：
+   - 业务模块通过 platform outbox 发布事件（如 `practice.flag_accepted`、`challenge.publish_check_finished`）
+   - `ops` 注册 outbox handler，消费事件后写入 `notifications` 表
+   - 通过 `SourceEventKey` 实现幂等，防止重复创建通知
+
+2. **WebSocket 实时推送**（辅助路径）：
+   - 通知创建后，再次写入 outbox 发布 `notification.created` 事件
+   - `ops` 的 fanout handler 消费该事件，调用 `NotificationBroadcaster.SendToUser(userID, envelope)`
+   - WebSocket Manager 将消息推送到该用户的所有活跃连接
+
+### 订阅机制
+
+用户通过 WebSocket 连接订阅通知：
+
+- **连接入口**：`GET /ws/notifications`，通过 `middleware.Auth()` 认证
+- **订阅范围**：默认订阅当前用户的所有通知类型（`system`、`contest`、`challenge`、`team`）
+- **连接管理**：`Manager` 维护 `clients` 映射（`userID -> clientID -> *client`）
+- **心跳机制**：连接建立后发送 `system.connected` 消息，包含心跳间隔配置（默认 30 秒）
+
+### 通知优先级
+
+当前通知系统不实现优先级队列，所有通知按创建时间排序：
+
+- **数据库查询**：`notifications` 表按 `created_at DESC` 排序，支持分页
+- **WebSocket 推送**：所有通知实时推送，前端可按类型或优先级过滤
+- **未来扩展**：可在 `notifications` 表新增 `priority` 字段，实现优先级排序
+
+### 已读状态管理
+
+已读状态同时更新数据库和推送 WebSocket 事件：
+
+1. **标记已读**：
+   - 前端调用 `PUT /api/v1/notifications/:id/read`
+   - `NotificationService.MarkAsRead()` 更新 `notifications.is_read = true` 和 `read_at`
+   - 写入 outbox 发布 `notification.read` 事件
+
+2. **WebSocket 推送**：
+   - Fanout handler 消费 `notification.read` 事件
+   - 推送到该用户的所有活跃连接，同步已读状态
+
+### WebSocket 连接管理
+
+- **注册**：连接建立时，`Manager.register(client)` 将客户端加入 `clients` 映射
+- **注销**：连接断开时，`Manager.unregister(client)` 移除客户端，关闭 `send` channel
+- **并发安全**：通过 `Manager.mu` 读写锁保护 `clients` 和 `channels` 映射
+- **优雅关闭**：客户端 `close()` 通过 `sync.Once` 确保只关闭一次，防止 panic
+
+**代码位置**：
+- `code/backend/internal/module/ops/application/commands/notification_service.go`：通知创建和 outbox handler
+- `code/backend/internal/module/ops/entity/notification.go`：通知实体和类型常量
+- `code/backend/internal/module/ops/ports/notification.go`：通知端口和 `NotificationBroadcaster` 接口
+- `code/backend/internal/infrastructure/websocket/manager.go`：WebSocket Manager 实现
+- `code/backend/internal/module/ops/runtime/notification_wiring.go`：通知 outbox handler 注册
+
+**相关专题**：
+- Platform Outbox 模式 → `docs/architecture/backend/05-event-outbox.md`（如存在）
+
 ## 数据与副作用
 
 - PostgreSQL：审计日志、通知和通知批次。
@@ -106,6 +178,8 @@
 - `code/backend/internal/module/ops/architecture_test.go`：约束 API / commands / queries / ports 分层和 runtime typed deps。
 - `code/backend/internal/module/ops/ports/dashboard_state_context_contract_test.go`：约束 dashboard state store context。
 - `code/backend/internal/module/ops/api/http/notification_http_integration_test.go`：覆盖通知 HTTP 和 WebSocket 集成。
+- `code/backend/internal/module/ops/application/commands/notification_service_test.go`：覆盖通知创建和 outbox handler。
+- `code/backend/internal/infrastructure/websocket/manager_test.go`：覆盖 WebSocket Manager 连接管理和消息推送。
 - `code/backend/internal/app/full_router_access_integration_test.go`：覆盖路由访问层行为。
 
 ## 已知限制

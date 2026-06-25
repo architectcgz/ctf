@@ -8,6 +8,15 @@
 
 `contest` 是赛事 owner，负责竞赛配置、报名、队伍、题目编排、提交、排行榜、公告、状态推进、AWD 轮次、AWD 服务、checker、攻击、防守流量和实时事件。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| contest 模块的职责边界、HTTP 入口和用例组织 | 竞赛状态机详细设计 → `docs/architecture/backend/design/contest-status-state-machine.md` |
+| 竞赛、队伍、提交、排行榜、AWD 流程的 owner | AWD 完整模式设计 → `docs/architecture/features/校园级CTF-AWD模式完整设计.md` |
+| 后台任务（状态推进、轮次更新）的实现 | 后台任务调度机制 → `docs/architecture/backend/design/background-jobs.md` |
+| 模块内部组件协作和数据流 | Redis 键命名规范 → `docs/architecture/backend/design/redis-key-conventions.md` |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/contest/api/http/`

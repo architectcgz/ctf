@@ -29,7 +29,126 @@
   - 负责：页面级异步加载、路由 query 同步、导出流、分页、重试、回调桥接和一次性派生状态；其中 `shared/model/common` 承接 `useToast`、`useDestructiveConfirm`、`useClipboard`、`usePagination` 与 `useProbeEasterEggs` 这类共享反馈 / 通用状态 owner，`shared/model/layout` 承接工作区导航与后台面包屑细节，`shared/model/theme` 承接全局主题与品牌 owner，`shared/model/navigation` 承接 route-aware transport 与 query/tab 同步 owner，`shared/lib/*` 承接时间倒计时、请求取消、sanitize、键盘导航和 route target 契约等无业务语义的基础能力
   - 不负责：把真正跨页面共享的会话状态重新复制回某个局部 composable
 
-## 1. 状态归属规则
+## 1. Pinia Store 职责边界
+
+### 1.1 Store 职责边界
+
+**Pinia Store 只承载以下类型的状态**：
+
+1. **跨页面共享且多组件同时读写**
+   - 登录用户信息（所有页面守卫、导航栏、权限判断）
+   - 通知列表和未读数（顶栏、列表页、详情页）
+   - 竞赛共享状态（排行榜、公告、冻结态）
+
+2. **全局唯一且需要响应式派生**
+   - `isLoggedIn`、`isAdmin`、`isTeacher`（基于 `user` 的派生值）
+   - `unreadCount`（基于 `notifications` 的计算属性）
+
+3. **需要持久化到浏览器存储**
+   - 当前项目不持久化认证状态（改用 HttpOnly cookie）
+   - 未来可考虑持久化主题偏好、语言设置等非敏感配置
+
+**不应进入 Pinia Store 的状态**：
+
+1. **页面级状态**（跟随页面生命周期销毁）
+   - 列表分页、筛选条件、表单草稿
+   - 页面 loading 状态、错误信息
+   - 局部对话框开关、展开/折叠状态
+
+2. **一次性流程状态**
+   - 表单提交中、文件上传中
+   - 导出任务轮询（由 `useReportStatusPolling` 承载）
+   - 临时确认弹窗（由 `useDestructiveConfirm` 承载）
+
+3. **路由派生状态**
+   - Route query tabs（由 `useRouteQueryTabs` 承载）
+   - Route navigation transport（由 `useRouteNavigationTransport` 承载）
+   - 页面路径参数和 query（直接从 `useRoute()` 读取）
+
+4. **共享但无需全局响应式的工具状态**
+   - Toast 通知（由 `useToast` 承载）
+   - Clipboard 复制反馈（由 `useClipboard` 承载）
+   - 主题切换（由 `useTheme` 承载，基于 `localStorage` + DOM 类名）
+
+### 1.2 状态持久化策略
+
+**当前持久化机制**：
+
+| 状态类型 | 持久化方式 | 原因 |
+|---------|-----------|------|
+| 登录态 | HttpOnly Session Cookie（后端管理） | 防止 XSS 攻击窃取 Token |
+| 用户快照 | 不持久化，每次刷新调用 `/auth/profile` | 保证状态最新，避免前端缓存过期数据 |
+| 通知列表 | 不持久化，每次进入页面重新拉取 | 通知数据频繁变化，持久化无意义 |
+| 竞赛状态 | 不持久化，进入竞赛页面时拉取 | 竞赛状态（如封榜）需要实时同步 |
+
+**历史清理**：
+- `auth.restore()` 会主动清理历史 `localStorage` 中的 `ctf_access_token` 和 `ctf_refresh_token`
+- 这是从旧 Token 模式迁移到 Session Cookie 的兼容措施
+
+**未来扩展**：
+- 主题偏好、语言设置等非敏感配置可考虑持久化到 `localStorage`
+- 使用 `pinia-plugin-persistedstate` 或手动实现
+- 持久化字段应显式声明，避免意外泄漏敏感信息
+
+### 1.3 跨 Store 通信模式
+
+**禁止模式**：
+- Store A 直接 import Store B 并修改其状态
+- Store 之间循环依赖
+
+**推荐模式**：
+
+1. **通过 Action 通信**：
+   ```typescript
+   // stores/auth.ts
+   export const useAuthStore = defineStore('auth', () => {
+     const logout = () => {
+       // 清理本地状态
+       user.value = null
+       
+       // 通知其他 store
+       const notificationStore = useNotificationStore()
+       notificationStore.clearAll()
+     }
+     return { logout }
+   })
+   ```
+
+2. **通过事件总线通信**（适用于松耦合场景）：
+   ```typescript
+   // 发布方
+   import { eventBus } from '@/shared/lib/events'
+   eventBus.emit('user.logout')
+   
+   // 订阅方
+   eventBus.on('user.logout', () => {
+     // 清理本地缓存
+   })
+   ```
+
+3. **通过 Composable 协调**（适用于复杂流程）：
+   ```typescript
+   // shared/model/auth/useLogout.ts
+   export function useLogout() {
+     const authStore = useAuthStore()
+     const notificationStore = useNotificationStore()
+     
+     const logout = async () => {
+       await authStore.logout()
+       notificationStore.clearAll()
+       router.push('/login')
+     }
+     
+     return { logout }
+   }
+   ```
+
+**当前项目实践**：
+- `auth.logout()` 只清理认证状态，不直接清理通知 store
+- 登出后的导航由路由守卫负责，而非 store 内部执行 `router.push()`
+- 通知清理由页面级 composable 或守卫触发，不在 store 间耦合
+
+## 2. 状态归属规则
 
 当前前端按下面的 owner 规则分层：
 

@@ -52,6 +52,9 @@
 | [design/awd-engine-migration.md](./design/awd-engine-migration.md) | AWD 运行时引擎化迁移后的当前事实 |
 | [design/contest-status-state-machine.md](./design/contest-status-state-machine.md) | 竞赛状态机、定时推进与幂等 guardrail |
 | [design/instance-sharing.md](./design/instance-sharing.md) | 题目实例共享策略与限制条件 |
+| [design/redis-key-conventions.md](./design/redis-key-conventions.md) | Redis 键命名规范、TTL 策略与键冲突避免机制 |
+| [design/event-bus-contracts.md](./design/event-bus-contracts.md) | 事件总线契约、Payload 结构规范与消费方注册机制 |
+| [design/logging-and-audit.md](./design/logging-and-audit.md) | 日志级别策略、结构化日志字段约定与审计日志范围 |
 
 ## Guardrail
 

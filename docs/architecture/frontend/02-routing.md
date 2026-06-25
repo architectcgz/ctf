@@ -115,22 +115,136 @@
 
 ## 3. 路由守卫与回退
 
+### 3.1 守卫执行顺序
+
 `code/frontend/src/router/guards.ts` 当前守卫顺序如下：
 
 1. 命中公开页 `/login` 或 `/register` 时直接放行
 2. 对公开页也会尝试 `ensureSessionRestored()`，已登录用户访问登录/注册页时，先通过 `sanitizeRedirectPath()` 做 open redirect 防御和 legacy `/teacher/* -> /academy/*` 归一化，再按 `redirect` 参数或 `getRoleDashboardPath()` 跳转
 3. 受保护页面在首次进入时调用 `authStore.restore()`
 4. 恢复后仍未登录时，跳转到 `/login?redirect=${to.fullPath}`
-5. `meta.roles` 与当前用户角色不匹配时，提示“无权限访问该页面”并跳 `/403`
+5. `meta.roles` 与当前用户角色不匹配时，提示”无权限访问该页面”并跳 `/403`
 6. 守卫内部出现异常时，执行 `authStore.logout()` 并跳回登录页
 7. `afterEach` 调用 `resolveRouteTitle()`，按 `APP_TITLE_PREFIX` 更新页面标题
 8. `router.onError` 统一跳到 `/500`
+
+**代码位置**：
+- `code/frontend/src/router/guards.ts`
+- `code/frontend/src/router/__tests__/guards.test.ts`
+
+### 3.2 Session 恢复时机
+
+**恢复策略**：
+- 公开页（`/login`、`/register`）也会执行 session 恢复
+- 恢复通过 `ensureSessionRestored()` 函数统一处理
+- 恢复只执行一次，通过 `authStore.sessionRestored` 标志位避免重复调用
+
+**实现细节**：
+```typescript
+async function ensureSessionRestored(): Promise<void> {
+  const authStore = useAuthStore()
+  if (authStore.user || authStore.sessionRestored) return
+  await authStore.restore()
+}
+```
+
+**恢复时机**：
+- 首次访问任何页面时（包括公开页和受保护页）
+- 刷新页面后重新进入应用时
+- 从外部链接或书签直接跳转时
+
+**注意事项**：
+- 恢复失败不阻塞公开页访问
+- 恢复成功后，已登录用户访问 `/login` 会自动跳转到 `redirect` 参数或角色默认首页
+
+### 3.3 Redirect 路径清洗
+
+**功能定位**：防止 open redirect 攻击和兼容 legacy 路径。
+
+**实现函数**：`sanitizeRedirectPath(redirectParam: string | string[] | undefined): string`
+
+**代码位置**：`code/frontend/src/utils/redirectPath.ts`
+
+**清洗规则**：
+1. **参数规范化**：
+   - `redirectParam` 为数组时取第一个元素
+   - `redirectParam` 为空或非字符串时返回 `/`
+
+2. **外部 URL 拦截**：
+   - 包含 `://` 或 `//` 的 URL 视为外部链接，返回 `/`
+   - 防止 `?redirect=https://evil.com` 跳转到外部站点
+
+3. **Legacy 路径归一化**：
+   - `/teacher/*` 路径统一返回 `/`（不再支持教师端旧路径）
+   - 由登录后逻辑重新导向角色默认首页
+
+4. **合法路径透传**：
+   - 其他以 `/` 开头的路径直接返回
+   - 包括 `/academy/*`、`/platform/*`、`/student/*` 等正式路径
+
+**示例**：
+```typescript
+sanitizeRedirectPath('https://evil.com')       // → '/'
+sanitizeRedirectPath('//evil.com')             // → '/'
+sanitizeRedirectPath('/teacher/classes')       // → '/'
+sanitizeRedirectPath('/academy/overview')      // → '/academy/overview'
+sanitizeRedirectPath(['/contests', '/other'])  // → '/contests'
+sanitizeRedirectPath(undefined)                // → '/'
+```
+
+### 3.4 403 跳转策略
+
+**触发条件**：
+- 用户已登录，但 `meta.roles` 不包含当前用户角色
+- 例如：学生访问 `/platform/challenges`（仅 admin/teacher 可访问）
+
+**执行流程**：
+1. `hasRequiredRole()` 函数判断角色匹配
+2. 不匹配时调用 `toast.warning('无权限访问该页面')`
+3. 跳转到 `/403` 错误页
+
+**实现细节**：
+```typescript
+export function hasRequiredRole(
+  requiredRoles: RouteLocationNormalized['meta']['roles'],
+  currentRole: UserRole | undefined
+): boolean {
+  if (!requiredRoles || requiredRoles.length === 0) return true
+  if (!currentRole) return false
+  return requiredRoles.includes(currentRole)
+}
+```
+
+**注意事项**：
+- `/403` 页面本身不要求登录
+- 用户可从 `/403` 页面返回上一页或回到首页
+- 权限校验只在路由层执行一次，页面内部不重复判断
+
+### 3.5 异常处理与回退
+
+**守卫异常**：
+- `beforeEach` 守卫内部捕获所有异常
+- 异常时执行 `authStore.logout()` 清除登录态
+- 跳转到 `/login` 页面
+
+**路由错误**：
+- `router.onError()` 统一捕获路由加载失败
+- 跳转到 `/500` 错误页
+
+**测试覆盖**：
+- `code/frontend/src/router/__tests__/guards.test.ts` 覆盖：
+  - 公开页放行
+  - Session 恢复时机
+  - Redirect 参数处理
+  - 角色权限校验
+  - 异常回退流程
 
 相关路径：
 
 - 登录态恢复：`code/frontend/src/stores/auth.ts`
 - 默认首页映射：`code/frontend/src/utils/roleRoutes.ts`
 - 标题解析：`code/frontend/src/utils/routeTitle.ts`
+- Redirect 清洗：`code/frontend/src/utils/redirectPath.ts`
 
 ## 4. 导航匹配与边界
 

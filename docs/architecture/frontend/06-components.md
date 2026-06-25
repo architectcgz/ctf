@@ -327,7 +327,154 @@
 - route view 保持薄壳
 - 不再新建回 `components/**` 作为长期 owner 层
 
-### 5.1 `feature-owned UI` 判定规则
+### 5.1 业务组件分层规则（Entities vs Features 判断）
+
+**判断原则**：
+
+| 判断维度 | Entities | Features |
+|---------|----------|----------|
+| 主要回答的问题 | "这个业务对象是什么、如何稳定展示" | "用户在这里要完成什么动作" |
+| 典型内容 | 卡片、标签、状态映射、轻量类型 | 上传、提交、筛选、编辑器、工作区 |
+| 依赖方向 | 不依赖 features、pages、route state | 可以依赖 entities、shared、api |
+| 复用场景 | 多个 feature 都会用到该对象的展示 | 只服务单一功能或工作区 |
+
+**Entities 示例**：
+- `entities/challenge/ui/ChallengeCard.vue` - 题目卡片展示
+- `entities/contest/model/contestStatus.ts` - 竞赛状态映射
+- `entities/user/ui/UserAvatar.vue` - 用户头像组件
+- `entities/team/ui/TeamBadge.vue` - 队伍徽章
+
+**Features 示例**：
+- `features/challenge-detail/ui/ChallengeSubmitPanel.vue` - 题目提交面板
+- `features/contest-create/ui/ContestForm.vue` - 竞赛创建表单
+- `features/challenge-filter/ui/ChallengeFilterBar.vue` - 题目筛选栏
+- `features/writeup-editor/ui/WriteupEditor.vue` - 题解编辑器
+
+**决策树**：
+
+```
+这个组件主要做什么？
+    ↓
+展示业务对象的稳定属性 → Entities
+    例：显示题目类型、难度、标签
+    ↓
+用户动作流程或工作区 → Features
+    例：提交 Flag、筛选题目、编辑题解
+    ↓
+跨业务对象的通用 UI → Shared
+    例：空状态、Toast、表格骨架
+```
+
+**边界守卫**：
+- `entities/*` 不能 import `features/*` 或 `pages/*`
+- `entities/*` 不能依赖 route state 或异步工作流
+- 业务语义明确的展示块不应放在 `shared/*`
+
+### 5.2 Workspace 组件设计（Widgets 与 Pages 关系）
+
+**定位**：`widgets/*` 负责跨 feature 页面区块组合，承接工作区级完整内容区。
+
+#### 与 Features 协作模式
+
+**单一能力 Surface（Features）**：
+- 职责：只服务单一功能的 UI 块
+- 位置：`features/**/ui/`
+- 示例：
+  - `features/challenge-submit/ui/SubmitForm.vue`
+  - `features/challenge-hints/ui/HintsList.vue`
+  - `features/instance-control/ui/InstancePanel.vue`
+
+**工作区级组合（Widgets）**：
+- 职责：组合多个 features 和 entities 成完整工作区
+- 位置：`widgets/*-workspace/`
+- 示例：
+  - `widgets/challenge-detail-workspace/` - 组合题面 + 提交 + 实例 + 题解
+  - `widgets/contest-detail-workspace/` - 组合概览 + 公告 + 排行榜 + 题目
+  - `widgets/awd-review-workspace/` - 组合复盘数据 + 攻击记录 + 轮次详情
+
+**协作流程**：
+
+```
+Pages (路由入口)
+    ↓ 组合
+Widgets (工作区级组合)
+    ↓ 组合
+Features (单一能力) + Entities (业务对象展示)
+    ↓ 消费
+Shared (通用 UI 原语)
+```
+
+#### Workspace 命名约定
+
+**命名格式**：
+- 基本格式：`<context>-<entity>-workspace`
+- 简化格式：`<context>-workspace`（当 context 已明确表达实体）
+
+**当前命名实例**：
+
+| 目录名 | 说明 |
+|--------|------|
+| `challenge-detail-workspace` | 题目详情工作区 |
+| `contest-detail-workspace` | 竞赛详情工作区 |
+| `contest-list-workspace` | 竞赛列表工作区 |
+| `awd-review-workspace` | AWD 复盘工作区 |
+| `notification-list-workspace` | 通知列表工作区 |
+| `scoreboard-detail-workspace` | 排行榜详情工作区 |
+
+**命名禁止模式**：
+- 不使用 `*-page`（page 是路由入口，不是 widget）
+- 不使用 `*-container`（过于泛化，无明确语义）
+- 不使用 `*-view`（与 route view 混淆）
+
+#### 与 Pages 关系
+
+**Pages 职责**：
+- 路由入口，只负责组合 widgets 或 features
+- 处理路由参数解析和初始 query 同步
+- 不应包含大段业务逻辑或复杂 UI 结构
+
+**Widgets 职责**：
+- 工作区级 UI 组合和布局协调
+- 跨 feature 的状态桥接（如工作区 tabs 与子区块同步）
+- 不应反向依赖 pages 或 route state
+
+**决策规则**：
+
+1. **内容需要组合多个 features** → 创建 widget
+   ```typescript
+   // pages/challenges/[id]/RoutePage.vue
+   <template>
+     <ChallengeDetailWorkspace :challenge-id="challengeId" />
+   </template>
+   ```
+
+2. **内容只需要单一 feature** → 直接使用 feature UI
+   ```typescript
+   // pages/notifications/index/RoutePage.vue
+   <template>
+     <NotificationList />
+   </template>
+   ```
+
+3. **内容需要复杂布局协调** → 创建 widget
+   ```typescript
+   // widgets/awd-review-workspace/AWDReviewWorkspace.vue
+   <template>
+     <div class="workspace-shell">
+       <WorkspaceToolbar />
+       <WorkspaceTabs v-model="activeTab" />
+       <AWDReviewOverview v-if="activeTab === 'overview'" />
+       <AWDAttackRecords v-else-if="activeTab === 'attacks'" />
+     </div>
+   </template>
+   ```
+
+**反例（不应出现）**：
+- Pages 包含大段 UI 结构和业务逻辑
+- Widgets 直接导入 `useRoute()` 或依赖路由参数
+- Features UI 组件尝试承担工作区级布局协调
+
+### 5.3 `feature-owned UI` 判定规则
 
 以下条件同时成立时，默认直接落到 `features/*/ui/`，不要再新建 `components/**`：
 

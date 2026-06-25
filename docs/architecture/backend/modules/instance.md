@@ -8,6 +8,15 @@
 
 `instance` 是靶机实例生命周期和访问入口 owner，负责实例命令、查询、proxy ticket、maintenance、startup recovery 以及 AWD target / defense SSH 访问所需的实例边界。
 
+## 本文档范围
+
+| 本文档负责 | 本文档不负责（见其他文档） |
+|-----------|-------------------------|
+| instance 模块的职责边界、HTTP 入口和用例组织 | 实例共享策略和访问控制 → `docs/architecture/backend/design/instance-sharing.md` |
+| 实例生命周期管理和 proxy 访问的实现 | 容器运行时能力 → `container_runtime` 模块文档 |
+| 实例启动恢复和维护任务 | 容器调度和并发控制 → `docs/architecture/backend/design/容器调度与并发控制.md` |
+| 模块内部组件协作和数据流 | 竞赛实例编排 → `contest` 模块文档 |
+
 ## 事实来源
 
 - HTTP 入口：`code/backend/internal/module/instance/api/http/handler.go`
