@@ -44,6 +44,8 @@ func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runt
 	if endpoint == "" {
 		endpoint = "local://docker"
 	}
+	publicHost := strings.TrimSpace(spec.PublicHost)
+	accessHost := strings.TrimSpace(spec.AccessHost)
 	now := time.Now().UTC()
 
 	var node runtimeentity.RuntimeNode
@@ -52,6 +54,8 @@ func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runt
 		node = runtimeentity.RuntimeNode{
 			Name:             name,
 			Endpoint:         endpoint,
+			PublicHost:       publicHost,
+			AccessHost:       accessHost,
 			TLSIdentity:      strings.TrimSpace(spec.TLSIdentity),
 			Schedulable:      spec.Schedulable,
 			Labels:           "{}",
@@ -71,6 +75,8 @@ func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runt
 
 	updates := map[string]any{
 		"endpoint":     endpoint,
+		"public_host":  publicHost,
+		"access_host":  accessHost,
 		"tls_identity": strings.TrimSpace(spec.TLSIdentity),
 		"schedulable":  spec.Schedulable,
 		"updated_at":   now,
@@ -81,6 +87,8 @@ func (r *RuntimeNodeRepository) EnsureDefaultNode(ctx context.Context, spec runt
 		return nil, err
 	}
 	node.Endpoint = endpoint
+	node.PublicHost = publicHost
+	node.AccessHost = accessHost
 	node.TLSIdentity = strings.TrimSpace(spec.TLSIdentity)
 	node.Schedulable = spec.Schedulable
 	node.UpdatedAt = now

@@ -65,6 +65,12 @@ func BuildContainerRuntimeModule(root *Root) (*ContainerRuntimeModule, error) {
 	if err != nil {
 		return nil, err
 	}
+	resourcePoolRepo := containerruntimeinfra.NewRuntimeResourcePoolRepository(root.DB())
+	if resourcePoolRepo != nil && defaultNode != nil && defaultNode.ID > 0 {
+		if err := resourcePoolRepo.EnsurePoolsForNode(root.Context(), defaultNode.ID, cfg.Container); err != nil {
+			return nil, err
+		}
+	}
 
 	defaultNodeClient, err := buildDefaultNodeRuntimeClient(root, allocationRepo, defaultNode)
 	if err != nil {
@@ -210,6 +216,8 @@ func buildDefaultRuntimeNodeSelector(root *Root, defaultNodeName string) (runtim
 	spec := runtimecontracts.RuntimeNodeBootstrapSpec{
 		Name:        defaultNodeName,
 		Endpoint:    defaultRuntimeNodeEndpoint(cfg),
+		PublicHost:  cfg.Container.PublicHost,
+		AccessHost:  cfg.Container.AccessHost,
 		TLSIdentity: defaultRuntimeNodeTLSIdentity(cfg),
 		Schedulable: true,
 	}

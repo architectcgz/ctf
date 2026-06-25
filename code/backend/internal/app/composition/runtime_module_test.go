@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 
 	"ctf-platform/internal/config"
 	runtimecmd "ctf-platform/internal/module/container_runtime/application/commands"
@@ -28,6 +29,19 @@ import (
 	instanceentity "ctf-platform/internal/module/instance/entity"
 	instanceports "ctf-platform/internal/module/instance/ports"
 )
+
+func autoMigrateContainerRuntimeModuleTables(t *testing.T, db *gorm.DB) {
+	t.Helper()
+
+	if err := db.AutoMigrate(
+		&containerruntimeentity.RuntimeNode{},
+		&containerruntimeentity.RuntimePortPool{},
+		&containerruntimeentity.RuntimeSubnetPool{},
+		&instanceentity.Instance{},
+	); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+}
 
 func TestBuildRuntimeHostExecutorProvidesReachableRuntimeInTestEnv(t *testing.T) {
 	t.Parallel()
@@ -242,9 +256,7 @@ func TestBuildContainerRuntimeModuleRejectsLocalRuntimeWithoutExplicitFallback(t
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.App.Env = "dev"
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -291,9 +303,7 @@ func TestBuildContainerRuntimeModuleAllowsExplicitLocalRuntimeFallback(t *testin
 	cfg.App.Env = "dev"
 	cfg.RuntimeAgent.AllowLocalFallback = true
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -360,9 +370,7 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	t.Parallel()
 
 	cfg, db, cache := newRootTestDependencies(t)
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -414,6 +422,76 @@ func TestBuildContainerRuntimeModuleProvidesDefaultRuntimeNodeSelector(t *testin
 	}
 }
 
+func TestBuildContainerRuntimeModuleSeedsDefaultRuntimeNodeResourcePools(t *testing.T) {
+	t.Parallel()
+
+	cfg, db, cache := newRootTestDependencies(t)
+	cfg.Container = config.ContainerConfig{
+		PortRangeStart: 30000,
+		PortRangeEnd:   30003,
+		Network: config.ContainerNetworkConfig{
+			SingleContainerSubnetBase: "10.11.0.0/29",
+			SingleContainerSubnetMask: 30,
+			TopologySubnetBase:        "10.10.0.0/16",
+			TopologySubnetMask:        24,
+		},
+	}
+	if err := db.AutoMigrate(
+		&containerruntimeentity.RuntimeNode{},
+		&containerruntimeentity.RuntimePortPool{},
+		&containerruntimeentity.RuntimeSubnetPool{},
+		&instanceentity.Instance{},
+	); err != nil {
+		t.Fatalf("auto migrate runtime module tables: %v", err)
+	}
+
+	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
+	if err != nil {
+		t.Fatalf("BuildRoot() error = %v", err)
+	}
+	module, err := BuildContainerRuntimeModule(root)
+	if err != nil {
+		t.Fatalf("BuildContainerRuntimeModule() error = %v", err)
+	}
+	if module == nil || module.RuntimeNodeSelector == nil {
+		t.Fatalf("expected runtime module, got %+v", module)
+	}
+	binding, err := module.RuntimeNodeSelector.SelectDefaultNode(context.Background())
+	if err != nil {
+		t.Fatalf("SelectDefaultNode() error = %v", err)
+	}
+
+	var portCount int64
+	if err := db.Model(&containerruntimeentity.RuntimePortPool{}).
+		Where("runtime_node_id = ?", binding.NodeID).
+		Count(&portCount).Error; err != nil {
+		t.Fatalf("count runtime port pool: %v", err)
+	}
+	if portCount != 3 {
+		t.Fatalf("runtime port pool rows = %d, want 3", portCount)
+	}
+
+	var topologySubnetCount int64
+	if err := db.Model(&containerruntimeentity.RuntimeSubnetPool{}).
+		Where("runtime_node_id = ? AND pool_kind = ?", binding.NodeID, containerruntimeentity.RuntimeSubnetPoolKindTopology).
+		Count(&topologySubnetCount).Error; err != nil {
+		t.Fatalf("count topology subnet pool: %v", err)
+	}
+	if topologySubnetCount != 256 {
+		t.Fatalf("topology subnet pool rows = %d, want 256", topologySubnetCount)
+	}
+
+	var singleContainerSubnetCount int64
+	if err := db.Model(&containerruntimeentity.RuntimeSubnetPool{}).
+		Where("runtime_node_id = ? AND pool_kind = ?", binding.NodeID, containerruntimeentity.RuntimeSubnetPoolKindSingleContainer).
+		Count(&singleContainerSubnetCount).Error; err != nil {
+		t.Fatalf("count single-container subnet pool: %v", err)
+	}
+	if singleContainerSubnetCount != 2 {
+		t.Fatalf("single-container subnet pool rows = %d, want 2", singleContainerSubnetCount)
+	}
+}
+
 func TestBuildContainerRuntimeModuleRegistersRuntimeNodeHealthJobWhenEnabled(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 	cfg.Container.RuntimeNodeHealth.Enabled = true
@@ -422,9 +500,7 @@ func TestBuildContainerRuntimeModuleRegistersRuntimeNodeHealthJobWhenEnabled(t *
 	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
 	cfg.Container.RuntimeNodeHealth.FailureThreshold = 1
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -452,9 +528,7 @@ func TestBuildContainerRuntimeModuleSkipsRuntimeNodeHealthJobWhenDisabled(t *tes
 	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
 	cfg.Container.RuntimeNodeHealth.FailureThreshold = 1
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -502,9 +576,7 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredDefaultRuntimeNode(t *testi
 		ServerName: "runtime-agent.internal",
 	}
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	legacyNode := containerruntimeentity.RuntimeNode{
 		Name:             "local-default",
@@ -557,9 +629,7 @@ func TestBuildContainerRuntimeModuleSelectsConfiguredRuntimeAgentNodeName(t *tes
 		ServerName: "runtime-agent.internal",
 	}
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	root, err := BuildRoot(cfg, zap.NewNop(), db, cache)
 	if err != nil {
@@ -591,9 +661,7 @@ func TestBuildContainerRuntimeModuleDefaultSelectorSkipsOfflineRuntimeNode(t *te
 	cfg.Container.RuntimeNodeHealth.Enabled = true
 	cfg.Container.RuntimeNodeHealth.StaleAfter = time.Minute
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime module tables: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	now := time.Now().UTC()
 	offlineDefault := containerruntimeentity.RuntimeNode{
@@ -646,9 +714,7 @@ func TestBuildContainerRuntimeModuleDefaultSelectorSkipsOfflineRuntimeNode(t *te
 func TestBuildContainerRuntimeModuleMigratesLegacyInstanceACLRulesToHandle(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime migration dependencies: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	node := containerruntimeentity.RuntimeNode{
 		Name:             "local-default",
@@ -728,9 +794,7 @@ func TestBuildContainerRuntimeModuleMigratesLegacyInstanceACLRulesToHandle(t *te
 func TestBuildContainerRuntimeModuleIgnoresMissingLegacyACLRuleDuringMigration(t *testing.T) {
 	cfg, db, cache := newRootTestDependencies(t)
 
-	if err := db.AutoMigrate(&containerruntimeentity.RuntimeNode{}, &instanceentity.Instance{}); err != nil {
-		t.Fatalf("auto migrate runtime migration dependencies: %v", err)
-	}
+	autoMigrateContainerRuntimeModuleTables(t, db)
 
 	node := containerruntimeentity.RuntimeNode{
 		Name:             "local-default",

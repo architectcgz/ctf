@@ -186,6 +186,10 @@ var reviewedTransactionBoundaryFunctions = map[string]struct{}{
 	"identity/infrastructure/repository.go#Create":                                                                {},
 	"identity/infrastructure/repository.go#Update":                                                                {},
 	"ops/infrastructure/notification_repository.go#CreateBatch":                                                   {},
+	"container_runtime/infrastructure/resource_pool_repository.go#ReserveAvailablePortForNode":                    {},
+	"container_runtime/infrastructure/resource_pool_repository.go#ReserveAvailableSubnetForNode":                  {},
+	"container_runtime/infrastructure/resource_pool_repository.go#BindResourcesForInstance":                       {},
+	"container_runtime/infrastructure/resource_pool_repository.go#ReleaseResourcesForInstance":                    {},
 	"practice/infrastructure/repository.go#CreateAWDServiceOperation":                                             {},
 	"practice/infrastructure/repository.go#ResetInstanceRuntimeForRestart":                                        {},
 }

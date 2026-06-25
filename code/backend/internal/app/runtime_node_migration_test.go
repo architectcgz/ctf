@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRuntimeNodeContractInBaseline(t *testing.T) {
+func TestRuntimeNodeSchemaContractInBaseline(t *testing.T) {
 	t.Parallel()
 
 	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000001_init_schema.up.sql"))
@@ -17,8 +17,41 @@ func TestRuntimeNodeContractInBaseline(t *testing.T) {
 	upSQL := string(up)
 	for _, snippet := range []string{
 		"CREATE TABLE public.runtime_nodes",
+		"public_host character varying(255) DEFAULT ''::character varying NOT NULL",
+		"access_host character varying(255) DEFAULT ''::character varying NOT NULL",
 		"CREATE TABLE public.instances",
+		"provisioning_stage character varying(64) DEFAULT ''::character varying NOT NULL",
+		"provisioning_attempt integer DEFAULT 0 NOT NULL",
+		"last_provisioning_error text DEFAULT ''::text NOT NULL",
 		"runtime_node_id bigint",
+		"CREATE TABLE public.runtime_port_pool",
+		"runtime_node_id bigint NOT NULL",
+		"port integer NOT NULL",
+		"status character varying(16) DEFAULT 'available'::character varying NOT NULL",
+		"reserved_at timestamp with time zone",
+		"ADD CONSTRAINT runtime_port_pool_pkey PRIMARY KEY (runtime_node_id, port)",
+		"CREATE INDEX idx_runtime_port_pool_available ON public.runtime_port_pool USING btree (runtime_node_id, status, port)",
+		"CREATE INDEX idx_runtime_port_pool_instance ON public.runtime_port_pool USING btree (instance_id) WHERE (instance_id IS NOT NULL)",
+		"ADD CONSTRAINT runtime_port_pool_runtime_node_id_fkey",
+		"CREATE TABLE public.runtime_subnet_pool",
+		"pool_kind character varying(32) NOT NULL",
+		"subnet text NOT NULL",
+		"network_key character varying(128) DEFAULT ''::character varying NOT NULL",
+		"ADD CONSTRAINT runtime_subnet_pool_pkey PRIMARY KEY (runtime_node_id, subnet)",
+		"CREATE INDEX idx_runtime_subnet_pool_available ON public.runtime_subnet_pool USING btree (runtime_node_id, pool_kind, status, subnet)",
+		"CREATE UNIQUE INDEX uk_runtime_subnet_pool_instance_network ON public.runtime_subnet_pool USING btree (instance_id, network_key)",
+		"WHERE ((instance_id IS NOT NULL) AND ((status)::text = ANY",
+		"ADD CONSTRAINT runtime_subnet_pool_runtime_node_id_fkey",
+		"CREATE TABLE public.instance_provisioning_events",
+		"attempt integer DEFAULT 0 NOT NULL",
+		"stage character varying(64) NOT NULL",
+		"message character varying(255) DEFAULT ''::character varying NOT NULL",
+		"severity character varying(16) DEFAULT 'info'::character varying NOT NULL",
+		"detail jsonb DEFAULT '{}'::jsonb NOT NULL",
+		"ADD CONSTRAINT instance_provisioning_events_pkey PRIMARY KEY (id)",
+		"CREATE INDEX idx_instance_provisioning_events_instance ON public.instance_provisioning_events USING btree (instance_id, created_at DESC)",
+		"CREATE INDEX idx_instance_provisioning_events_stage ON public.instance_provisioning_events USING btree (stage, created_at DESC)",
+		"ADD CONSTRAINT instance_provisioning_events_instance_id_fkey",
 		"ALTER TABLE ONLY public.instances",
 		"ADD CONSTRAINT instances_runtime_node_id_fkey",
 		"FOREIGN KEY (runtime_node_id) REFERENCES public.runtime_nodes(id)",

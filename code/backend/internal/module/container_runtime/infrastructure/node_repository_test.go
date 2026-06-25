@@ -68,6 +68,51 @@ func TestRuntimeNodeRepositoryHeartbeatUpdatesHealthAndLastSeen(t *testing.T) {
 	}
 }
 
+func TestRuntimeNodeRepositoryEnsureDefaultNodePersistsAccessHosts(t *testing.T) {
+	t.Parallel()
+
+	db := newRuntimeNodeRepositoryTestDB(t)
+	repo := NewRuntimeNodeRepository(db)
+	node, err := repo.EnsureDefaultNode(context.Background(), runtimecontracts.RuntimeNodeBootstrapSpec{
+		Name:        "agent-a",
+		Endpoint:    "grpc://agent-a",
+		PublicHost:  "public-a.ctf.local",
+		AccessHost:  "access-a.internal",
+		Schedulable: true,
+	})
+	if err != nil {
+		t.Fatalf("EnsureDefaultNode() create error = %v", err)
+	}
+	if node.PublicHost != "public-a.ctf.local" || node.AccessHost != "access-a.internal" {
+		t.Fatalf("created hosts = public %q access %q", node.PublicHost, node.AccessHost)
+	}
+
+	updated, err := repo.EnsureDefaultNode(context.Background(), runtimecontracts.RuntimeNodeBootstrapSpec{
+		Name:        "agent-a",
+		Endpoint:    "grpc://agent-a",
+		PublicHost:  "public-b.ctf.local",
+		AccessHost:  "access-b.internal",
+		Schedulable: true,
+	})
+	if err != nil {
+		t.Fatalf("EnsureDefaultNode() update error = %v", err)
+	}
+	if updated.ID != node.ID {
+		t.Fatalf("updated node id = %d, want %d", updated.ID, node.ID)
+	}
+	if updated.PublicHost != "public-b.ctf.local" || updated.AccessHost != "access-b.internal" {
+		t.Fatalf("updated hosts = public %q access %q", updated.PublicHost, updated.AccessHost)
+	}
+
+	var stored runtimeentity.RuntimeNode
+	if err := db.First(&stored, node.ID).Error; err != nil {
+		t.Fatalf("load stored node: %v", err)
+	}
+	if stored.PublicHost != "public-b.ctf.local" || stored.AccessHost != "access-b.internal" {
+		t.Fatalf("stored hosts = public %q access %q", stored.PublicHost, stored.AccessHost)
+	}
+}
+
 func TestRuntimeNodeRepositorySelectsOnlyFreshReadyOrDegradedNodes(t *testing.T) {
 	t.Parallel()
 

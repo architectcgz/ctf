@@ -8,6 +8,8 @@ type RuntimeNodeBinding struct {
 type RuntimeNodeBootstrapSpec struct {
 	Name        string
 	Endpoint    string
+	PublicHost  string
+	AccessHost  string
 	TLSIdentity string
 	Schedulable bool
 }

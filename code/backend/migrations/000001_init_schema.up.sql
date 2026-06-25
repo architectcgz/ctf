@@ -1096,6 +1096,9 @@ CREATE TABLE public.instances (
     service_id bigint,
     destroyed_at timestamp with time zone,
     runtime_node_id bigint,
+    provisioning_stage character varying(64) DEFAULT ''::character varying NOT NULL,
+    provisioning_attempt integer DEFAULT 0 NOT NULL,
+    last_provisioning_error text DEFAULT ''::text NOT NULL,
     CONSTRAINT chk_instances_share_scope CHECK (((share_scope)::text = ANY (ARRAY[('per_user'::character varying)::text, ('per_team'::character varying)::text, ('shared'::character varying)::text])))
 );
 
@@ -1117,6 +1120,42 @@ CREATE SEQUENCE public.instances_id_seq
 --
 
 ALTER SEQUENCE public.instances_id_seq OWNED BY public.instances.id;
+
+
+--
+-- Name: instance_provisioning_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.instance_provisioning_events (
+    id bigint NOT NULL,
+    instance_id bigint NOT NULL,
+    attempt integer DEFAULT 0 NOT NULL,
+    stage character varying(64) NOT NULL,
+    message character varying(255) DEFAULT ''::character varying NOT NULL,
+    severity character varying(16) DEFAULT 'info'::character varying NOT NULL,
+    runtime_node_id bigint,
+    detail jsonb DEFAULT '{}'::jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: instance_provisioning_events_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.instance_provisioning_events_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: instance_provisioning_events_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.instance_provisioning_events_id_seq OWNED BY public.instance_provisioning_events.id;
 
 
 --
@@ -1220,6 +1259,38 @@ CREATE TABLE public.port_allocations (
 
 
 --
+-- Name: runtime_port_pool; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.runtime_port_pool (
+    runtime_node_id bigint NOT NULL,
+    port integer NOT NULL,
+    status character varying(16) DEFAULT 'available'::character varying NOT NULL,
+    instance_id bigint,
+    reserved_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: runtime_subnet_pool; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.runtime_subnet_pool (
+    runtime_node_id bigint NOT NULL,
+    pool_kind character varying(32) NOT NULL,
+    subnet text NOT NULL,
+    status character varying(16) DEFAULT 'available'::character varying NOT NULL,
+    instance_id bigint,
+    network_key character varying(128) DEFAULT ''::character varying NOT NULL,
+    reserved_at timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: reports; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1298,6 +1369,8 @@ CREATE TABLE public.runtime_nodes (
     id bigint NOT NULL,
     name character varying(128) NOT NULL,
     endpoint character varying(255) DEFAULT ''::character varying NOT NULL,
+    public_host character varying(255) DEFAULT ''::character varying NOT NULL,
+    access_host character varying(255) DEFAULT ''::character varying NOT NULL,
     tls_identity character varying(255) DEFAULT ''::character varying NOT NULL,
     schedulable boolean DEFAULT true NOT NULL,
     labels jsonb DEFAULT '{}'::jsonb NOT NULL,
@@ -1803,6 +1876,13 @@ ALTER TABLE ONLY public.instances ALTER COLUMN id SET DEFAULT nextval('public.in
 
 
 --
+-- Name: instance_provisioning_events id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instance_provisioning_events ALTER COLUMN id SET DEFAULT nextval('public.instance_provisioning_events_id_seq'::regclass);
+
+
+--
 -- Name: notification_batches id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2142,6 +2222,14 @@ ALTER TABLE ONLY public.instances
 
 
 --
+-- Name: instance_provisioning_events instance_provisioning_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instance_provisioning_events
+    ADD CONSTRAINT instance_provisioning_events_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: network_allocations network_allocations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -2171,6 +2259,22 @@ ALTER TABLE ONLY public.notifications
 
 ALTER TABLE ONLY public.port_allocations
     ADD CONSTRAINT port_allocations_pkey PRIMARY KEY (port);
+
+
+--
+-- Name: runtime_port_pool runtime_port_pool_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_port_pool
+    ADD CONSTRAINT runtime_port_pool_pkey PRIMARY KEY (runtime_node_id, port);
+
+
+--
+-- Name: runtime_subnet_pool runtime_subnet_pool_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_subnet_pool
+    ADD CONSTRAINT runtime_subnet_pool_pkey PRIMARY KEY (runtime_node_id, subnet);
 
 
 --
@@ -2798,6 +2902,20 @@ CREATE INDEX idx_instances_user_id ON public.instances USING btree (user_id);
 
 
 --
+-- Name: idx_instance_provisioning_events_instance; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_instance_provisioning_events_instance ON public.instance_provisioning_events USING btree (instance_id, created_at DESC);
+
+
+--
+-- Name: idx_instance_provisioning_events_stage; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_instance_provisioning_events_stage ON public.instance_provisioning_events USING btree (stage, created_at DESC);
+
+
+--
 -- Name: idx_name_tag; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -2851,6 +2969,27 @@ CREATE INDEX idx_notifications_user_unread ON public.notifications USING btree (
 --
 
 CREATE INDEX idx_port_allocations_instance_id ON public.port_allocations USING btree (instance_id);
+
+
+--
+-- Name: idx_runtime_port_pool_available; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_runtime_port_pool_available ON public.runtime_port_pool USING btree (runtime_node_id, status, port);
+
+
+--
+-- Name: idx_runtime_port_pool_instance; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_runtime_port_pool_instance ON public.runtime_port_pool USING btree (instance_id) WHERE (instance_id IS NOT NULL);
+
+
+--
+-- Name: idx_runtime_subnet_pool_available; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_runtime_subnet_pool_available ON public.runtime_subnet_pool USING btree (runtime_node_id, pool_kind, status, subnet);
 
 
 --
@@ -3166,6 +3305,13 @@ CREATE UNIQUE INDEX uk_instances_shared_practice_active ON public.instances USIN
 --
 
 CREATE UNIQUE INDEX uk_network_allocations_owner_key ON public.network_allocations USING btree (instance_id, network_key);
+
+
+--
+-- Name: uk_runtime_subnet_pool_instance_network; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX uk_runtime_subnet_pool_instance_network ON public.runtime_subnet_pool USING btree (instance_id, network_key) WHERE ((instance_id IS NOT NULL) AND ((status)::text = ANY (ARRAY[('reserved'::character varying)::text, ('bound'::character varying)::text])));
 
 
 --
@@ -3826,6 +3972,22 @@ ALTER TABLE ONLY public.instances
 
 
 --
+-- Name: instance_provisioning_events instance_provisioning_events_instance_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instance_provisioning_events
+    ADD CONSTRAINT instance_provisioning_events_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id) ON DELETE CASCADE;
+
+
+--
+-- Name: instance_provisioning_events instance_provisioning_events_runtime_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.instance_provisioning_events
+    ADD CONSTRAINT instance_provisioning_events_runtime_node_id_fkey FOREIGN KEY (runtime_node_id) REFERENCES public.runtime_nodes(id) ON DELETE SET NULL;
+
+
+--
 -- Name: notification_batches notification_batches_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3855,6 +4017,38 @@ ALTER TABLE ONLY public.notifications
 
 ALTER TABLE ONLY public.port_allocations
     ADD CONSTRAINT port_allocations_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id) ON DELETE CASCADE;
+
+
+--
+-- Name: runtime_port_pool runtime_port_pool_instance_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_port_pool
+    ADD CONSTRAINT runtime_port_pool_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id) ON DELETE SET NULL;
+
+
+--
+-- Name: runtime_port_pool runtime_port_pool_runtime_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_port_pool
+    ADD CONSTRAINT runtime_port_pool_runtime_node_id_fkey FOREIGN KEY (runtime_node_id) REFERENCES public.runtime_nodes(id) ON DELETE CASCADE;
+
+
+--
+-- Name: runtime_subnet_pool runtime_subnet_pool_instance_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_subnet_pool
+    ADD CONSTRAINT runtime_subnet_pool_instance_id_fkey FOREIGN KEY (instance_id) REFERENCES public.instances(id) ON DELETE SET NULL;
+
+
+--
+-- Name: runtime_subnet_pool runtime_subnet_pool_runtime_node_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.runtime_subnet_pool
+    ADD CONSTRAINT runtime_subnet_pool_runtime_node_id_fkey FOREIGN KEY (runtime_node_id) REFERENCES public.runtime_nodes(id) ON DELETE CASCADE;
 
 
 --

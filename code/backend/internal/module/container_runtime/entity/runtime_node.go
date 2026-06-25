@@ -13,6 +13,8 @@ type RuntimeNode struct {
 	ID               int64      `gorm:"column:id;primaryKey"`
 	Name             string     `gorm:"column:name;size:128;not null;uniqueIndex"`
 	Endpoint         string     `gorm:"column:endpoint;size:255;not null;default:''"`
+	PublicHost       string     `gorm:"column:public_host;size:255;not null;default:''"`
+	AccessHost       string     `gorm:"column:access_host;size:255;not null;default:''"`
 	TLSIdentity      string     `gorm:"column:tls_identity;size:255;not null;default:''"`
 	Schedulable      bool       `gorm:"column:schedulable;not null;default:true"`
 	Labels           string     `gorm:"column:labels;type:jsonb;not null;default:'{}'"`

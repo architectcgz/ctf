@@ -2,9 +2,9 @@
 
 > **面向 agent 执行者:** 必需子技能：使用 superpowers:subagent-driven-development（推荐）或 superpowers:executing-plans 逐任务执行本计划。步骤使用 checkbox（`- [ ]`）跟踪。
 
-**目标:** 将题目实例端口 / 网段分配改为按 runtime node 管理的数据库资源池，并补齐 node 级访问地址与实例启动进度事件。
+**Goal:** 将题目实例端口 / 网段分配改为按 runtime node 管理的数据库资源池，并补齐 node 级访问地址与实例启动进度事件。
 
-**架构:** `container_runtime` 负责 runtime node 元数据、按 node 分片的资源池和分配正确性。`practice` 负责实例启动 / provisioning 编排，并通过窄接口消费 node-scoped allocation 能力。`instance` 负责持久化实例生命周期、当前 provisioning stage 和 provisioning event history。`runtime_nodes.endpoint` 只表示控制面地址；`runtime_nodes.public_host/access_host` 表示数据面访问地址。
+**Architecture:** `container_runtime` 负责 runtime node 元数据、按 node 分片的资源池和分配正确性。`practice` 负责实例启动 / provisioning 编排，并通过窄接口消费 node-scoped allocation 能力。`instance` 负责持久化实例生命周期、当前 provisioning stage 和 provisioning event history。`runtime_nodes.endpoint` 只表示控制面地址；`runtime_nodes.public_host/access_host` 表示数据面访问地址。
 
 **技术栈:** Go, GORM, PostgreSQL, Docker Engine SDK, runtime-agent, Vue presentation tests, 既有 `container_runtime` / `instance` / `practice` 模块。
 
@@ -15,6 +15,45 @@
 - 建议 task slug：`runtime-node-resource-pool-public-hosts`
 - 实现前运行：`bash scripts/start-implementation.sh runtime-node-resource-pool-public-hosts`
 - 本计划是跨模块正式实施计划，需要经过项目 code-workflow startup gate、plan review、implementation review 和 completion validation。
+
+## Task Metadata
+
+- Task slug：`2026-06-24-runtime-node-resource-pool-public-hosts`
+- 分支：`task/2026-06-24-runtime-node-resource-pool-public-hosts`
+- Worktree：`.worktrees/ctf/2026-06-24-runtime-node-resource-pool-public-hosts`
+- Plan path：`docs/plan/impl-plan/2026-06-24-runtime-node-resource-pool-public-hosts-implementation-plan.md`
+
+## Task Classification
+
+- 类型：后端结构性实现，包含 schema、repository、composition wiring 和契约测试。
+- 复杂度：非琐碎，跨 `container_runtime`、`instance`、`app/composition` 和 migration。
+- 风险面：运行节点资源唯一性、启动期 seed 写放大、访问地址 fallback、实例 provisioning 可观测性。
+
+## Files
+
+- 数据库：`code/backend/migrations/000001_init_schema.up.sql`。
+- Runtime node：`code/backend/internal/module/container_runtime/**` 与 `code/backend/internal/app/composition/**`。
+- Instance：`code/backend/internal/module/instance/entity/**`。
+- 测试：runtime node migration、node repository、resource pool repository、runtime module composition。
+
+## 复用与 Owner 决策
+
+- 资源池 owner 放在 `container_runtime`，复用既有 runtime node repository、GORM entity 和 `subnetCandidates` CIDR 生成逻辑。
+- `instance` 只持有实例生命周期与 provisioning event 数据结构，不反向承担 runtime node 分配决策。
+- Composition 只负责默认节点启动 seed 接线，不把 schema owner 或资源分配规则放入启动组装层。
+
+## Intake Analysis Gate
+
+- 当前任务已绑定项目 code-workflow startup gate，并按正式实施计划推进。
+- 实现前置判断采用项目 `AGENTS.md`、`ctf-backend-patterns`、后端测试分层说明和资源池计划的 owner 划分。
+- Review 反馈的 P1 写放大问题已作为任务 4 收口修复点处理，未扩大到任务 5 之后的 provisioning flow。
+
+## Validation
+
+- 资源池 repository：`go test ./internal/module/container_runtime/infrastructure -run TestResourcePool -count=1`。
+- Runtime module seed：`go test ./internal/app/composition -run TestBuildContainerRuntimeModule -count=1`。
+- 提交前最小充分验证：`go test ./internal/module/container_runtime/infrastructure ./internal/app/composition -count=1`。
+- Pre-commit gate：`bash scripts/run-workflow-stage.sh pre-commit-quick` 或正常 `git commit` hook。
 
 ## 背景
 
@@ -284,11 +323,11 @@ Composition 与 access URL：
 - 修改：runtime node contract/config bootstrap files
 - 测试：`code/backend/internal/module/container_runtime/infrastructure/node_repository_test.go`
 
-- [ ] **步骤 1：添加 `public_host/access_host` 持久化失败测试**
+- [x] **步骤 1：添加 `public_host/access_host` 持久化失败测试**
 
 断言 `EnsureDefaultNode` 会创建并更新这两个字段。
 
-- [ ] **步骤 2：运行失败测试**
+- [x] **步骤 2：运行失败测试**
 
 运行：
 
@@ -299,11 +338,11 @@ go test ./internal/module/container_runtime/infrastructure -run TestRuntimeNodeR
 
 预期：FAIL。
 
-- [ ] **步骤 3：添加 entity、contract 和 repository 字段**
+- [x] **步骤 3：添加 entity、contract 和 repository 字段**
 
 不要改变 `endpoint` 语义。
 
-- [ ] **步骤 4：运行聚焦测试**
+- [x] **步骤 4：运行聚焦测试**
 
 运行：
 
@@ -324,7 +363,7 @@ go test ./internal/module/container_runtime/infrastructure -run TestRuntimeNodeR
 - 新建：`code/backend/internal/module/instance/entity/provisioning_event.go`
 - 测试：`code/backend/internal/app/*migration*_test.go` 或最近的 baseline schema test
 
-- [ ] **步骤 1：添加 schema 失败断言**
+- [x] **步骤 1：添加 schema 失败断言**
 
 断言 baseline 包含：
 
@@ -338,7 +377,7 @@ go test ./internal/module/container_runtime/infrastructure -run TestRuntimeNodeR
 - `instance_provisioning_events`
 - port/subnet pool 的 per-node primary keys
 
-- [ ] **步骤 2：运行失败 migration test**
+- [x] **步骤 2：运行失败 migration test**
 
 运行：
 
@@ -349,11 +388,11 @@ go test ./internal/app -run 'Test.*Runtime.*Schema|Test.*Migration' -count=1
 
 预期：FAIL。
 
-- [ ] **步骤 3：添加 SQL schema 和 entities**
+- [x] **步骤 3：添加 SQL schema 和 entities**
 
 迁移期间保留现有 `port_allocations/network_allocations`。本切片不要删除旧表。
 
-- [ ] **步骤 4：运行 migration test**
+- [x] **步骤 4：运行 migration test**
 
 运行：
 
@@ -370,19 +409,19 @@ go test ./internal/app -run 'Test.*Runtime.*Schema|Test.*Migration' -count=1
 - 新建：`code/backend/internal/module/container_runtime/infrastructure/resource_pool_repository.go`
 - 测试：`code/backend/internal/module/container_runtime/infrastructure/resource_pool_repository_test.go`
 
-- [ ] **步骤 1：添加不同 node 复用同一端口的失败测试**
+- [x] **步骤 1：添加不同 node 复用同一端口的失败测试**
 
 为 node A 和 node B 都 seed 端口 `30000`。两个 reservation 必须能独立成功。
 
-- [ ] **步骤 2：添加同一 node 并发分配的失败测试**
+- [x] **步骤 2：添加同一 node 并发分配的失败测试**
 
 同一 node 上的并发 reservation 不能返回同一个端口。
 
-- [ ] **步骤 3：添加不同 node 复用同一网段的失败测试**
+- [x] **步骤 3：添加不同 node 复用同一网段的失败测试**
 
 node A 和 node B 上的同一 subnet 必须能独立 reserve。
 
-- [ ] **步骤 4：实现 repository 方法**
+- [x] **步骤 4：实现 repository 方法**
 
 必需方法：
 
@@ -394,7 +433,7 @@ node A 和 node B 上的同一 subnet 必须能独立 reserve。
 - `QuarantinePort(ctx, nodeID int64, port int, reason string) error`
 - `QuarantineSubnet(ctx, nodeID int64, subnet string, reason string) error`
 
-- [ ] **步骤 5：运行资源池测试**
+- [x] **步骤 5：运行资源池测试**
 
 运行：
 
@@ -413,15 +452,15 @@ go test ./internal/module/container_runtime/infrastructure -run TestResourcePool
 - 测试：`code/backend/internal/module/container_runtime/infrastructure/resource_pool_repository_test.go`
 - 测试：`code/backend/internal/app/composition/runtime_module_test.go`
 
-- [ ] **步骤 1：添加幂等性失败测试**
+- [x] **步骤 1：添加幂等性失败测试**
 
 连续调用两次 `EnsurePoolsForNode` 不能重复插入 rows，也不能覆盖 `reserved/bound` rows。
 
-- [ ] **步骤 2：添加配置生成数量失败测试**
+- [x] **步骤 2：添加配置生成数量失败测试**
 
 对于 `30000-30003`，预期生成 3 条 port rows。对于 topology `10.10.0.0/16 + /24`，预期生成 256 条 subnet rows。
 
-- [ ] **步骤 3：实现资源池 seed**
+- [x] **步骤 3：实现资源池 seed**
 
 使用现有配置：
 
@@ -432,7 +471,7 @@ go test ./internal/module/container_runtime/infrastructure -run TestResourcePool
 - `container.network.topology_subnet_base`
 - `container.network.topology_subnet_mask`
 
-- [ ] **步骤 4：运行测试**
+- [x] **步骤 4：运行测试**
 
 运行：
 
