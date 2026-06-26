@@ -2,7 +2,7 @@
 
 - Project: `ctf 仓库根目录`
 - Created: `2026-06-21T19:03+08:00`
-- Status: `Partially tracked by impl-plan`
+- Status: `Open follow-up`
 
 ## Context
 
@@ -32,5 +32,16 @@ AWD 的 `docker_bridge_alias` 依赖同一 Docker 宿主内的 bridge network。
 
 ## Open Items
 
-- [ ] 设计 emergency recreate 的产品形态：先决定是内部 service / runbook，还是管理员 API + UI，再实现显式整场切换 node 和全量重建。
-- [ ] 评估是否需要完整 runtime reservation / capacity preflight；仅在多场 AWD 并发、多 node 自动排布和容量可视化需求明确后再立项。
+- [ ] 完整 runtime reservation / capacity preflight 仍未落地。后续只有在明确需要多场 AWD 并发、多 node 自动排布或赛前容量可视化时再立项；立项时应重新确认是否需要 `runtime_node_reservations`、`reserved_units`、按 contest 排除自身 reservation 的容量计算，以及 reservation 生命周期释放。
+- [ ] AWD runtime placement 管理 API / UI 仍未落地。当前 active placement 由后端在 AWD scope 首次选择 runtime node 时自动 `ensure`；没有 `preflight-reserve`、候选 node 列表、reserve/rebind 管理端点或管理员容量面板。
+- [ ] runtime reservation gate 仍未落地。当前 start、prewarm、round、checker、学生 start/restart、管理员 start/restart 没有强制要求先存在有效 reservation；checker readiness override 也没有和 reservation blocker 绑定。
+- [ ] emergency recreate 仍未实现。已有草案计划 `docs/plan/archive/impl-plan/2026-06/2026-06-21-awd-emergency-runtime-recreate-implementation-plan.md`，但生产代码中没有 placement replacement、contest-scoped AWD emergency requeue、desired reconcile state cleanup、内部 CLI 或 runbook。
+- [ ] degraded / provisioning eligibility 需要在 capacity preflight 或 emergency recreate 立项时重新决策。当前事实是默认新调度允许 `ready/degraded + fresh + schedulable`；旧 6/13 计划中的 `degraded_container_threshold`、`provisioning_eligible = ready + fresh + schedulable` 和 degraded blocking reason 没有作为生产契约落地。
+- [ ] reservation 相关文档和 OpenAPI 只在对应能力实现时再补。不要把 preflight reserve、reservation lifecycle、runtime placement UI 或 degraded capacity 规则写成当前事实。
+
+## Covered By Later Work
+
+以下内容已经由后续实现覆盖，不再作为本 todo 的 open item 跟踪：
+
+- `2026-06-21-awd-runtime-node-identity-and-placement`：完成 `instances.node_id` 到 `instances.runtime_node_id` 的迁移、复合执行身份索引、`contest_runtime_placements` 轻量表、AWD scope 固定 active placement，以及绑定 node 不可用时不回退默认 selector。
+- `2026-06-24-runtime-node-resource-pool-public-hosts`：完成 per-node `public_host/access_host`、`runtime_port_pool`、`runtime_subnet_pool` 和 node-scoped 资源分配；这解决的是 node 内端口/子网分配正确性，不等同于 contest-level runtime reservation。
