@@ -34,6 +34,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.session_cookie_same_site", "lax")
 	v.SetDefault("auth.session_key_prefix", "ctf:auth:session")
 	v.SetDefault("auth.oauth.issuer_url", "")
+	v.SetDefault("auth.oauth.login_url", "/login")
 	v.SetDefault("auth.oauth.authorization_code_ttl", 5*time.Minute)
 	v.SetDefault("auth.oauth.access_token_ttl", 15*time.Minute)
 	v.SetDefault("auth.oauth.refresh_token_ttl", 30*24*time.Hour)

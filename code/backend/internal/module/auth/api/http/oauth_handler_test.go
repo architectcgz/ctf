@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 )
 
@@ -185,7 +186,9 @@ func TestHTTP_OAuthAuthorizeValidatesRequest(t *testing.T) {
 }
 
 func TestHTTP_OAuthAuthorizeRedirectsUnauthenticatedUserToLogin(t *testing.T) {
-	env := newIntegrationTestEnv(t)
+	env := newIntegrationTestEnvWithAuthConfig(t, func(cfg *config.AuthConfig) {
+		cfg.OAuth.LoginURL = "http://127.0.0.1:5174/login"
+	})
 	registerOAuthTestClient(t, env)
 
 	target := validAuthorizeTarget("state-login")
@@ -194,10 +197,10 @@ func TestHTTP_OAuthAuthorizeRedirectsUnauthenticatedUserToLogin(t *testing.T) {
 		t.Fatalf("expected unauthenticated authorize to redirect, got %d body=%s", resp.Code, resp.Body.String())
 	}
 	location := resp.Header().Get("Location")
-	if !strings.HasPrefix(location, "/login?redirect=") {
+	if !strings.HasPrefix(location, "http://127.0.0.1:5174/login?redirect=") {
 		t.Fatalf("unexpected login redirect location: %q", location)
 	}
-	redirectValue, err := url.QueryUnescape(strings.TrimPrefix(location, "/login?redirect="))
+	redirectValue, err := url.QueryUnescape(strings.TrimPrefix(location, "http://127.0.0.1:5174/login?redirect="))
 	if err != nil {
 		t.Fatalf("decode redirect: %v", err)
 	}

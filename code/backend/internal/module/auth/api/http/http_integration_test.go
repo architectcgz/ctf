@@ -917,6 +917,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		MaxAge:   authCfg.SessionTTL,
 	}, zap.NewNop(), auditCommandService)
 	authHandler.SetOAuthServices(oauthCommandService, oauthMetadataService)
+	authHandler.SetOAuthLoginURL(authCfg.OAuth.LoginURL)
 	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
 	router := gin.New()
@@ -978,6 +979,7 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 			AccessTokenTTL:            time.Hour,
 			RefreshTokenTTL:           30 * 24 * time.Hour,
 			ClientRegistrationEnabled: true,
+			LoginURL:                  "/login",
 			RedisKeyPrefix:            "test:oauth",
 		},
 	}

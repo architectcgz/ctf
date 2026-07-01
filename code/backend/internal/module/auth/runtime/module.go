@@ -95,5 +95,6 @@ func buildHandler(deps moduleDeps, oauthService authcmd.OAuthService) *http.Hand
 		deps.auditRecorder,
 	)
 	handler.SetOAuthServices(oauthService, oauthMetadataService)
+	handler.SetOAuthLoginURL(cfg.Auth.OAuth.LoginURL)
 	return handler
 }

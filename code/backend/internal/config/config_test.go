@@ -868,6 +868,9 @@ func TestLoadAppliesOAuthDefaults(t *testing.T) {
 	if cfg.Auth.OAuth.RedisKeyPrefix != "ctf:auth:oauth" {
 		t.Fatalf("oauth redis key prefix = %q", cfg.Auth.OAuth.RedisKeyPrefix)
 	}
+	if cfg.Auth.OAuth.LoginURL != "http://127.0.0.1:5173/login" {
+		t.Fatalf("oauth login url = %q", cfg.Auth.OAuth.LoginURL)
+	}
 }
 
 func TestValidateOAuthRejectsInvalidProductionIssuer(t *testing.T) {
@@ -1158,10 +1161,12 @@ func validConfigForValidationTests() *Config {
 	return &Config{
 		Auth: AuthConfig{
 			OAuth: AuthOAuthConfig{
+				IssuerURL:                 "https://ctf.example.edu",
 				AuthorizationCodeTTL:      5 * time.Minute,
 				AccessTokenTTL:            15 * time.Minute,
 				RefreshTokenTTL:           30 * 24 * time.Hour,
 				ClientRegistrationEnabled: true,
+				LoginURL:                  "/login",
 				RedisKeyPrefix:            "ctf:auth:oauth",
 			},
 		},

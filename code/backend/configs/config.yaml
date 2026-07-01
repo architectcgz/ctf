@@ -84,6 +84,7 @@ auth:
   session_key_prefix: ctf:auth:session
   oauth:
     issuer_url: ""
+    login_url: /login
     authorization_code_ttl: 5m
     access_token_ttl: 15m
     refresh_token_ttl: 720h

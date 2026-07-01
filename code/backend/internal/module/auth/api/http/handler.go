@@ -3,6 +3,7 @@ package http
 import (
 	"context"
 	stdhttp "net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -65,6 +66,7 @@ type Handler struct {
 	casQueries    casQueryService
 	oauthCommands oauthCommandService
 	oauthMetadata oauthMetadataQueryService
+	oauthLoginURL string
 	tokenService  authcontracts.TokenService
 	cookieConfig  CookieConfig
 	log           *zap.Logger
@@ -109,6 +111,10 @@ func NewHandler(commands authCommandService, profileCmd profileCommandService, p
 func (h *Handler) SetOAuthServices(commands oauthCommandService, metadata oauthMetadataQueryService) {
 	h.oauthCommands = commands
 	h.oauthMetadata = metadata
+}
+
+func (h *Handler) SetOAuthLoginURL(loginURL string) {
+	h.oauthLoginURL = strings.TrimSpace(loginURL)
 }
 
 func (h *Handler) Register(c *gin.Context) {

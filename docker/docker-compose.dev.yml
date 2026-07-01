@@ -206,6 +206,7 @@ services:
       CTF_REDIS_DB: 2
       CTF_CONTAINER_FLAG_GLOBAL_SECRET: ctf-container-flag-secret-0123456789abcdef
       CTF_CONTAINER_FLAG_GLOBAL_SECRET_FILE: runtime/flag-global-secret
+      CTF_AUTH_OAUTH_LOGIN_URL: http://127.0.0.1:${CTF_FRONTEND_PORT:-5173}/login
       CTF_RUNTIME_AGENT_ENABLED: "true"
       CTF_RUNTIME_AGENT_ENDPOINT: ctf-runtime-agent:9443
       CTF_RUNTIME_AGENT_SERVER_NAME: runtime-agent.local

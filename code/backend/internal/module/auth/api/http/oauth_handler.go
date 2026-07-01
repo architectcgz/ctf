@@ -100,7 +100,7 @@ func (h *Handler) OAuthAuthorize(c *gin.Context) {
 		return
 	}
 	if !authenticated {
-		c.Redirect(stdhttp.StatusFound, "/login?redirect="+url.QueryEscape(c.Request.URL.RequestURI()))
+		c.Redirect(stdhttp.StatusFound, h.oauthLoginRedirectURL(c))
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *Handler) OAuthAuthorizeDecision(c *gin.Context) {
 		return
 	}
 	if !authenticated {
-		c.Redirect(stdhttp.StatusFound, "/login?redirect="+url.QueryEscape(c.Request.URL.RequestURI()))
+		c.Redirect(stdhttp.StatusFound, h.oauthLoginRedirectURL(c))
 		return
 	}
 	input := authcmd.OAuthAuthorizationDecisionInput{
@@ -291,6 +291,19 @@ func (h *Handler) renderOAuthConsent(c *gin.Context, req authcmd.OAuthAuthorizat
 		return
 	}
 	c.Data(stdhttp.StatusOK, "text/html; charset=utf-8", page.Bytes())
+}
+
+func (h *Handler) oauthLoginRedirectURL(c *gin.Context) string {
+	loginURL := strings.TrimSpace(h.oauthLoginURL)
+	if loginURL == "" {
+		loginURL = "/login"
+	}
+	separator := "?"
+	if strings.Contains(loginURL, "?") {
+		separator = "&"
+	}
+	// The login page is a frontend route; after session creation it redirects back to this API authorize request.
+	return loginURL + separator + "redirect=" + url.QueryEscape(c.Request.URL.RequestURI())
 }
 
 func (h *Handler) recordOAuthTokenAudit(c *gin.Context, action, event, clientID string, userID *int64, scope string, cause error) {

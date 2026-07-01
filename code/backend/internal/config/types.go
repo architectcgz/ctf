@@ -118,6 +118,7 @@ type AuthConfig struct {
 
 type AuthOAuthConfig struct {
 	IssuerURL                  string        `mapstructure:"issuer_url"`
+	LoginURL                   string        `mapstructure:"login_url"`
 	AuthorizationCodeTTL       time.Duration `mapstructure:"authorization_code_ttl"`
 	AccessTokenTTL             time.Duration `mapstructure:"access_token_ttl"`
 	RefreshTokenTTL            time.Duration `mapstructure:"refresh_token_ttl"`

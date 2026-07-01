@@ -517,6 +517,9 @@ func validateAuthOAuthConfig(env string, cfg AuthOAuthConfig) error {
 	if strings.TrimSpace(cfg.RedisKeyPrefix) == "" {
 		return fmt.Errorf("auth.oauth.redis_key_prefix must not be empty")
 	}
+	if err := validateOAuthLoginURL(env, cfg.LoginURL); err != nil {
+		return err
+	}
 	for _, prefix := range cfg.AllowedRedirectURIPrefixes {
 		if strings.TrimSpace(prefix) == "" {
 			return fmt.Errorf("auth.oauth.allowed_redirect_uri_prefixes must not contain empty prefix")
@@ -526,6 +529,27 @@ func validateAuthOAuthConfig(env string, cfg AuthOAuthConfig) error {
 		if !isHTTPSOrigin(cfg.IssuerURL) {
 			return fmt.Errorf("auth.oauth.issuer_url must be an https origin in prod")
 		}
+	}
+	return nil
+}
+
+func validateOAuthLoginURL(env string, raw string) error {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return fmt.Errorf("auth.oauth.login_url must not be empty")
+	}
+	if strings.HasPrefix(trimmed, "/") && !strings.HasPrefix(trimmed, "//") && !strings.HasPrefix(trimmed, `/\`) {
+		return nil
+	}
+	parsed, err := url.Parse(trimmed)
+	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
+		return fmt.Errorf("auth.oauth.login_url must be an absolute http(s) URL or root-relative path")
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("auth.oauth.login_url must use http or https when absolute")
+	}
+	if isProductionEnv(env) && parsed.Scheme != "https" {
+		return fmt.Errorf("auth.oauth.login_url must be https in prod when absolute")
 	}
 	return nil
 }
