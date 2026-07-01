@@ -1,14 +1,15 @@
 # Frontend Architecture Review Prompt（CTF 入口）
 
-共享正文 owner：`/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md`
+> 状态：Legacy local entry
+> 说明：保留给历史 review 引用；已移除的共享 code-reviewer prompt 不再作为本文件前置依赖。
 
-使用时先读取共享正文，再应用本仓库补充。若目标是 CTF 前端架构审计，优先使用下面的项目化提示词。
+本文件仅作为 CTF 前端架构审计的项目化提示词入口。
 
 ## CTF 补充
 
 - 使用前先读目标仓库的 `AGENTS.md`、前端架构测试、路由入口和主要 feature owner。
 - 如果 review 结果会进入仓库，优先写入 `docs/reviews/{frontend|architecture|general}/`，不要只停留在聊天结论。
-- 如果这轮 review 产出了可复用方法，而不是一次性结论，再回写 `feedback/` 或 `/home/azhi/.agents/skills/code-reviewer/`。
+- 如果这轮 review 产出了可复用方法，而不是一次性结论，再回写 `feedback/`；跨项目通用内容再提升到共享 skill 或共享 harness prompt。
 
 ## CTF 前端架构审计提示词
 

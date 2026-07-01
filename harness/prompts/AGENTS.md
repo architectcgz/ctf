@@ -10,7 +10,7 @@
 ## 当前模块
 
 - `architecture-diagram-generation.md`：共享正文位于 `/home/azhi/.agents/harness/prompts/architecture-diagram-generation.md`
-- `frontend-architecture-review.md`：共享正文位于 `/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md`
+- `frontend-architecture-review.md`：CTF 前端架构审计历史入口和项目化补充；不再引用已移除的共享 code-reviewer prompt
 - `network-security-review.md`：CTF 平台网络安全防护审查入口，配合 `security-vulnerability-scan` skill 使用
 
 ## 入口约定
