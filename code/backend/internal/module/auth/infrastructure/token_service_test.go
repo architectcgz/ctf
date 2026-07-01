@@ -3,6 +3,8 @@ package infrastructure_test
 import (
 	"context"
 	"errors"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -262,6 +264,25 @@ func TestTokenServiceListUserSessionsRejectsNilContext(t *testing.T) {
 
 	if _, err := service.ListUserSessions(nil, 42); err == nil {
 		t.Fatal("expected ListUserSessions() to reject nil context")
+	}
+}
+
+func TestTokenServiceLegacyMCPTokenSurfaceRemoved(t *testing.T) {
+	files := []string{
+		"token_service.go",
+		"../contracts/token_service.go",
+	}
+	for _, file := range files {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatalf("read %s: %v", file, err)
+		}
+		// 旧 MCP token 入口一旦残留，就会形成绕过 OAuth browser authorization 的第二条认证路径。
+		for _, legacy := range []string{"MCPToken", "IssueMCPToken", "ResolveMCPToken", "mcpTokenPayload", "mcpTokenKey"} {
+			if strings.Contains(string(content), legacy) {
+				t.Fatalf("%s still contains legacy MCP token surface %q", file, legacy)
+			}
+		}
 	}
 }
 

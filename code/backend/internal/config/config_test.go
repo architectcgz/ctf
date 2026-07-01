@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -839,16 +840,9 @@ func TestValidateRejectsNonPositiveContestSubmissionRateLimitTTL(t *testing.T) {
 	}
 }
 
-func TestValidateRejectsNonPositiveMCPTokenTTL(t *testing.T) {
-	cfg := validConfigForValidationTests()
-	cfg.Auth.MCPTokenTTL = 0
-
-	err := cfg.Validate()
-	if err == nil {
-		t.Fatal("expected Validate() to reject non-positive MCP token ttl, got nil")
-	}
-	if !strings.Contains(err.Error(), "auth.mcp_token_ttl must be greater than 0") {
-		t.Fatalf("unexpected error: %v", err)
+func TestAuthConfigDoesNotExposeLegacyMCPTokenTTL(t *testing.T) {
+	if _, ok := reflect.TypeOf(AuthConfig{}).FieldByName("MCPTokenTTL"); ok {
+		t.Fatal("AuthConfig must not expose legacy MCPTokenTTL after OAuth migration")
 	}
 }
 

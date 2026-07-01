@@ -230,6 +230,15 @@ func TestHTTP_LoginResponseDoesNotExposeAccessToken(t *testing.T) {
 	}
 }
 
+func TestHTTP_MCPTokenEndpointRemoved(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+
+	resp := performJSONRequest(t, env.router, http.MethodPost, "/api/v1/auth/mcp-token", nil, nil, nil)
+	if resp.Code != http.StatusNotFound {
+		t.Fatalf("expected removed MCP token endpoint to return 404, got %d body=%s", resp.Code, resp.Body.String())
+	}
+}
+
 func TestHTTP_IssueMCPTokenRequiresSessionAndReturnsBearerToken(t *testing.T) {
 	env := newIntegrationTestEnv(t)
 

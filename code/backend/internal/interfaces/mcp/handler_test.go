@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -188,13 +189,10 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 	}
 }
 
-func TestHandlerReturnsAuthRequiredErrorWithLoginURLs(t *testing.T) {
-	handler := NewHandler(Deps{
-		LoginURL: "/login",
-		TokenURL: "/api/v1/auth/mcp-token",
-	})
+func TestHandlerReturnsOAuthChallengeWhenAuthRequired(t *testing.T) {
+	handler := NewHandler(Deps{})
 
-	resp := postMCPRaw(t, handler, nil, map[string]any{
+	rec := postMCPRecorder(t, handler, nil, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      "auth-required",
 		"method":  "tools/call",
@@ -203,6 +201,18 @@ func TestHandlerReturnsAuthRequiredErrorWithLoginURLs(t *testing.T) {
 		},
 	})
 
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("status = %d body = %s, want 401", rec.Code, rec.Body.String())
+	}
+	challenge := rec.Header().Get("WWW-Authenticate")
+	if !strings.Contains(challenge, `Bearer realm="ctf-mcp"`) || !strings.Contains(challenge, `resource_metadata=`) {
+		t.Fatalf("unexpected WWW-Authenticate header: %q", challenge)
+	}
+
+	var resp mcpResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode response: %v\nbody: %s", err, rec.Body.String())
+	}
 	if resp.Error == nil {
 		t.Fatalf("expected auth error, got %+v", resp)
 	}
@@ -211,8 +221,11 @@ func TestHandlerReturnsAuthRequiredErrorWithLoginURLs(t *testing.T) {
 		t.Fatalf("error code = %v, want -32001", errPayload["code"])
 	}
 	data := errPayload["data"].(map[string]any)
-	if data["login_url"] != "/login" || data["token_url"] != "/api/v1/auth/mcp-token" {
+	if data["auth_method"] != "oauth" || data["resource_metadata"] == "" || data["required_scope"] != "mcp:challenge:read" {
 		t.Fatalf("unexpected auth data: %+v", data)
+	}
+	if _, exists := data["token_url"]; exists {
+		t.Fatalf("auth data must not expose legacy token_url: %+v", data)
 	}
 }
 
@@ -313,6 +326,20 @@ func postMCPWithHeaders(t *testing.T, handler *Handler, headers map[string]strin
 func postMCPRaw(t *testing.T, handler *Handler, prepare func(*gin.Context), body map[string]any) mcpResponse {
 	t.Helper()
 
+	rec := postMCPRecorder(t, handler, prepare, body)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d body = %s", rec.Code, rec.Body.String())
+	}
+	var resp mcpResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("decode response: %v\nbody: %s", err, rec.Body.String())
+	}
+	return resp
+}
+
+func postMCPRecorder(t *testing.T, handler *Handler, prepare func(*gin.Context), body map[string]any) *httptest.ResponseRecorder {
+	t.Helper()
+
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 	router.POST("/mcp", func(c *gin.Context) {
@@ -331,12 +358,5 @@ func postMCPRaw(t *testing.T, handler *Handler, prepare func(*gin.Context), body
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusOK {
-		t.Fatalf("status = %d body = %s", rec.Code, rec.Body.String())
-	}
-	var resp mcpResponse
-	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
-		t.Fatalf("decode response: %v\nbody: %s", err, rec.Body.String())
-	}
-	return resp
+	return rec
 }
