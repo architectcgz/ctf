@@ -14,6 +14,7 @@ import (
 
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -45,25 +46,31 @@ func (s *stubChallengeQuery) GetPublishedChallenge(ctx context.Context, userID, 
 	return s.detail, nil
 }
 
-type stubTokenService struct {
-	session      *authcontracts.Session
-	mcpUser      *authctx.CurrentUser
-	lastMCPToken string
+type stubOAuthTokenResolver struct {
+	user              *authctx.CurrentUser
+	clientID          string
+	scope             string
+	err               error
+	lastToken         string
+	lastRequiredScope string
+	calls             int
 }
 
-func (s *stubTokenService) GetSession(context.Context, string) (*authcontracts.Session, error) {
-	if s.session == nil {
-		return nil, authcontracts.ErrAccessTokenExpired
+func (s *stubOAuthTokenResolver) ResolveOAuthAccessToken(_ context.Context, token string, requiredScope string) (*authcmd.OAuthAccessTokenResolution, error) {
+	s.calls++
+	s.lastToken = token
+	s.lastRequiredScope = requiredScope
+	if s.err != nil {
+		return nil, s.err
 	}
-	return s.session, nil
-}
-
-func (s *stubTokenService) ResolveMCPToken(_ context.Context, token string) (*authctx.CurrentUser, error) {
-	s.lastMCPToken = token
-	if s.mcpUser == nil {
-		return nil, authcontracts.ErrMCPTokenInvalid
+	if s.user == nil {
+		return nil, authcontracts.NewOAuthInvalidGrant("access token is invalid or expired")
 	}
-	return s.mcpUser, nil
+	return &authcmd.OAuthAccessTokenResolution{
+		User:     *s.user,
+		ClientID: s.clientID,
+		Scope:    s.scope,
+	}, nil
 }
 
 type recordingAuditRecorder struct {
@@ -77,7 +84,7 @@ func (r *recordingAuditRecorder) Record(_ context.Context, entry auditlog.Entry)
 
 func TestHandlerListsCurrentChallengeTool(t *testing.T) {
 	handler := NewHandler(Deps{})
-	resp := postMCP(t, handler, authctx.CurrentUser{UserID: 42, Username: "student"}, map[string]any{
+	resp := postMCPRaw(t, handler, nil, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      1,
 		"method":  "tools/list",
@@ -138,11 +145,15 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 		NeedTarget:  true,
 		IsSolved:    false,
 	}}
-	tokens := &stubTokenService{mcpUser: &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"}}
+	tokens := &stubOAuthTokenResolver{
+		user:     &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"},
+		clientID: "client_test",
+		scope:    authcontracts.OAuthScopeMCPChallengeRead,
+	}
 	audit := &recordingAuditRecorder{}
 	handler := NewHandler(Deps{Instances: instances, Challenges: challenges, Tokens: tokens, AuditRecorder: audit})
 
-	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer mcp-token-1"}, map[string]any{
+	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer access-token-1"}, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      "call-1",
 		"method":  "tools/call",
@@ -155,8 +166,8 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 	if resp.Code != 0 {
 		t.Fatalf("unexpected error response: %+v", resp)
 	}
-	if tokens.lastMCPToken != "mcp-token-1" {
-		t.Fatalf("mcp token = %q, want mcp-token-1", tokens.lastMCPToken)
+	if tokens.lastToken != "access-token-1" || tokens.lastRequiredScope != authcontracts.OAuthScopeMCPChallengeRead {
+		t.Fatalf("oauth token=%q scope=%q", tokens.lastToken, tokens.lastRequiredScope)
 	}
 	if !instances.called || instances.lastUserID != 42 {
 		t.Fatalf("instances called=%v user=%d, want called with 42", instances.called, instances.lastUserID)
@@ -186,6 +197,9 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 	}
 	if entry.Detail["tool"] != toolGetCurrentChallenge || entry.Detail["result"] != "success" {
 		t.Fatalf("unexpected MCP audit detail: %+v", entry.Detail)
+	}
+	if entry.Detail["client_id"] != "client_test" || entry.Detail["scope"] != authcontracts.OAuthScopeMCPChallengeRead {
+		t.Fatalf("MCP audit should include oauth client and scope: %+v", entry.Detail)
 	}
 }
 
@@ -229,11 +243,55 @@ func TestHandlerReturnsOAuthChallengeWhenAuthRequired(t *testing.T) {
 	}
 }
 
+func TestHandlerRejectsInvalidOAuthTokenWithoutCallingTools(t *testing.T) {
+	testCases := []struct {
+		name string
+		err  error
+	}{
+		{name: "invalid token", err: authcontracts.NewOAuthInvalidGrant("access token is invalid or expired")},
+		{name: "missing scope", err: authcontracts.NewOAuthInvalidScope("access token does not include required scope")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			instances := &stubInstanceQuery{}
+			challenges := &stubChallengeQuery{}
+			tokens := &stubOAuthTokenResolver{err: tc.err}
+			handler := NewHandler(Deps{Instances: instances, Challenges: challenges, Tokens: tokens})
+
+			rec := postMCPRecorder(t, handler, func(c *gin.Context) {
+				c.Request.Header.Set("Authorization", "Bearer bad-token")
+			}, map[string]any{
+				"jsonrpc": "2.0",
+				"id":      "bad-token",
+				"method":  "tools/call",
+				"params": map[string]any{
+					"name": toolGetCurrentChallenge,
+				},
+			})
+
+			if rec.Code != http.StatusUnauthorized {
+				t.Fatalf("status = %d body = %s, want 401", rec.Code, rec.Body.String())
+			}
+			if tokens.lastToken != "bad-token" || tokens.lastRequiredScope != authcontracts.OAuthScopeMCPChallengeRead {
+				t.Fatalf("oauth token resolver token=%q scope=%q", tokens.lastToken, tokens.lastRequiredScope)
+			}
+			if instances.called || challenges.called {
+				t.Fatalf("tool services must not be called for invalid OAuth token, instances=%v challenges=%v", instances.called, challenges.called)
+			}
+		})
+	}
+}
+
 func TestHandlerRateLimitsAuthenticatedToolCalls(t *testing.T) {
 	instances := &stubInstanceQuery{}
 	handler := NewHandler(Deps{
 		Instances: instances,
-		Tokens:    &stubTokenService{mcpUser: &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"}},
+		Tokens: &stubOAuthTokenResolver{
+			user:     &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"},
+			clientID: "client_test",
+			scope:    authcontracts.OAuthScopeMCPChallengeRead,
+		},
 		RateLimit: func(ctx context.Context, user authctx.CurrentUser) (RateLimitResult, error) {
 			return RateLimitResult{
 				Allowed:    false,
@@ -245,7 +303,7 @@ func TestHandlerRateLimitsAuthenticatedToolCalls(t *testing.T) {
 		},
 	})
 
-	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer mcp-token-1"}, map[string]any{
+	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer access-token-1"}, map[string]any{
 		"jsonrpc": "2.0",
 		"id":      "rate-limited",
 		"method":  "tools/call",

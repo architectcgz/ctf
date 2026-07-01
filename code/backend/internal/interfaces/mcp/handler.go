@@ -14,6 +14,7 @@ import (
 	"ctf-platform/internal/apperror"
 	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
+	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
 	instancecontracts "ctf-platform/internal/module/instance/contracts"
@@ -27,11 +28,13 @@ const (
 
 	toolGetCurrentChallenge = "get_current_challenge"
 
-	defaultLoginURL = "/login"
-	defaultTokenURL = "/api/v1/auth/mcp-token"
+	protectedResourceMetadataPath = "/.well-known/oauth-protected-resource"
 
 	rpcCodeAuthRequired = -32001
 	rpcCodeRateLimited  = -32002
+
+	mcpOAuthClientIDKey = "mcp_oauth_client_id"
+	mcpOAuthScopeKey    = "mcp_oauth_scope"
 )
 
 type instanceQueryService interface {
@@ -42,8 +45,8 @@ type challengeQueryService interface {
 	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error)
 }
 
-type tokenResolver interface {
-	ResolveMCPToken(ctx context.Context, token string) (*authctx.CurrentUser, error)
+type oauthTokenResolver interface {
+	ResolveOAuthAccessToken(ctx context.Context, token string, requiredScope string) (*authcmd.OAuthAccessTokenResolution, error)
 }
 
 type RateLimitResult struct {
@@ -59,40 +62,26 @@ type RateLimitFunc func(ctx context.Context, user authctx.CurrentUser) (RateLimi
 type Deps struct {
 	Instances     instanceQueryService
 	Challenges    challengeQueryService
-	Tokens        tokenResolver
+	Tokens        oauthTokenResolver
 	RateLimit     RateLimitFunc
 	AuditRecorder auditlog.Recorder
-	LoginURL      string
-	TokenURL      string
 }
 
 type Handler struct {
 	instances     instanceQueryService
 	challenges    challengeQueryService
-	tokens        tokenResolver
+	tokens        oauthTokenResolver
 	rateLimit     RateLimitFunc
 	auditRecorder auditlog.Recorder
-	loginURL      string
-	tokenURL      string
 }
 
 func NewHandler(deps Deps) *Handler {
-	loginURL := deps.LoginURL
-	if loginURL == "" {
-		loginURL = defaultLoginURL
-	}
-	tokenURL := deps.TokenURL
-	if tokenURL == "" {
-		tokenURL = defaultTokenURL
-	}
 	return &Handler{
 		instances:     deps.Instances,
 		challenges:    deps.Challenges,
 		tokens:        deps.Tokens,
 		rateLimit:     deps.RateLimit,
 		auditRecorder: deps.AuditRecorder,
-		loginURL:      loginURL,
-		tokenURL:      tokenURL,
 	}
 }
 
@@ -113,7 +102,8 @@ func (h *Handler) ServeHTTP(c *gin.Context) {
 	case methodToolsCall:
 		user, err := h.currentUser(c)
 		if err != nil {
-			c.JSON(http.StatusOK, h.authRequiredResponse(req.ID))
+			h.writeOAuthChallenge(c)
+			c.JSON(http.StatusUnauthorized, h.authRequiredResponse(req.ID))
 			return
 		}
 		allowed, err := h.applyRateLimit(c, user)
@@ -144,22 +134,24 @@ func (h *Handler) currentUser(c *gin.Context) (authctx.CurrentUser, error) {
 		}
 	}
 
-	token := strings.TrimSpace(strings.TrimPrefix(c.GetHeader("Authorization"), "Bearer "))
-	if token == "" || token == c.GetHeader("Authorization") {
-		return authctx.CurrentUser{}, authcontracts.ErrMCPTokenInvalid
+	token, ok := bearerToken(c.GetHeader("Authorization"))
+	if !ok {
+		return authctx.CurrentUser{}, authcontracts.NewOAuthInvalidGrant("access token is required")
 	}
 	if h == nil || h.tokens == nil {
-		return authctx.CurrentUser{}, authcontracts.ErrMCPTokenInvalid
+		return authctx.CurrentUser{}, authcontracts.NewOAuthInvalidGrant("access token resolver is unavailable")
 	}
-	user, err := h.tokens.ResolveMCPToken(c.Request.Context(), token)
+	resolution, err := h.tokens.ResolveOAuthAccessToken(c.Request.Context(), token, authcontracts.OAuthScopeMCPChallengeRead)
 	if err != nil {
 		return authctx.CurrentUser{}, err
 	}
-	if user == nil || user.UserID <= 0 {
-		return authctx.CurrentUser{}, authcontracts.ErrMCPTokenInvalid
+	if resolution == nil || resolution.User.UserID <= 0 {
+		return authctx.CurrentUser{}, authcontracts.NewOAuthInvalidGrant("access token is invalid or expired")
 	}
-	authctx.SetCurrentUser(c, *user)
-	return *user, nil
+	authctx.SetCurrentUser(c, resolution.User)
+	c.Set(mcpOAuthClientIDKey, resolution.ClientID)
+	c.Set(mcpOAuthScopeKey, resolution.Scope)
+	return resolution.User, nil
 }
 
 func (h *Handler) applyRateLimit(c *gin.Context, user authctx.CurrentUser) (bool, error) {
@@ -196,6 +188,8 @@ func (h *Handler) recordToolAudit(c *gin.Context, user authctx.CurrentUser, tool
 		Detail: map[string]any{
 			"tool":       toolName,
 			"result":     result,
+			"client_id":  c.GetString(mcpOAuthClientIDKey),
+			"scope":      c.GetString(mcpOAuthScopeKey),
 			"request_id": c.GetString("request_id"),
 		},
 		IPAddress: c.ClientIP(),
@@ -354,11 +348,58 @@ func rpcErrorResponseWithData(id any, code int, message string, data any) rpcRes
 }
 
 func (h *Handler) authRequiredResponse(id any) rpcResponse {
-	return rpcErrorResponseWithData(id, rpcCodeAuthRequired, "请先登录 CTF 平台并签发 MCP Token", map[string]any{
-		"login_url":   h.loginURL,
-		"token_url":   h.tokenURL,
-		"auth_method": "bearer_token",
+	return rpcErrorResponseWithData(id, rpcCodeAuthRequired, "请通过浏览器授权 CTF MCP", map[string]any{
+		"auth_method":       "oauth",
+		"resource_metadata": protectedResourceMetadataPath,
+		"required_scope":    authcontracts.OAuthScopeMCPChallengeRead,
 	})
+}
+
+func (h *Handler) writeOAuthChallenge(c *gin.Context) {
+	c.Header("WWW-Authenticate", `Bearer realm="ctf-mcp", resource_metadata="`+oauthResourceMetadataURL(c)+`"`)
+}
+
+func bearerToken(header string) (string, bool) {
+	scheme, token, ok := strings.Cut(strings.TrimSpace(header), " ")
+	if !ok || !strings.EqualFold(scheme, "Bearer") {
+		return "", false
+	}
+	token = strings.TrimSpace(token)
+	return token, token != ""
+}
+
+func oauthResourceMetadataURL(c *gin.Context) string {
+	origin := requestOrigin(c)
+	if origin == "" {
+		return protectedResourceMetadataPath
+	}
+	return origin + protectedResourceMetadataPath
+}
+
+func requestOrigin(c *gin.Context) string {
+	scheme := firstForwardedValue(c.GetHeader("X-Forwarded-Proto"))
+	if scheme == "" {
+		if c.Request.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+	host := firstForwardedValue(c.GetHeader("X-Forwarded-Host"))
+	if host == "" {
+		host = c.Request.Host
+	}
+	if host == "" {
+		return ""
+	}
+	return strings.TrimRight(scheme+"://"+host, "/")
+}
+
+func firstForwardedValue(raw string) string {
+	if idx := strings.Index(raw, ","); idx >= 0 {
+		raw = raw[:idx]
+	}
+	return strings.TrimSpace(raw)
 }
 
 func (h *Handler) rateLimitedResponse(id any) rpcResponse {

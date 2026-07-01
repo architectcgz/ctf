@@ -14,7 +14,8 @@ import (
 )
 
 type Module struct {
-	Handler *http.Handler
+	Handler      *http.Handler
+	OAuthService authcmd.OAuthService
 }
 
 type Deps struct {
@@ -40,8 +41,10 @@ type moduleDeps struct {
 
 func Build(deps Deps) *Module {
 	internalDeps := newModuleDeps(deps)
+	oauthService := buildOAuthService(internalDeps)
 	return &Module{
-		Handler: buildHandler(internalDeps),
+		Handler:      buildHandler(internalDeps, oauthService),
+		OAuthService: oauthService,
 	}
 }
 
@@ -57,11 +60,17 @@ func newModuleDeps(deps Deps) moduleDeps {
 	}
 }
 
-func buildHandler(deps moduleDeps) *http.Handler {
+func buildOAuthService(deps moduleDeps) authcmd.OAuthService {
+	cfg := deps.input.Config
+	log := deps.input.Logger
+	oauthService := authcmd.NewOAuthService(cfg.Auth.OAuth, deps.oauthStore, deps.tokenService, log.Named("oauth_service"))
+	return oauthService
+}
+
+func buildHandler(deps moduleDeps, oauthService authcmd.OAuthService) *http.Handler {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	authService := authcmd.NewService(deps.users, deps.tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	oauthService := authcmd.NewOAuthService(cfg.Auth.OAuth, deps.oauthStore, deps.tokenService, log.Named("oauth_service"))
 	oauthMetadataService := authqry.NewOAuthMetadataService(cfg.App.Env, cfg.Auth.OAuth)
 	casValidator := authinfra.NewCASTicketValidator(log.Named("cas_ticket_validator"), nil)
 	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, deps.users, deps.tokenService, log.Named("cas_command_service"), casValidator)

@@ -189,11 +189,9 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	mcpHandler := mcpinterface.NewHandler(mcpinterface.Deps{
 		Instances:     instanceModule.QueryService,
 		Challenges:    challengeModule.PublishedQuery,
-		Tokens:        tokenService,
+		Tokens:        authModule.OAuthService,
 		RateLimit:     mcpRateLimitFunc(rateChecker, cfg.RateLimit.MCP),
 		AuditRecorder: opsModule.AuditService,
-		LoginURL:      "/login",
-		TokenURL:      "/api/v1/auth/mcp-token",
 	})
 	engine.POST("/mcp", mcpHandler.ServeHTTP)
 

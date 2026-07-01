@@ -555,12 +555,12 @@ cd code/backend && go test ./internal/app -run '^TestNewRouterRegistersStudentCh
 - 修改：`code/backend/internal/app/router_route_wiring_test.go`
 - 修改：`code/backend/internal/module/auth/contracts/oauth.go`
 
-- [ ] 步骤 1：写 MCP OAuth 红测：无 `Authorization` 返回 HTTP 401 + `WWW-Authenticate`。
-- [ ] 步骤 2：写 MCP OAuth 红测：无效 access token、过期 token、scope 不包含 `mcp:challenge:read` 都返回 401，且不会调用 instance/challenge service。
-- [ ] 步骤 3：写 MCP OAuth 绿测：合法 access token + scope 可调用 `tools/call get_current_challenge`。
-- [ ] 步骤 4：写 `tools/list` 行为确认：可以无需 token 返回工具列表，或按 MCP 客户端兼容性决定仍返回 401；实现前在测试名中固定选择。建议第一版允许 `initialize` / `tools/list` 无 token，`tools/call` 必须有 token。
-- [ ] 步骤 5：删除 `tokenResolver`、`TokenURL`、`defaultTokenURL`、`ResolveMCPToken` 调用和 `auth_method=bearer_token`。
-- [ ] 步骤 6：新增 `oauthTokenResolver` 接口：
+- [x] 步骤 1：写 MCP OAuth 红测：无 `Authorization` 返回 HTTP 401 + `WWW-Authenticate`。
+- [x] 步骤 2：写 MCP OAuth 红测：无效 access token、过期 token、scope 不包含 `mcp:challenge:read` 都返回 401，且不会调用 instance/challenge service。
+- [x] 步骤 3：写 MCP OAuth 绿测：合法 access token + scope 可调用 `tools/call get_current_challenge`。
+- [x] 步骤 4：写 `tools/list` 行为确认：可以无需 token 返回工具列表，或按 MCP 客户端兼容性决定仍返回 401；实现前在测试名中固定选择。建议第一版允许 `initialize` / `tools/list` 无 token，`tools/call` 必须有 token。
+- [x] 步骤 5：删除 `tokenResolver`、`TokenURL`、`defaultTokenURL`、`ResolveMCPToken` 调用和 `auth_method=bearer_token`。
+- [x] 步骤 6：新增 `oauthTokenResolver` 接口：
 
 ```go
 type oauthTokenResolver interface {
@@ -568,19 +568,21 @@ type oauthTokenResolver interface {
 }
 ```
 
-- [ ] 步骤 7：实现 `WWW-Authenticate` header builder，`resource_metadata` 根据 issuer / request origin 生成。
-- [ ] 步骤 8：保留 `rate_limit.mcp` 和 `mcp_tool/read` 审计，但 detail 增加 `client_id` 和 `scope`，不记录 token。
-- [ ] 步骤 9：运行验证。
+- [x] 步骤 7：实现 `WWW-Authenticate` header builder，`resource_metadata` 根据 issuer / request origin 生成。
+- [x] 步骤 8：保留 `rate_limit.mcp` 和 `mcp_tool/read` 审计，但 detail 增加 `client_id` 和 `scope`，不记录 token。
+- [x] 步骤 9：运行验证。
 
 运行：
 
 ```bash
-cd code/backend && go test ./internal/interfaces/mcp ./internal/app -run 'MCP|OAuth|Route' -count=1
+cd code/backend && go test ./internal/interfaces/mcp -run 'MCP|OAuth' -count=1
+cd code/backend && go test ./internal/app -run '^TestNewRouterRegistersStudentChallengeRoutes$' -count=1
+cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp ./internal/app -run '^$' -count=1
 ```
 
 预期：PASS。
 
-- [ ] 步骤 10：提交本切片。
+- [x] 步骤 10：提交本切片。
 
 ### 任务 7：删除旧 token 实现、配置和测试
 
