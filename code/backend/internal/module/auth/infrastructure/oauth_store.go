@@ -248,6 +248,15 @@ func (s *OAuthStore) ConsumeRefreshToken(ctx context.Context, token string) (*au
 	return &claims, nil
 }
 
+func (s *OAuthStore) StoreConsentNonce(ctx context.Context, nonce string, ttl time.Duration) error {
+	return s.storeJSON(ctx, s.consentNonceKey(nonce), map[string]string{"nonce": nonce}, ttl)
+}
+
+func (s *OAuthStore) ConsumeConsentNonce(ctx context.Context, nonce string) (bool, error) {
+	var payload map[string]string
+	return s.consumeJSON(ctx, s.consentNonceKey(nonce), &payload)
+}
+
 func (s *OAuthStore) storeJSON(ctx context.Context, key string, value any, ttl time.Duration) error {
 	if err := requireContext(ctx); err != nil {
 		return err
@@ -309,6 +318,10 @@ func (s *OAuthStore) accessTokenKey(token string) string {
 
 func (s *OAuthStore) refreshTokenKey(token string) string {
 	return fmt.Sprintf("%s:refresh:%s", s.config.RedisKeyPrefix, hashOAuthSecret(token))
+}
+
+func (s *OAuthStore) consentNonceKey(nonce string) string {
+	return fmt.Sprintf("%s:consent_nonce:%s", s.config.RedisKeyPrefix, hashOAuthSecret(nonce))
 }
 
 func hashOAuthSecret(secret string) string {

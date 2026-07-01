@@ -106,6 +106,7 @@ type integrationTestEnv struct {
 	router       *gin.Engine
 	db           *gorm.DB
 	tokenService *memoryTokenService
+	oauthStore   *memoryOAuthStore
 }
 
 type memoryTokenService struct {
@@ -119,15 +120,102 @@ type memoryTokenService struct {
 	revokeErr error
 }
 
-type memoryOAuthClientStore struct {
-	mu      sync.Mutex
-	clients []authcontracts.OAuthClient
+type memoryOAuthStore struct {
+	mu       sync.Mutex
+	clients  map[string]authcontracts.OAuthClient
+	consents map[string]authcontracts.OAuthConsent
+	codes    map[string]authcontracts.OAuthAuthorizationCode
+	nonces   map[string]bool
 }
 
-func (s *memoryOAuthClientStore) SaveClient(ctx context.Context, client authcontracts.OAuthClient) error {
+func newMemoryOAuthStore() *memoryOAuthStore {
+	return &memoryOAuthStore{
+		clients:  make(map[string]authcontracts.OAuthClient),
+		consents: make(map[string]authcontracts.OAuthConsent),
+		codes:    make(map[string]authcontracts.OAuthAuthorizationCode),
+		nonces:   make(map[string]bool),
+	}
+}
+
+func (s *memoryOAuthStore) SaveClient(ctx context.Context, client authcontracts.OAuthClient) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.clients = append(s.clients, client)
+	s.clients[client.ClientID] = client
+	return nil
+}
+
+func (s *memoryOAuthStore) FindClientByID(ctx context.Context, clientID string) (*authcontracts.OAuthClient, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	client, ok := s.clients[clientID]
+	if !ok {
+		return nil, nil
+	}
+	return &client, nil
+}
+
+func (s *memoryOAuthStore) UpsertConsent(ctx context.Context, consent authcontracts.OAuthConsent) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.consents[oauthConsentTestKey(consent.UserID, consent.ClientID, consent.Scope)] = consent
+	return nil
+}
+
+func (s *memoryOAuthStore) FindActiveConsent(ctx context.Context, userID int64, clientID, scope string) (*authcontracts.OAuthConsent, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	consent, ok := s.consents[oauthConsentTestKey(userID, clientID, scope)]
+	if !ok || consent.RevokedAt != nil {
+		return nil, nil
+	}
+	return &consent, nil
+}
+
+func (s *memoryOAuthStore) StoreAuthorizationCode(ctx context.Context, code string, claims authcontracts.OAuthAuthorizationCode, ttl time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.codes[code] = claims
+	return nil
+}
+
+func (s *memoryOAuthStore) StoreConsentNonce(ctx context.Context, nonce string, ttl time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.nonces[nonce] = true
+	return nil
+}
+
+func (s *memoryOAuthStore) ConsumeConsentNonce(ctx context.Context, nonce string) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.nonces[nonce] {
+		return false, nil
+	}
+	delete(s.nonces, nonce)
+	return true, nil
+}
+
+func oauthConsentTestKey(userID int64, clientID, scope string) string {
+	return fmt.Sprintf("%d:%s:%s", userID, clientID, scope)
+}
+
+func (s *memoryOAuthStore) StoreAccessToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error {
+	return nil
+}
+
+func (s *memoryOAuthStore) ResolveAccessToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error) {
+	return nil, nil
+}
+
+func (s *memoryOAuthStore) StoreRefreshToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error {
+	return nil
+}
+
+func (s *memoryOAuthStore) ConsumeRefreshToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error) {
+	return nil, nil
+}
+
+func (s *memoryOAuthStore) RevokeConsent(ctx context.Context, userID int64, clientID, scope string) error {
 	return nil
 }
 
@@ -849,7 +937,8 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	casValidator := authinfra.NewCASTicketValidator(zap.NewNop(), nil)
 	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), casValidator)
 	casQueryService := authqry.NewCASService(authCfg.CAS)
-	oauthCommandService := authcmd.NewOAuthService(authCfg.OAuth, &memoryOAuthClientStore{}, zap.NewNop())
+	oauthStore := newMemoryOAuthStore()
+	oauthCommandService := authcmd.NewOAuthService(authCfg.OAuth, oauthStore, zap.NewNop())
 	oauthMetadataService := authqry.NewOAuthMetadataService("dev", authCfg.OAuth)
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditCommandService := opscmd.NewAuditService(auditRepo, zap.NewNop())
@@ -882,6 +971,8 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 
 	oauthGroup := apiV1.Group("/oauth")
 	oauthGroup.POST("/register", authHandler.RegisterOAuthClient)
+	oauthGroup.GET("/authorize", authHandler.OAuthAuthorize)
+	oauthGroup.POST("/authorize", authHandler.OAuthAuthorizeDecision)
 
 	protected := apiV1.Group("")
 	protected.Use(testAuthMiddleware(tokenService, authCfg.SessionCookieName))
@@ -904,6 +995,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		router:       router,
 		db:           db,
 		tokenService: tokenService,
+		oauthStore:   oauthStore,
 	}
 }
 

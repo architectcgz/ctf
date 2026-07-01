@@ -1,15 +1,60 @@
 package http
 
 import (
+	"bytes"
 	"errors"
+	"html/template"
 	stdhttp "net/http"
+	"net/url"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/authctx"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 )
+
+var oauthConsentPageTemplate = template.Must(template.New("oauth_consent").Parse(`<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CTF MCP 授权</title>
+</head>
+<body>
+  <main>
+    <h1>授权 {{ .ClientName }}</h1>
+    <p>当前用户：{{ .Username }}</p>
+    <p>请求权限：{{ .Scope }}</p>
+    <form method="post" action="/api/v1/oauth/authorize">
+      <input type="hidden" name="response_type" value="{{ .ResponseType }}">
+      <input type="hidden" name="client_id" value="{{ .ClientID }}">
+      <input type="hidden" name="redirect_uri" value="{{ .RedirectURI }}">
+      <input type="hidden" name="scope" value="{{ .Scope }}">
+      <input type="hidden" name="state" value="{{ .State }}">
+      <input type="hidden" name="code_challenge" value="{{ .CodeChallenge }}">
+      <input type="hidden" name="code_challenge_method" value="{{ .CodeChallengeMethod }}">
+      <input type="hidden" name="csrf_nonce" value="{{ .CSRFNonce }}">
+      <button type="submit" name="approve" value="true">允许</button>
+      <button type="submit" name="approve" value="false">拒绝</button>
+    </form>
+  </main>
+</body>
+</html>`))
+
+type oauthConsentPageData struct {
+	ClientName          string
+	Username            string
+	ResponseType        string
+	ClientID            string
+	RedirectURI         string
+	Scope               string
+	State               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	CSRFNonce           string
+}
 
 func (h *Handler) OAuthProtectedResourceMetadata(c *gin.Context) {
 	if h.oauthMetadata == nil {
@@ -35,6 +80,74 @@ func (h *Handler) OAuthAuthorizationServerMetadata(c *gin.Context) {
 		return
 	}
 	c.JSON(stdhttp.StatusOK, resp)
+}
+
+func (h *Handler) OAuthAuthorize(c *gin.Context) {
+	if h.oauthCommands == nil {
+		c.JSON(stdhttp.StatusServiceUnavailable, OAuthErrorResp{Error: "server_error", ErrorDescription: "oauth authorization service is unavailable"})
+		return
+	}
+	req := oauthAuthorizationRequestFromQuery(c)
+	if _, err := h.oauthCommands.ValidateAuthorizationRequest(c.Request.Context(), req); err != nil {
+		writeOAuthError(c, err)
+		return
+	}
+
+	user, authenticated, err := h.currentOAuthUser(c)
+	if err != nil {
+		writeOAuthError(c, err)
+		return
+	}
+	if !authenticated {
+		c.Redirect(stdhttp.StatusFound, "/login?redirect="+url.QueryEscape(c.Request.URL.RequestURI()))
+		return
+	}
+
+	result, err := h.oauthCommands.PrepareAuthorization(c.Request.Context(), authcmd.OAuthAuthorizationInput{
+		Request: req,
+		User:    user,
+	})
+	if err != nil {
+		writeOAuthError(c, err)
+		return
+	}
+	if result.NeedsConsent {
+		h.renderOAuthConsent(c, req, user, result)
+		return
+	}
+	c.Redirect(stdhttp.StatusFound, result.RedirectTo)
+}
+
+func (h *Handler) OAuthAuthorizeDecision(c *gin.Context) {
+	if h.oauthCommands == nil {
+		c.JSON(stdhttp.StatusServiceUnavailable, OAuthErrorResp{Error: "server_error", ErrorDescription: "oauth authorization service is unavailable"})
+		return
+	}
+	user, authenticated, err := h.currentOAuthUser(c)
+	if err != nil {
+		writeOAuthError(c, err)
+		return
+	}
+	if !authenticated {
+		c.Redirect(stdhttp.StatusFound, "/login?redirect="+url.QueryEscape(c.Request.URL.RequestURI()))
+		return
+	}
+	input := authcmd.OAuthAuthorizationDecisionInput{
+		Request:   oauthAuthorizationRequestFromForm(c),
+		User:      user,
+		CSRFNonce: c.PostForm("csrf_nonce"),
+	}
+	var result *authcmd.OAuthAuthorizationResult
+	if isApprovedConsent(c.PostForm("approve")) {
+		result, err = h.oauthCommands.ApproveAuthorization(c.Request.Context(), input)
+	} else {
+		result, err = h.oauthCommands.DenyAuthorization(c.Request.Context(), input)
+	}
+	if err != nil {
+		writeOAuthError(c, err)
+		return
+	}
+	c.Redirect(stdhttp.StatusFound, result.RedirectTo)
 }
 
 func (h *Handler) RegisterOAuthClient(c *gin.Context) {
@@ -72,6 +185,80 @@ func (h *Handler) RegisterOAuthClient(c *gin.Context) {
 		Scope:                   resp.Scope,
 		TokenEndpointAuthMethod: resp.TokenEndpointAuthMethod,
 	})
+}
+
+func (h *Handler) renderOAuthConsent(c *gin.Context, req authcmd.OAuthAuthorizationRequest, user authctx.CurrentUser, result *authcmd.OAuthAuthorizationResult) {
+	var page bytes.Buffer
+	if err := oauthConsentPageTemplate.Execute(&page, oauthConsentPageData{
+		ClientName:          result.Client.ClientName,
+		Username:            user.Username,
+		ResponseType:        req.ResponseType,
+		ClientID:            req.ClientID,
+		RedirectURI:         req.RedirectURI,
+		Scope:               result.Scope,
+		State:               req.State,
+		CodeChallenge:       req.CodeChallenge,
+		CodeChallengeMethod: req.CodeChallengeMethod,
+		CSRFNonce:           result.CSRFNonce,
+	}); err != nil {
+		c.JSON(stdhttp.StatusInternalServerError, OAuthErrorResp{Error: "server_error", ErrorDescription: err.Error()})
+		return
+	}
+	c.Data(stdhttp.StatusOK, "text/html; charset=utf-8", page.Bytes())
+}
+
+func (h *Handler) currentOAuthUser(c *gin.Context) (authctx.CurrentUser, bool, error) {
+	if h.tokenService == nil {
+		return authctx.CurrentUser{}, false, authcontracts.NewOAuthError("server_error", "token service is unavailable", stdhttp.StatusServiceUnavailable)
+	}
+	sessionID, err := c.Cookie(h.cookieConfig.Name)
+	if err != nil || sessionID == "" {
+		return authctx.CurrentUser{}, false, nil
+	}
+	session, err := h.tokenService.GetSession(c.Request.Context(), sessionID)
+	if err != nil {
+		return authctx.CurrentUser{}, false, nil
+	}
+	return authctx.CurrentUser{
+		UserID:    session.UserID,
+		Username:  session.Username,
+		Role:      session.Role,
+		SessionID: session.ID,
+		ExpiresAt: session.ExpiresAt,
+	}, true, nil
+}
+
+func oauthAuthorizationRequestFromQuery(c *gin.Context) authcmd.OAuthAuthorizationRequest {
+	return authcmd.OAuthAuthorizationRequest{
+		ResponseType:        c.Query("response_type"),
+		ClientID:            c.Query("client_id"),
+		RedirectURI:         c.Query("redirect_uri"),
+		Scope:               c.Query("scope"),
+		State:               c.Query("state"),
+		CodeChallenge:       c.Query("code_challenge"),
+		CodeChallengeMethod: c.Query("code_challenge_method"),
+	}
+}
+
+func oauthAuthorizationRequestFromForm(c *gin.Context) authcmd.OAuthAuthorizationRequest {
+	return authcmd.OAuthAuthorizationRequest{
+		ResponseType:        c.PostForm("response_type"),
+		ClientID:            c.PostForm("client_id"),
+		RedirectURI:         c.PostForm("redirect_uri"),
+		Scope:               c.PostForm("scope"),
+		State:               c.PostForm("state"),
+		CodeChallenge:       c.PostForm("code_challenge"),
+		CodeChallengeMethod: c.PostForm("code_challenge_method"),
+	}
+}
+
+func isApprovedConsent(raw string) bool {
+	switch strings.ToLower(strings.TrimSpace(raw)) {
+	case "true", "1", "yes", "on":
+		return true
+	default:
+		return false
+	}
 }
 
 func writeOAuthError(c *gin.Context, err error) {

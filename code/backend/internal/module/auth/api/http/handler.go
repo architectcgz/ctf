@@ -43,6 +43,10 @@ type casQueryService interface {
 
 type oauthCommandService interface {
 	RegisterClient(ctx context.Context, req authcmd.OAuthClientRegistrationInput) (*authcmd.OAuthClientRegistrationResp, error)
+	ValidateAuthorizationRequest(ctx context.Context, req authcmd.OAuthAuthorizationRequest) (*authcmd.OAuthAuthorizationValidation, error)
+	PrepareAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationInput) (*authcmd.OAuthAuthorizationResult, error)
+	ApproveAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationDecisionInput) (*authcmd.OAuthAuthorizationResult, error)
+	DenyAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationDecisionInput) (*authcmd.OAuthAuthorizationResult, error)
 }
 
 type oauthMetadataQueryService interface {

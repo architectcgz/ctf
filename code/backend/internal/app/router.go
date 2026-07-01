@@ -142,6 +142,8 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 		oauthGroup.Use(middleware.RateLimitByIP(rateChecker, "oauth:register", cfg.RateLimit.Anonymous.Limit, cfg.RateLimit.Anonymous.Window))
 	}
 	oauthGroup.POST("/register", authModule.Handler.RegisterOAuthClient)
+	oauthGroup.GET("/authorize", authModule.Handler.OAuthAuthorize)
+	oauthGroup.POST("/authorize", authModule.Handler.OAuthAuthorizeDecision)
 
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName, identityModule.Users))

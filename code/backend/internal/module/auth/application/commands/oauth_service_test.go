@@ -99,6 +99,30 @@ func (s *captureOAuthClientStore) SaveClient(ctx context.Context, client authcon
 	return nil
 }
 
+func (s *captureOAuthClientStore) FindClientByID(ctx context.Context, clientID string) (*authcontracts.OAuthClient, error) {
+	return nil, nil
+}
+
+func (s *captureOAuthClientStore) FindActiveConsent(ctx context.Context, userID int64, clientID, scope string) (*authcontracts.OAuthConsent, error) {
+	return nil, nil
+}
+
+func (s *captureOAuthClientStore) UpsertConsent(ctx context.Context, consent authcontracts.OAuthConsent) error {
+	return nil
+}
+
+func (s *captureOAuthClientStore) StoreAuthorizationCode(ctx context.Context, code string, claims authcontracts.OAuthAuthorizationCode, ttl time.Duration) error {
+	return nil
+}
+
+func (s *captureOAuthClientStore) StoreConsentNonce(ctx context.Context, nonce string, ttl time.Duration) error {
+	return nil
+}
+
+func (s *captureOAuthClientStore) ConsumeConsentNonce(ctx context.Context, nonce string) (bool, error) {
+	return false, nil
+}
+
 func isOAuthErrorCode(err error, code string) bool {
 	oauthErr, ok := err.(*authcontracts.OAuthError)
 	return ok && oauthErr.Code == code

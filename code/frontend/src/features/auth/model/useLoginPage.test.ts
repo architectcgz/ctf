@@ -20,6 +20,10 @@ const probeMocks = vi.hoisted(() => ({
   track: vi.fn(),
 }))
 
+const browserMocks = vi.hoisted(() => ({
+  redirectTo: vi.fn(),
+}))
+
 vi.mock('./useAuth', () => ({
   useAuth: () => authMocks,
 }))
@@ -38,6 +42,8 @@ vi.mock('@/shared/model/common/useProbeEasterEggs', () => ({
   useProbeEasterEggs: () => probeMocks,
 }))
 
+vi.mock('@/utils/browser', () => browserMocks)
+
 import { useLoginPage } from './useLoginPage'
 
 describe('useLoginPage', () => {
@@ -49,6 +55,7 @@ describe('useLoginPage', () => {
     authMocks.login.mockReset()
     routeState.value.redirect = undefined
     navigationMocks.push.mockReset()
+    browserMocks.redirectTo.mockReset()
     probeMocks.track.mockReset()
     probeMocks.track.mockReturnValue({
       unlocked: false,
@@ -108,6 +115,22 @@ describe('useLoginPage', () => {
     await page.onSubmit()
 
     expect(navigationMocks.push).toHaveBeenCalledWith('/contests/1')
+  })
+
+  it('OAuth 授权 redirect 应使用浏览器硬跳转回到后端端点', async () => {
+    routeState.value.redirect =
+      '/api/v1/oauth/authorize?response_type=code&client_id=client_test&state=abc'
+    authMocks.login.mockResolvedValue({ role: 'student' })
+    const page = useLoginPage()
+    page.form.username = 'alice'
+    page.form.password = 'pass'
+
+    await page.onSubmit()
+
+    expect(browserMocks.redirectTo).toHaveBeenCalledWith(
+      '/api/v1/oauth/authorize?response_type=code&client_id=client_test&state=abc'
+    )
+    expect(navigationMocks.push).not.toHaveBeenCalled()
   })
 
   it('应把 legacy 教师端 redirect 参数回退到角色默认首页', async () => {

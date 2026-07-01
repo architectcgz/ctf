@@ -3,6 +3,7 @@ import { computed, getCurrentInstance, onBeforeUnmount, reactive, ref } from 'vu
 import { useRouteNavigationTransport } from '@/shared/model/navigation/useRouteNavigationTransport'
 import { useRouteQueryTransport } from '@/shared/model/navigation/useRouteQueryTransport'
 import { useProbeEasterEggs } from '@/shared/model/common/useProbeEasterEggs'
+import { redirectTo as redirectToBrowser } from '@/utils/browser'
 import { sanitizeRedirectPath } from '@/utils/redirectPath'
 import { getRoleDashboardPath } from '@/utils/roleRoutes'
 
@@ -82,7 +83,12 @@ export function useLoginPage() {
     submitError.value = ''
     try {
       const user = await login({ username, password })
-      await push(resolveLoginRedirectTarget(redirectTo.value, getRoleDashboardPath(user.role)))
+      const target = resolveLoginRedirectTarget(redirectTo.value, getRoleDashboardPath(user.role))
+      if (target.startsWith('/api/v1/oauth/authorize')) {
+        redirectToBrowser(target)
+        return
+      }
+      await push(target)
     } catch (err) {
       submitError.value =
         err instanceof Error && err.message.trim() ? err.message : '身份验证失败，请核对信息'

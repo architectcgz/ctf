@@ -39,6 +39,14 @@ func NewOAuthInvalidClientMetadata(description string) *OAuthError {
 	return NewOAuthError("invalid_client_metadata", description, http.StatusBadRequest)
 }
 
+func NewOAuthInvalidRequest(description string) *OAuthError {
+	return NewOAuthError("invalid_request", description, http.StatusBadRequest)
+}
+
+func NewOAuthInvalidClient(description string) *OAuthError {
+	return NewOAuthError("invalid_client", description, http.StatusBadRequest)
+}
+
 func NewOAuthInvalidScope(description string) *OAuthError {
 	return NewOAuthError("invalid_scope", description, http.StatusBadRequest)
 }

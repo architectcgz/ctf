@@ -463,7 +463,7 @@ cd code/backend && go test ./internal/module/auth/application/commands ./interna
 - 修改：`code/frontend/src/features/auth/model/useLoginPage.ts`
 - 修改：`code/frontend/src/features/auth/model/useLoginPage.test.ts`
 
-- [ ] 步骤 1：写 authorize 参数校验红测：
+- [x] 步骤 1：写 authorize 参数校验红测：
   - `response_type` 只能是 `code`
   - 必须有 `client_id`
   - `redirect_uri` 必须和注册记录精确匹配
@@ -471,16 +471,16 @@ cd code/backend && go test ./internal/module/auth/application/commands ./interna
   - `code_challenge_method` 必须是 `S256`
   - `scope` 必须包含且只包含允许 scope
   - `state` 原样透传，不强制服务端理解
-- [ ] 步骤 2：写未登录重定向红测：`GET /api/v1/oauth/authorize?...` 无 session 时 302 到 `/login?redirect=<escaped authorize path>`。
-- [ ] 步骤 3：写前端登录跳转红测：当 redirect target 是 `/api/v1/oauth/authorize?...` 时，登录成功后使用 `window.location.assign()`，而不是 Vue Router `push()`。
-- [ ] 步骤 4：写 consent 红测：已登录但未同意时返回 HTML 表单，表单 action 为 `/api/v1/oauth/authorize`，隐藏字段保留原始 authorize 参数和 CSRF nonce。
-- [ ] 步骤 5：写 approve 红测：`POST /api/v1/oauth/authorize` 同意后创建 `oauth_consents`，签发 authorization code，302 到 `redirect_uri?code=...&state=...`。
-- [ ] 步骤 6：写 deny 红测：拒绝后 302 到 `redirect_uri?error=access_denied&state=...`，不创建 code。
-- [ ] 步骤 7：实现 authorize request parser 和 service 校验。
-- [ ] 步骤 8：实现 server-side consent HTML，页面只显示客户端名、scope 和当前用户；禁止输出 access token / refresh token。
-- [ ] 步骤 9：实现 consent CSRF nonce，nonce 存 Redis 或 signed form value，TTL 不超过 authorization code TTL。
-- [ ] 步骤 10：实现前端 `useLoginPage` 的 hard navigation 分支。
-- [ ] 步骤 11：运行后端和前端验证。
+- [x] 步骤 2：写未登录重定向红测：`GET /api/v1/oauth/authorize?...` 无 session 时 302 到 `/login?redirect=<escaped authorize path>`。
+- [x] 步骤 3：写前端登录跳转红测：当 redirect target 是 `/api/v1/oauth/authorize?...` 时，登录成功后使用 `window.location.assign()`，而不是 Vue Router `push()`。
+- [x] 步骤 4：写 consent 红测：已登录但未同意时返回 HTML 表单，表单 action 为 `/api/v1/oauth/authorize`，隐藏字段保留原始 authorize 参数和 CSRF nonce。
+- [x] 步骤 5：写 approve 红测：`POST /api/v1/oauth/authorize` 同意后创建 `oauth_consents`，签发 authorization code，302 到 `redirect_uri?code=...&state=...`。
+- [x] 步骤 6：写 deny 红测：拒绝后 302 到 `redirect_uri?error=access_denied&state=...`，不创建 code。
+- [x] 步骤 7：实现 authorize request parser 和 service 校验。
+- [x] 步骤 8：实现 server-side consent HTML，页面只显示客户端名、scope 和当前用户；禁止输出 access token / refresh token。
+- [x] 步骤 9：实现 consent CSRF nonce，nonce 存 Redis 或 signed form value，TTL 不超过 authorization code TTL。
+- [x] 步骤 10：实现前端 `useLoginPage` 的 hard navigation 分支。
+- [x] 步骤 11：运行后端和前端验证。
 
 运行：
 
@@ -491,7 +491,7 @@ cd code/frontend && pnpm test:run src/features/auth/model/useLoginPage.test.ts
 
 预期：PASS。
 
-- [ ] 步骤 12：提交本切片。
+- [x] 步骤 12：提交本切片。
 
 ### 任务 5：实现 token endpoint 和 refresh token 旋转
 
