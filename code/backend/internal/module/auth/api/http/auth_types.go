@@ -35,11 +35,6 @@ type WSTicketResp struct {
 	ExpiresAt string `json:"expires_at"`
 }
 
-type MCPTokenResp struct {
-	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
-}
-
 type CASStatusResp struct {
 	Provider      string `json:"provider"`
 	Enabled       bool   `json:"enabled"`

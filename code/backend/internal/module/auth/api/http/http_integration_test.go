@@ -74,11 +74,6 @@ type testCASLoginResponse struct {
 	CallbackURL string `json:"callback_url"`
 }
 
-type testMCPTokenResponse struct {
-	Token     string `json:"token"`
-	ExpiresAt string `json:"expires_at"`
-}
-
 type testProfileResponse struct {
 	ID        int64   `json:"id"`
 	Username  string  `json:"username"`
@@ -117,7 +112,6 @@ type memoryTokenService struct {
 	sessions  map[string]authcontracts.Session
 	versions  map[int64]int64
 	tickets   map[string]authctx.CurrentUser
-	mcpTokens map[string]authctx.CurrentUser
 	revokeErr error
 }
 
@@ -371,72 +365,6 @@ func TestHTTP_MCPTokenEndpointRemoved(t *testing.T) {
 	resp := performJSONRequest(t, env.router, http.MethodPost, "/api/v1/auth/mcp-token", nil, nil, nil)
 	if resp.Code != http.StatusNotFound {
 		t.Fatalf("expected removed MCP token endpoint to return 404, got %d body=%s", resp.Code, resp.Body.String())
-	}
-}
-
-func TestHTTP_IssueMCPTokenRequiresSessionAndReturnsBearerToken(t *testing.T) {
-	env := newIntegrationTestEnv(t)
-
-	registerResp := performJSONRequest(
-		t,
-		env.router,
-		http.MethodPost,
-		"/api/v1/auth/register",
-		map[string]any{
-			"username": "mcp_token_user",
-			"password": "Password123",
-		},
-		nil,
-		nil,
-	)
-	if registerResp.Code != http.StatusOK {
-		t.Fatalf("unexpected register status: %d body=%s", registerResp.Code, registerResp.Body.String())
-	}
-	sessionCookie := cloneCookie(registerResp.Result().Cookies(), "ctf_session")
-	if sessionCookie == nil {
-		t.Fatal("expected session cookie from register response")
-	}
-
-	tokenResp := performJSONRequest(
-		t,
-		env.router,
-		http.MethodPost,
-		"/api/v1/auth/mcp-token",
-		nil,
-		nil,
-		[]*http.Cookie{sessionCookie},
-	)
-	if tokenResp.Code != http.StatusOK {
-		t.Fatalf("unexpected MCP token status: %d body=%s", tokenResp.Code, tokenResp.Body.String())
-	}
-	tokenBody := decodeEnvelope(t, tokenResp)
-	data := decodeJSON[testMCPTokenResponse](t, tokenBody.Data)
-	if data.Token == "" {
-		t.Fatalf("expected non-empty MCP token, got %+v", data)
-	}
-	if _, err := time.Parse(time.RFC3339, data.ExpiresAt); err != nil {
-		t.Fatalf("expires_at should be RFC3339, got %q: %v", data.ExpiresAt, err)
-	}
-
-	user, err := env.tokenService.ResolveMCPToken(context.Background(), data.Token)
-	if err != nil {
-		t.Fatalf("ResolveMCPToken() error = %v", err)
-	}
-	if user.Username != "mcp_token_user" || user.Role != identitycontracts.RoleStudent {
-		t.Fatalf("unexpected MCP token user: %+v", user)
-	}
-
-	var auditEntry opsentity.AuditLog
-	if err := env.db.Where("action = ? AND resource_type = ?", auditlog.ActionCreate, "mcp_token").First(&auditEntry).Error; err != nil {
-		t.Fatalf("expected MCP token issuance audit log: %v", err)
-	}
-	if auditEntry.UserID == nil || *auditEntry.UserID != user.UserID {
-		t.Fatalf("unexpected MCP token audit user: %+v", auditEntry)
-	}
-
-	unauthorizedResp := performJSONRequest(t, env.router, http.MethodPost, "/api/v1/auth/mcp-token", nil, nil, nil)
-	if unauthorizedResp.Code != http.StatusUnauthorized {
-		t.Fatalf("expected unauthenticated MCP token request to return 401, got %d body=%s", unauthorizedResp.Code, unauthorizedResp.Body.String())
 	}
 }
 
@@ -1057,12 +985,11 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 
 func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig) *memoryTokenService {
 	return &memoryTokenService{
-		config:    cfg,
-		wsConfig:  wsCfg,
-		sessions:  make(map[string]authcontracts.Session),
-		versions:  make(map[int64]int64),
-		tickets:   make(map[string]authctx.CurrentUser),
-		mcpTokens: make(map[string]authctx.CurrentUser),
+		config:   cfg,
+		wsConfig: wsCfg,
+		sessions: make(map[string]authcontracts.Session),
+		versions: make(map[int64]int64),
+		tickets:  make(map[string]authctx.CurrentUser),
 	}
 }
 
@@ -1174,38 +1101,6 @@ func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string)
 		return nil, authcontracts.ErrWSTicketInvalid
 	}
 	delete(s.tickets, ticket)
-	return &user, nil
-}
-
-func (s *memoryTokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUser) (*authcontracts.MCPToken, error) {
-	token := fmt.Sprintf("mcp_%s", randomHex(16))
-	expiresAt := time.Now().Add(s.config.OAuth.AccessTokenTTL).UTC()
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.mcpTokens[token] = authctx.CurrentUser{
-		UserID:   user.UserID,
-		Username: user.Username,
-		Role:     user.Role,
-	}
-
-	return &authcontracts.MCPToken{
-		Token:     token,
-		ExpiresAt: expiresAt,
-	}, nil
-}
-
-func (s *memoryTokenService) ResolveMCPToken(ctx context.Context, token string) (*authctx.CurrentUser, error) {
-	if token == "" {
-		return nil, authcontracts.ErrMCPTokenInvalid
-	}
-
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	user, ok := s.mcpTokens[token]
-	if !ok {
-		return nil, authcontracts.ErrMCPTokenInvalid
-	}
 	return &user, nil
 }
 

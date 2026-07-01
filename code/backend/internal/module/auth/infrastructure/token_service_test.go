@@ -11,7 +11,6 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	redislib "github.com/redis/go-redis/v9"
 
-	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
@@ -283,102 +282,6 @@ func TestTokenServiceLegacyMCPTokenSurfaceRemoved(t *testing.T) {
 				t.Fatalf("%s still contains legacy MCP token surface %q", file, legacy)
 			}
 		}
-	}
-}
-
-func TestTokenServiceIssueAndResolveMCPToken(t *testing.T) {
-	mini := miniredis.RunT(t)
-	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
-	t.Cleanup(func() { _ = redisClient.Close() })
-
-	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
-
-	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
-		UserID:   42,
-		Username: "alice",
-		Role:     "student",
-	})
-	if err != nil {
-		t.Fatalf("IssueMCPToken() error = %v", err)
-	}
-	if token.Token == "" {
-		t.Fatal("expected non-empty MCP token")
-	}
-	if !token.ExpiresAt.After(time.Now().UTC()) {
-		t.Fatalf("expected future expiration, got %s", token.ExpiresAt)
-	}
-
-	first, err := service.ResolveMCPToken(context.Background(), token.Token)
-	if err != nil {
-		t.Fatalf("ResolveMCPToken() first error = %v", err)
-	}
-	second, err := service.ResolveMCPToken(context.Background(), token.Token)
-	if err != nil {
-		t.Fatalf("ResolveMCPToken() second error = %v", err)
-	}
-	if first.UserID != 42 || first.Username != "alice" || first.Role != "student" {
-		t.Fatalf("unexpected first claims: %+v", first)
-	}
-	if second.UserID != first.UserID || second.Username != first.Username || second.Role != first.Role {
-		t.Fatalf("MCP token should be reusable until expiry, first=%+v second=%+v", first, second)
-	}
-}
-
-func TestTokenServiceIssueMCPTokenUsesConfiguredShortTTL(t *testing.T) {
-	mini := miniredis.RunT(t)
-	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
-	t.Cleanup(func() { _ = redisClient.Close() })
-
-	cfg := newTestAuthConfig()
-	cfg.SessionTTL = 24 * time.Hour
-	cfg.OAuth.AccessTokenTTL = 30 * time.Minute
-	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
-
-	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
-		UserID:   42,
-		Username: "alice",
-		Role:     "student",
-	})
-	if err != nil {
-		t.Fatalf("IssueMCPToken() error = %v", err)
-	}
-	if remaining := time.Until(token.ExpiresAt); remaining > time.Hour {
-		t.Fatalf("MCP token should use dedicated short TTL, remaining=%s", remaining)
-	}
-
-	mini.FastForward(31 * time.Minute)
-	if _, err := service.ResolveMCPToken(context.Background(), token.Token); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
-		t.Fatalf("expected MCP token to expire after dedicated TTL, got %v", err)
-	}
-}
-
-func TestTokenServiceResolveMCPTokenRejectsMissingAndExpired(t *testing.T) {
-	mini := miniredis.RunT(t)
-	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
-	t.Cleanup(func() { _ = redisClient.Close() })
-
-	cfg := newTestAuthConfig()
-	cfg.SessionTTL = time.Hour
-	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
-
-	if _, err := service.ResolveMCPToken(context.Background(), ""); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
-		t.Fatalf("expected invalid error for empty MCP token, got %v", err)
-	}
-	if _, err := service.ResolveMCPToken(context.Background(), "missing"); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
-		t.Fatalf("expected invalid error for missing MCP token, got %v", err)
-	}
-
-	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
-		UserID:   42,
-		Username: "alice",
-		Role:     "student",
-	})
-	if err != nil {
-		t.Fatalf("IssueMCPToken() error = %v", err)
-	}
-	mini.FastForward(2 * time.Hour)
-	if _, err := service.ResolveMCPToken(context.Background(), token.Token); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
-		t.Fatalf("expected invalid error for expired MCP token, got %v", err)
 	}
 }
 

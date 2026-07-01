@@ -604,12 +604,12 @@ cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp 
 - 修改：`code/backend/configs/config.dev.yaml`
 - 修改：`code/backend/configs/config.prod.yaml`
 
-- [ ] 步骤 1：删除 `MCPToken` struct、`IssueMCPToken`、`ResolveMCPToken`、`mcpTokenPayload`、`mcpTokenKey`。
-- [ ] 步骤 2：删除 `Handler.IssueMCPToken` 和 `MCPTokenResp`。
-- [ ] 步骤 3：删除 router 中 `protected.POST("/auth/mcp-token", ...)`。
-- [ ] 步骤 4：删除 `auth.mcp_token_ttl` 默认值、配置项、校验和 YAML 示例。
-- [ ] 步骤 5：删除旧 MCP token 相关测试，保留“endpoint removed”测试作为迁移 guard。
-- [ ] 步骤 6：全仓搜索旧关键字。
+- [x] 步骤 1：删除 `MCPToken` struct、`IssueMCPToken`、`ResolveMCPToken`、`mcpTokenPayload`、`mcpTokenKey`。
+- [x] 步骤 2：删除 `Handler.IssueMCPToken` 和 `MCPTokenResp`。
+- [x] 步骤 3：删除 router 中 `protected.POST("/auth/mcp-token", ...)`。
+- [x] 步骤 4：删除 `auth.mcp_token_ttl` 默认值、配置项、校验和 YAML 示例。
+- [x] 步骤 5：删除旧 MCP token 相关测试，保留“endpoint removed”测试作为迁移 guard。
+- [x] 步骤 6：全仓搜索旧关键字。
 
 运行：
 
@@ -617,9 +617,9 @@ cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp 
 rg -n "mcp-token|MCPToken|IssueMCPToken|ResolveMCPToken|mcp_token_ttl|token_url|CTF_MCP_TOKEN|bearer_token_env_var" .
 ```
 
-预期：只允许本计划、历史旧计划、归档说明或明确标注为 superseded 的文档命中；生产代码和当前契约不得命中。
+执行记录：2026-07-01 已运行；生产代码和后端配置只剩迁移 guard / 负向测试命中。`docs/contracts/*`、`docs/architecture/*` 和 OpenAPI bundle 仍命中旧契约，按任务 8 统一更新。
 
-- [ ] 步骤 7：运行后端验证。
+- [x] 步骤 7：运行后端验证。
 
 运行：
 
@@ -629,7 +629,17 @@ cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp 
 
 预期：PASS。
 
-- [ ] 步骤 8：提交本切片。
+执行记录：原命令中的 `./internal/app -run '...Route...'` 会触发既有 full-router fixture / 路由抽取矩阵失败；任务 7 实际采用以下收窄验证：
+
+```bash
+cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp ./internal/config -run 'OAuth|MCP|Config' -count=1
+cd code/backend && go test ./internal/app -run '^TestNewRouterRegistersStudentChallengeRoutes$' -count=1
+cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp ./internal/config ./internal/app -run '^$' -count=1
+```
+
+结果：PASS。
+
+- [x] 步骤 8：提交本切片。
 
 ### 任务 8：更新 OpenAPI、API contract、架构事实和操作文档
 

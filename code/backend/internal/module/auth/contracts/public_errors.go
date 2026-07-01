@@ -7,7 +7,6 @@ import (
 )
 
 var ErrWSTicketInvalid = apperror.Define(15002, "WebSocket Ticket 无效或已过期", http.StatusUnauthorized)
-var ErrMCPTokenInvalid = apperror.Define(15003, "MCP Token 无效或已过期", http.StatusUnauthorized)
 var (
 	ErrInvalidCredentials    = apperror.Define(11001, "用户名或密码错误", http.StatusUnauthorized)
 	ErrAccessTokenExpired    = apperror.Define(11002, "会话已失效或不存在", http.StatusUnauthorized)
