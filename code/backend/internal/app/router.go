@@ -109,6 +109,8 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	if err != nil {
 		return nil, err
 	}
+	engine.GET("/.well-known/oauth-protected-resource", authModule.Handler.OAuthProtectedResourceMetadata)
+	engine.GET("/.well-known/oauth-authorization-server", authModule.Handler.OAuthAuthorizationServerMetadata)
 
 	apiV1 := engine.Group("/api/v1")
 	apiV1.GET("/live", health.GetLive)
@@ -135,6 +137,12 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	authGroup.GET("/cas/login", authModule.Handler.CASLogin)
 	authGroup.GET("/cas/callback", authModule.Handler.CASCallback)
 
+	oauthGroup := apiV1.Group("/oauth")
+	if cfg.RateLimit.Anonymous.Enabled {
+		oauthGroup.Use(middleware.RateLimitByIP(rateChecker, "oauth:register", cfg.RateLimit.Anonymous.Limit, cfg.RateLimit.Anonymous.Window))
+	}
+	oauthGroup.POST("/register", authModule.Handler.RegisterOAuthClient)
+
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName, identityModule.Users))
 	if cfg.RateLimit.Global.Enabled {
@@ -144,7 +152,6 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	protected.GET("/auth/profile", authModule.Handler.Profile)
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authModule.Handler.IssueWSTicket)
-	protected.POST("/auth/mcp-token", authModule.Handler.IssueMCPToken)
 
 	opsModule.BuildNotificationHandler(root, tokenService)
 	protected.GET("/notifications", opsModule.NotificationHandler.ListNotifications)

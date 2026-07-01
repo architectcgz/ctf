@@ -119,6 +119,18 @@ type memoryTokenService struct {
 	revokeErr error
 }
 
+type memoryOAuthClientStore struct {
+	mu      sync.Mutex
+	clients []authcontracts.OAuthClient
+}
+
+func (s *memoryOAuthClientStore) SaveClient(ctx context.Context, client authcontracts.OAuthClient) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.clients = append(s.clients, client)
+	return nil
+}
+
 var fallbackRequestIDCounter atomic.Uint64
 
 func TestHTTP_RegisterLoginAndProfileFlow(t *testing.T) {
@@ -837,6 +849,8 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	casValidator := authinfra.NewCASTicketValidator(zap.NewNop(), nil)
 	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), casValidator)
 	casQueryService := authqry.NewCASService(authCfg.CAS)
+	oauthCommandService := authcmd.NewOAuthService(authCfg.OAuth, &memoryOAuthClientStore{}, zap.NewNop())
+	oauthMetadataService := authqry.NewOAuthMetadataService("dev", authCfg.OAuth)
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditCommandService := opscmd.NewAuditService(auditRepo, zap.NewNop())
 	auditQueryService := opsqry.NewAuditService(auditRepo, config.PaginationConfig{
@@ -850,10 +864,13 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 		SameSite: http.SameSiteLaxMode,
 		MaxAge:   authCfg.SessionTTL,
 	}, zap.NewNop(), auditCommandService)
+	authHandler.SetOAuthServices(oauthCommandService, oauthMetadataService)
 	auditHandler := opshttp.NewAuditHandler(auditQueryService)
 
 	router := gin.New()
 	router.Use(testRequestID())
+	router.GET("/.well-known/oauth-protected-resource", authHandler.OAuthProtectedResourceMetadata)
+	router.GET("/.well-known/oauth-authorization-server", authHandler.OAuthAuthorizationServerMetadata)
 
 	apiV1 := router.Group("/api/v1")
 	authGroup := apiV1.Group("/auth")
@@ -863,12 +880,15 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	authGroup.GET("/cas/login", authHandler.CASLogin)
 	authGroup.GET("/cas/callback", authHandler.CASCallback)
 
+	oauthGroup := apiV1.Group("/oauth")
+	oauthGroup.POST("/register", authHandler.RegisterOAuthClient)
+
 	protected := apiV1.Group("")
 	protected.Use(testAuthMiddleware(tokenService, authCfg.SessionCookieName))
 	protected.POST("/auth/logout", authHandler.Logout)
 	protected.GET("/auth/profile", authHandler.Profile)
 	protected.PUT("/auth/password", authHandler.ChangePassword)
-	protected.POST("/auth/mcp-token", authHandler.IssueMCPToken)
+	protected.POST("/auth/ws-ticket", authHandler.IssueWSTicket)
 
 	adminOnly := protected.Group("/admin")
 	adminOnly.Use(testRequireRole(identitycontracts.RoleAdmin))
@@ -898,7 +918,11 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 		SessionCookieSameSite: "lax",
 		SessionKeyPrefix:      "test:session",
 		OAuth: config.AuthOAuthConfig{
-			AccessTokenTTL: time.Hour,
+			AuthorizationCodeTTL:      5 * time.Minute,
+			AccessTokenTTL:            time.Hour,
+			RefreshTokenTTL:           30 * 24 * time.Hour,
+			ClientRegistrationEnabled: true,
+			RedisKeyPrefix:            "test:oauth",
 		},
 	}
 }

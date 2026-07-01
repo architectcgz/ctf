@@ -416,7 +416,7 @@ cd code/backend && go test ./internal/app -run 'Migration|TestMigrationFiles' -c
 - 修改：`code/backend/internal/app/composition/auth_module.go`
 - 修改：`code/backend/internal/app/router.go`
 
-- [ ] 步骤 1：写 metadata HTTP 红测。
+- [x] 步骤 1：写 metadata HTTP 红测。
 
 关键断言：
 
@@ -425,18 +425,18 @@ if got := body["code_challenge_methods_supported"]; !contains(got, "S256") { t.F
 if got := body["token_endpoint_auth_methods_supported"]; !contains(got, "none") { t.Fatal(...) }
 ```
 
-- [ ] 步骤 2：写 DCR 红测：合法 loopback redirect URI 返回 `client_id`；非 loopback 且未配置 allow prefix 的 redirect URI 返回 400。
-- [ ] 步骤 3：写 service 红测：client id 必须不可预测、注册 scope 只能是 `mcp:challenge:read` 子集、`client_secret` 不返回。
-- [ ] 步骤 4：实现 metadata query service，issuer 生成规则为：
+- [x] 步骤 2：写 DCR 红测：合法 loopback redirect URI 返回 `client_id`；非 loopback 且未配置 allow prefix 的 redirect URI 返回 400。
+- [x] 步骤 3：写 service 红测：client id 必须不可预测、注册 scope 只能是 `mcp:challenge:read` 子集、`client_secret` 不返回。
+- [x] 步骤 4：实现 metadata query service，issuer 生成规则为：
   - prod：必须使用 `auth.oauth.issuer_url`
   - dev：配置为空时从 `X-Forwarded-Proto` / `Host` 或 request origin 推导
-- [ ] 步骤 5：实现 dynamic client registration command。
-- [ ] 步骤 6：接线路由：
+- [x] 步骤 5：实现 dynamic client registration command。
+- [x] 步骤 6：接线路由：
   - `engine.GET("/.well-known/oauth-protected-resource", ...)`
   - `engine.GET("/.well-known/oauth-authorization-server", ...)`
   - `apiV1.POST("/oauth/register", ...)`
-- [ ] 步骤 7：对 `/api/v1/oauth/register` 添加 IP 级 rate limit，例如 `rate_limit.auth_anonymous` 或新增 `rate_limit.oauth_client_registration`。
-- [ ] 步骤 8：运行验证。
+- [x] 步骤 7：对 `/api/v1/oauth/register` 添加 IP 级 rate limit，例如 `rate_limit.auth_anonymous` 或新增 `rate_limit.oauth_client_registration`。
+- [x] 步骤 8：运行验证。
 
 运行：
 
@@ -446,7 +446,7 @@ cd code/backend && go test ./internal/module/auth/application/commands ./interna
 
 预期：PASS。
 
-- [ ] 步骤 9：提交本切片。
+- [x] 步骤 9：提交本切片。
 
 ### 任务 4：实现 authorization endpoint、登录跳转和 consent
 

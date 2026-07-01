@@ -41,12 +41,23 @@ type casQueryService interface {
 	BuildLogin(ctx context.Context) (*authqry.CASLoginResp, error)
 }
 
+type oauthCommandService interface {
+	RegisterClient(ctx context.Context, req authcmd.OAuthClientRegistrationInput) (*authcmd.OAuthClientRegistrationResp, error)
+}
+
+type oauthMetadataQueryService interface {
+	ProtectedResource(ctx context.Context, requestOrigin string) (*authqry.OAuthProtectedResourceMetadataResp, error)
+	AuthorizationServer(ctx context.Context, requestOrigin string) (*authqry.OAuthAuthorizationServerMetadataResp, error)
+}
+
 type Handler struct {
 	commands      authCommandService
 	profileCmd    profileCommandService
 	profileQuery  profileQueryService
 	casCommands   casCommandService
 	casQueries    casQueryService
+	oauthCommands oauthCommandService
+	oauthMetadata oauthMetadataQueryService
 	tokenService  authcontracts.TokenService
 	cookieConfig  CookieConfig
 	log           *zap.Logger
@@ -86,6 +97,11 @@ func NewHandler(commands authCommandService, profileCmd profileCommandService, p
 		log:           log,
 		auditRecorder: auditRecorder,
 	}
+}
+
+func (h *Handler) SetOAuthServices(commands oauthCommandService, metadata oauthMetadataQueryService) {
+	h.oauthCommands = commands
+	h.oauthMetadata = metadata
 }
 
 func (h *Handler) Register(c *gin.Context) {

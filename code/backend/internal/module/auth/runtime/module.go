@@ -22,6 +22,7 @@ type Deps struct {
 	Logger          *zap.Logger
 	Users           identitycontracts.UserRepository
 	TokenService    authcontracts.TokenService
+	OAuthStore      authcmd.OAuthClientStore
 	ProfileCommands identitycontracts.ProfileCommandService
 	ProfileQueries  identitycontracts.ProfileQueryService
 	AuditRecorder   auditlog.Recorder
@@ -31,6 +32,7 @@ type moduleDeps struct {
 	input           Deps
 	users           identitycontracts.UserRepository
 	tokenService    authcontracts.TokenService
+	oauthStore      authcmd.OAuthClientStore
 	profileCommands identitycontracts.ProfileCommandService
 	profileQueries  identitycontracts.ProfileQueryService
 	auditRecorder   auditlog.Recorder
@@ -48,6 +50,7 @@ func newModuleDeps(deps Deps) moduleDeps {
 		input:           deps,
 		users:           deps.Users,
 		tokenService:    deps.TokenService,
+		oauthStore:      deps.OAuthStore,
 		profileCommands: deps.ProfileCommands,
 		profileQueries:  deps.ProfileQueries,
 		auditRecorder:   deps.AuditRecorder,
@@ -58,11 +61,13 @@ func buildHandler(deps moduleDeps) *http.Handler {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	authService := authcmd.NewService(deps.users, deps.tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
+	oauthService := authcmd.NewOAuthService(cfg.Auth.OAuth, deps.oauthStore, log.Named("oauth_service"))
+	oauthMetadataService := authqry.NewOAuthMetadataService(cfg.App.Env, cfg.Auth.OAuth)
 	casValidator := authinfra.NewCASTicketValidator(log.Named("cas_ticket_validator"), nil)
 	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, deps.users, deps.tokenService, log.Named("cas_command_service"), casValidator)
 	casQueryService := authqry.NewCASService(cfg.Auth.CAS)
 
-	return http.NewHandler(
+	handler := http.NewHandler(
 		authService,
 		deps.profileCommands,
 		deps.profileQueries,
@@ -80,4 +85,6 @@ func buildHandler(deps moduleDeps) *http.Handler {
 		log.Named("auth_handler"),
 		deps.auditRecorder,
 	)
+	handler.SetOAuthServices(oauthService, oauthMetadataService)
+	return handler
 }

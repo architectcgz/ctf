@@ -1,8 +1,47 @@
 package contracts
 
-import "time"
+import (
+	"fmt"
+	"net/http"
+	"time"
+)
 
 const OAuthScopeMCPChallengeRead = "mcp:challenge:read"
+
+type OAuthError struct {
+	Code        string
+	Description string
+	StatusCode  int
+}
+
+func (e *OAuthError) Error() string {
+	if e == nil {
+		return ""
+	}
+	if e.Description == "" {
+		return e.Code
+	}
+	return fmt.Sprintf("%s: %s", e.Code, e.Description)
+}
+
+func NewOAuthError(code, description string, statusCode int) *OAuthError {
+	if statusCode == 0 {
+		statusCode = http.StatusBadRequest
+	}
+	return &OAuthError{
+		Code:        code,
+		Description: description,
+		StatusCode:  statusCode,
+	}
+}
+
+func NewOAuthInvalidClientMetadata(description string) *OAuthError {
+	return NewOAuthError("invalid_client_metadata", description, http.StatusBadRequest)
+}
+
+func NewOAuthInvalidScope(description string) *OAuthError {
+	return NewOAuthError("invalid_scope", description, http.StatusBadRequest)
+}
 
 type OAuthClient struct {
 	ID                      int64

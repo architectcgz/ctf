@@ -3,6 +3,7 @@ package composition
 import (
 	"ctf-platform/internal/auditlog"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
+	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	authruntime "ctf-platform/internal/module/auth/runtime"
 	identitycontracts "ctf-platform/internal/module/identity/contracts"
 	identityinfra "ctf-platform/internal/module/identity/infrastructure"
@@ -22,11 +23,13 @@ type authModuleDeps struct {
 
 func BuildAuthModule(root *Root, ops *OpsModule, identity *IdentityModule, tokenService authcontracts.TokenService) (*authruntime.Module, error) {
 	deps := buildAuthModuleDeps(ops, identity, tokenService)
+	oauthStore := authinfra.NewOAuthStore(root.DB(), root.Cache(), root.Config().Auth.OAuth)
 	return authruntime.Build(authruntime.Deps{
 		Config:          root.Config(),
 		Logger:          root.Logger(),
 		Users:           deps.users,
 		TokenService:    deps.tokenService,
+		OAuthStore:      oauthStore,
 		ProfileCommands: deps.profileCommands,
 		ProfileQueries:  deps.profileQueries,
 		AuditRecorder:   deps.auditRecorder,
