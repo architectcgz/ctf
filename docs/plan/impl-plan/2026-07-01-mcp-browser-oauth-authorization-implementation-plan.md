@@ -711,8 +711,8 @@ python3 scripts/check-docs-consistency.py
 - 修改或新增：`tools/` 下的本地验证脚本，只有在手工 curl 过长且可复用时才新增。
 - 修改：`docs/operations/mcp-oauth-login.md`，补充本地验证输出。
 
-- [ ] 步骤 1：启动 Docker 开发环境，确认 API 和前端端口。
-- [ ] 步骤 2：请求 protected resource metadata。
+- [x] 步骤 1：启动 Docker 开发环境，确认 API 和前端端口。
+- [x] 步骤 2：请求 protected resource metadata。
 
 运行：
 
@@ -722,7 +722,7 @@ curl -i http://127.0.0.1:8080/.well-known/oauth-protected-resource
 
 预期：200，返回 `/mcp` resource 和 authorization server。
 
-- [ ] 步骤 3：请求 authorization server metadata。
+- [x] 步骤 3：请求 authorization server metadata。
 
 运行：
 
@@ -732,7 +732,7 @@ curl -i http://127.0.0.1:8080/.well-known/oauth-authorization-server
 
 预期：200，包含 `authorization_endpoint`、`token_endpoint`、`registration_endpoint`、`S256`。
 
-- [ ] 步骤 4：执行 dynamic client registration。
+- [x] 步骤 4：执行 dynamic client registration。
 
 运行：
 
@@ -744,7 +744,7 @@ curl -sS -X POST http://127.0.0.1:8080/api/v1/oauth/register \
 
 预期：返回 `client_id`，不返回 `client_secret`。
 
-- [ ] 步骤 5：无 access token 调用 `/mcp`。
+- [x] 步骤 5：无 access token 调用 `/mcp`。
 
 运行：
 
@@ -756,11 +756,14 @@ curl -i -X POST http://127.0.0.1:8080/mcp \
 
 预期：401，`WWW-Authenticate` 指向 `/.well-known/oauth-protected-resource`。
 
-- [ ] 步骤 6：用浏览器打开 authorize URL，确认未登录会跳到 `/login`，登录后回到授权页。
-- [ ] 步骤 7：同意授权后，本地 callback 收到 `code` 和原始 `state`。
-- [ ] 步骤 8：用 `code_verifier` 换 token，确认返回 access token 和 refresh token。
-- [ ] 步骤 9：用 access token 调 `/mcp`，确认 `get_current_challenge` 返回当前用户题目信息或 `has_current_challenge=false`。
-- [ ] 步骤 10：运行 workflow gate。
+- [x] 步骤 6：用浏览器打开 authorize URL，确认未登录会跳到 `/login`，登录后回到授权页。
+- [x] 步骤 7：同意授权后，本地 callback 收到 `code` 和原始 `state`。
+- [x] 步骤 8：用 `code_verifier` 换 token，确认返回 access token 和 refresh token。
+- [x] 步骤 9：用 access token 调 `/mcp`，确认 `get_current_challenge` 返回当前用户题目信息或 `has_current_challenge=false`。
+
+执行记录：2026-07-01 使用当前 worktree 源码在 `127.0.0.1:18080` 启动临时 API，配套临时 PostgreSQL `127.0.0.1:15433`、Redis `127.0.0.1:16380`、shared storage 和 runtime-agent 证书目录。`/ready` 返回 ready；metadata、DCR、未授权 `/mcp`、未登录 authorize 302、登录后 consent HTML、同意授权、本地 `127.0.0.1:14567/callback` 收到 `code/state`、authorization code + PKCE 换 token、Bearer 调 `/mcp` 返回 `has_current_challenge=false` 均 PASS。已有 `ctf-frontend` 容器端口为 `127.0.0.1:5174`。
+
+- [x] 步骤 10：运行 workflow gate。
 
 运行：
 
@@ -772,7 +775,11 @@ git diff --check
 
 预期：PASS。
 
-- [ ] 步骤 11：提交最终文档/验证补充。
+执行记录：2026-07-01 已运行 `bash scripts/run-workflow-stage.sh pre-commit-quick`、`bash scripts/run-workflow-stage.sh completion-full`、`git diff --check`，结果均 PASS。
+
+- [x] 步骤 11：提交最终文档/验证补充。
+
+执行记录：2026-07-01 已提交最终验证补充，并随本切片 docs 提交一并落库。
 
 ## 风险与缓解
 

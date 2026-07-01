@@ -40,6 +40,26 @@ claude mcp login ctf
 - 未授权时 `/mcp` 返回 HTTP `401`，`WWW-Authenticate` 指向 `/.well-known/oauth-protected-resource`。
 - 成功调用 `get_current_challenge` 后，响应 `structuredContent` 包含 `has_current_challenge`、`instance` 和 `challenge`；没有活动实例时 `has_current_challenge=false`。
 
+## 本地验证记录
+
+2026-07-01 在当前实现分支使用临时开发依赖完成一次 OAuth + MCP HTTP 链路验证：
+
+- API：当前源码进程 `http://127.0.0.1:18080`
+- PostgreSQL：临时容器 `127.0.0.1:15433`
+- Redis：临时容器 `127.0.0.1:16380`
+- Callback：临时 listener `http://127.0.0.1:14567/callback`
+
+验证结果：
+
+- `/.well-known/oauth-protected-resource` 返回 `/mcp` resource 和 authorization server。
+- `/.well-known/oauth-authorization-server` 返回 authorization / token / registration endpoints，且支持 `S256`。
+- Dynamic Client Registration 返回 `client_id`，不返回 `client_secret`。
+- 未携带 access token 调 `/mcp` 返回 `401`，`WWW-Authenticate` 指向 protected resource metadata，响应体不包含旧 `token_url`。
+- 未登录访问 `/api/v1/oauth/authorize` 返回 `/login?redirect=...`。
+- 登录 `student` 后 consent 页面包含 `local-codex` 和 `mcp:challenge:read`。
+- 同意授权后本地 callback 收到 `code` 和原始 `state`。
+- 使用 `code_verifier` 换取 access token 和 refresh token 后，Bearer 调 `/mcp` 成功返回 `has_current_challenge=false`。
+
 ## 已移除配置
 
 不要再使用或保留以下静态 token 配置：
