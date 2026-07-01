@@ -20,6 +20,11 @@ type WSTicket struct {
 	ExpiresAt time.Time
 }
 
+type MCPToken struct {
+	Token     string
+	ExpiresAt time.Time
+}
+
 type TokenService interface {
 	CreateSession(ctx context.Context, userID int64, username, role string) (*Session, error)
 	GetSession(ctx context.Context, sessionID string) (*Session, error)
@@ -30,4 +35,6 @@ type TokenService interface {
 	ListUserSessions(ctx context.Context, userID int64) ([]Session, error)
 	IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error)
 	ConsumeWSTicket(ctx context.Context, ticket string) (*authctx.CurrentUser, error)
+	IssueMCPToken(ctx context.Context, user authctx.CurrentUser) (*MCPToken, error)
+	ResolveMCPToken(ctx context.Context, token string) (*authctx.CurrentUser, error)
 }

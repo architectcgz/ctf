@@ -136,6 +136,19 @@ export interface WsTicketData {
 }
 ```
 
+### 2.7 POST `/api/v1/auth/mcp-token`
+
+`data`：
+
+```ts
+export interface MCPTokenData {
+  token: string
+  expires_at: ISODateTime
+}
+```
+
+> 说明：该接口需要当前登录态，用于给外部 agent 签发调用 `POST /mcp` 的 `Authorization: Bearer <token>`。MCP token 跟随用户 session version；改密或撤销用户会话后会在解析主链路失效。
+
 ### 2.8 GET `/api/v1/auth/cas/status`
 
 `data`：

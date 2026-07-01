@@ -114,7 +114,9 @@ func buildImageHandler(deps moduleDeps) (*challengecmd.ImageService, *challengeh
 	return imageCommandService, challengehttp.NewImageHandler(imageCommandService, imageQueryService)
 }
 
-func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengepublishcheck.ChallengePublishCheckService, *challengehttp.Handler) {
+func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuildService) (*challengepublishcheck.ChallengePublishCheckService, *challengehttp.Handler, interface {
+	GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error)
+}) {
 	cfg := deps.input.Config
 	challengeCommandRepo := challengeinfra.NewChallengeCommandRepository(deps.challengeCommandRepo)
 	challengeCommandImageRepo := challengeinfra.NewImageQueryRepository(deps.imageRepo)
@@ -184,7 +186,7 @@ func buildCoreHandler(deps moduleDeps, imageBuildService *challengecmd.ImageBuil
 			"",
 		),
 		PackageDelivery: packageDeliveryService,
-	})
+	}), challengeQueryService
 }
 
 func buildFlagHandler(deps moduleDeps) (*challengehttp.FlagHandler, challengecontracts.FlagValidator, error) {

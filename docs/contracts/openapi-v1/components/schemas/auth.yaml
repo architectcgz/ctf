@@ -32,6 +32,16 @@ ApiEnvelopeWsTicketData:
   - type: object
     required: [data]
     properties: {data: {$ref: '#/components/schemas/WsTicketData'}}
+MCPTokenData:
+  type: object
+  required: [token, expires_at]
+  properties: {token: {type: string}, expires_at: {$ref: '#/components/schemas/ISODateTime'}}
+ApiEnvelopeMCPTokenData:
+  allOf:
+  - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+  - type: object
+    required: [data]
+    properties: {data: {$ref: '#/components/schemas/MCPTokenData'}}
 CASStatusData:
   type: object
   required: [provider, enabled, configured, auto_provision, login_path, callback_path]

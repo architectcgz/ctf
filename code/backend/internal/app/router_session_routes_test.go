@@ -103,6 +103,14 @@ func (s *sessionTestTokenService) ConsumeWSTicket(_ context.Context, _ string) (
 	return nil, nil
 }
 
+func (s *sessionTestTokenService) IssueMCPToken(_ context.Context, _ authctx.CurrentUser) (*authcontracts.MCPToken, error) {
+	return nil, nil
+}
+
+func (s *sessionTestTokenService) ResolveMCPToken(_ context.Context, _ string) (*authctx.CurrentUser, error) {
+	return nil, nil
+}
+
 func TestAdminSessionRoutes(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	tokenService := newSessionTestTokenService()

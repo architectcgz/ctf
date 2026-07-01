@@ -95,6 +95,16 @@ components:
       - type: object
         required: [data]
         properties: {data: {$ref: '#/components/schemas/WsTicketData'}}
+    MCPTokenData:
+      type: object
+      required: [token, expires_at]
+      properties: {token: {type: string}, expires_at: {$ref: '#/components/schemas/ISODateTime'}}
+    ApiEnvelopeMCPTokenData:
+      allOf:
+      - {$ref: '#/components/schemas/ApiEnvelopeBase'}
+      - type: object
+        required: [data]
+        properties: {data: {$ref: '#/components/schemas/MCPTokenData'}}
     CASStatusData:
       type: object
       required: [provider, enabled, configured, auto_provision, login_path, callback_path]
@@ -2386,6 +2396,21 @@ paths:
           description: OK
           content:
             application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeWsTicketData'}}
+  /auth/mcp-token:
+    post:
+      tags: [Auth]
+      summary: 获取外部 agent 调用 MCP 的 Bearer token
+      security:
+      - {sessionCookieAuth: []}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMCPTokenData'}}
+        '401':
+          description: Unauthorized
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
   /auth/cas/status:
     get:
       tags: [Auth]

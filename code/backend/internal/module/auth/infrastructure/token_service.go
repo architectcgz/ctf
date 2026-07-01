@@ -24,6 +24,15 @@ type wsTicketPayload struct {
 	IssuedAt time.Time `json:"issued_at"`
 }
 
+type mcpTokenPayload struct {
+	UserID         int64     `json:"user_id"`
+	Username       string    `json:"username"`
+	Role           string    `json:"role"`
+	SessionVersion int64     `json:"session_version"`
+	IssuedAt       time.Time `json:"issued_at"`
+	ExpiresAt      time.Time `json:"expires_at"`
+}
+
 type sessionRecord struct {
 	ID             string    `json:"id"`
 	UserID         int64     `json:"user_id"`
@@ -331,6 +340,91 @@ func (s *tokenService) ConsumeWSTicket(ctx context.Context, ticket string) (*aut
 	}, nil
 }
 
+func (s *tokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUser) (*authcontracts.MCPToken, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
+	if user.UserID <= 0 || user.Username == "" || user.Role == "" {
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+
+	token, err := generateOpaqueToken(32)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	sessionVersion, err := s.getUserSessionVersion(ctx, user.UserID)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	now := time.Now().UTC()
+	expiresAt := now.Add(s.config.SessionTTL).UTC()
+	payload, err := json.Marshal(mcpTokenPayload{
+		UserID:         user.UserID,
+		Username:       user.Username,
+		Role:           user.Role,
+		SessionVersion: sessionVersion,
+		IssuedAt:       now,
+		ExpiresAt:      expiresAt,
+	})
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if err := s.cache.Set(ctx, s.mcpTokenKey(token), payload, s.config.SessionTTL).Err(); err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	return &authcontracts.MCPToken{
+		Token:     token,
+		ExpiresAt: expiresAt,
+	}, nil
+}
+
+func (s *tokenService) ResolveMCPToken(ctx context.Context, token string) (*authctx.CurrentUser, error) {
+	if err := requireContext(ctx); err != nil {
+		return nil, err
+	}
+	if token == "" {
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+
+	key := s.mcpTokenKey(token)
+	payload, err := s.cache.Get(ctx, key).Result()
+	if errors.Is(err, redislib.Nil) {
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	var claims mcpTokenPayload
+	if err := json.Unmarshal([]byte(payload), &claims); err != nil {
+		return nil, authcontracts.ErrMCPTokenInvalid.WithCause(err)
+	}
+	if claims.UserID <= 0 || claims.Username == "" || claims.Role == "" || claims.ExpiresAt.IsZero() {
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+	if !claims.ExpiresAt.After(time.Now().UTC()) {
+		_ = s.cache.Del(ctx, key).Err()
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+	currentVersion, err := s.getUserSessionVersion(ctx, claims.UserID)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if claims.SessionVersion != currentVersion {
+		_ = s.cache.Del(ctx, key).Err()
+		return nil, authcontracts.ErrMCPTokenInvalid
+	}
+
+	return &authctx.CurrentUser{
+		UserID:    claims.UserID,
+		Username:  claims.Username,
+		Role:      claims.Role,
+		ExpiresAt: claims.ExpiresAt,
+	}, nil
+}
+
 func (s *tokenService) sessionKey(sessionID string) string {
 	return fmt.Sprintf("%s:%s", s.config.SessionKeyPrefix, sessionID)
 }
@@ -363,6 +457,10 @@ func requireContext(ctx context.Context) error {
 
 func (s *tokenService) wsTicketKey(ticket string) string {
 	return fmt.Sprintf("%s:%s", s.wsConfig.TicketKeyPrefix, ticket)
+}
+
+func (s *tokenService) mcpTokenKey(token string) string {
+	return fmt.Sprintf("%s:mcp:%s", s.config.SessionKeyPrefix, token)
 }
 
 func generateOpaqueToken(size int) (string, error) {

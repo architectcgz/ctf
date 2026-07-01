@@ -9,6 +9,7 @@ import (
 	"github.com/alicebob/miniredis/v2"
 	redislib "github.com/redis/go-redis/v9"
 
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
@@ -261,6 +262,74 @@ func TestTokenServiceListUserSessionsRejectsNilContext(t *testing.T) {
 
 	if _, err := service.ListUserSessions(nil, 42); err == nil {
 		t.Fatal("expected ListUserSessions() to reject nil context")
+	}
+}
+
+func TestTokenServiceIssueAndResolveMCPToken(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	service := authinfra.NewTokenService(newTestAuthConfig(), testWebSocketConfig(), redisClient)
+
+	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
+		UserID:   42,
+		Username: "alice",
+		Role:     "student",
+	})
+	if err != nil {
+		t.Fatalf("IssueMCPToken() error = %v", err)
+	}
+	if token.Token == "" {
+		t.Fatal("expected non-empty MCP token")
+	}
+	if !token.ExpiresAt.After(time.Now().UTC()) {
+		t.Fatalf("expected future expiration, got %s", token.ExpiresAt)
+	}
+
+	first, err := service.ResolveMCPToken(context.Background(), token.Token)
+	if err != nil {
+		t.Fatalf("ResolveMCPToken() first error = %v", err)
+	}
+	second, err := service.ResolveMCPToken(context.Background(), token.Token)
+	if err != nil {
+		t.Fatalf("ResolveMCPToken() second error = %v", err)
+	}
+	if first.UserID != 42 || first.Username != "alice" || first.Role != "student" {
+		t.Fatalf("unexpected first claims: %+v", first)
+	}
+	if second.UserID != first.UserID || second.Username != first.Username || second.Role != first.Role {
+		t.Fatalf("MCP token should be reusable until expiry, first=%+v second=%+v", first, second)
+	}
+}
+
+func TestTokenServiceResolveMCPTokenRejectsMissingAndExpired(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cfg := newTestAuthConfig()
+	cfg.SessionTTL = time.Hour
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
+
+	if _, err := service.ResolveMCPToken(context.Background(), ""); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
+		t.Fatalf("expected invalid error for empty MCP token, got %v", err)
+	}
+	if _, err := service.ResolveMCPToken(context.Background(), "missing"); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
+		t.Fatalf("expected invalid error for missing MCP token, got %v", err)
+	}
+
+	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
+		UserID:   42,
+		Username: "alice",
+		Role:     "student",
+	})
+	if err != nil {
+		t.Fatalf("IssueMCPToken() error = %v", err)
+	}
+	mini.FastForward(2 * time.Hour)
+	if _, err := service.ResolveMCPToken(context.Background(), token.Token); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
+		t.Fatalf("expected invalid error for expired MCP token, got %v", err)
 	}
 }
 

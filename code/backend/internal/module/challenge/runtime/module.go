@@ -37,8 +37,11 @@ type Module struct {
 	Handler             *challengehttp.Handler
 	ImageHandler        *challengehttp.ImageHandler
 	ImageStore          challengecontracts.ImageStore
-	TopologyHandler     *challengehttp.TopologyHandler
-	WriteupHandler      *challengehttp.WriteupHandler
+	PublishedQuery      interface {
+		GetPublishedChallenge(ctx context.Context, userID, challengeID int64) (*challengecontracts.ChallengeDetailResp, error)
+	}
+	TopologyHandler *challengehttp.TopologyHandler
+	WriteupHandler  *challengehttp.WriteupHandler
 }
 
 type Deps struct {
@@ -120,7 +123,7 @@ func Build(deps Deps) (*Module, error) {
 
 	imageCommandService, imageHandler := buildImageHandler(internalDeps)
 	imageBuildService := buildImageBuildService(internalDeps)
-	publishCheckService, coreHandler := buildCoreHandler(internalDeps, imageBuildService)
+	publishCheckService, coreHandler, publishedQuery := buildCoreHandler(internalDeps, imageBuildService)
 	flagHandler, flagValidator, err := buildFlagHandler(internalDeps)
 	if err != nil {
 		return nil, err
@@ -139,6 +142,7 @@ func Build(deps Deps) (*Module, error) {
 		Handler:             coreHandler,
 		ImageHandler:        imageHandler,
 		ImageStore:          internalDeps.imageStore,
+		PublishedQuery:      publishedQuery,
 		TopologyHandler:     buildTopologyHandler(internalDeps),
 		WriteupHandler:      buildWriteupHandler(internalDeps),
 	}

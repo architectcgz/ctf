@@ -12,6 +12,7 @@ import (
 	"ctf-platform/internal/config"
 	healthHandler "ctf-platform/internal/handler/health"
 	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
+	mcpinterface "ctf-platform/internal/interfaces/mcp"
 	"ctf-platform/internal/middleware"
 	authinfra "ctf-platform/internal/module/auth/infrastructure"
 	contesthttp "ctf-platform/internal/module/contest/api/http"
@@ -141,6 +142,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	protected.GET("/auth/profile", authModule.Handler.Profile)
 	protected.PUT("/auth/password", authModule.Handler.ChangePassword)
 	protected.POST("/auth/ws-ticket", authModule.Handler.IssueWSTicket)
+	protected.POST("/auth/mcp-token", authModule.Handler.IssueMCPToken)
 
 	opsModule.BuildNotificationHandler(root, tokenService)
 	protected.GET("/notifications", opsModule.NotificationHandler.ListNotifications)
@@ -172,6 +174,14 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	practiceModule := buildPracticeModule(root, challengeModule, instanceModule, containerRuntimeModule)
 	composition.WireRuntimeNodeFailover(containerRuntimeModule, instanceModule, practiceModule)
 	instanceModule.BuildHandler(root, opsModule)
+	mcpHandler := mcpinterface.NewHandler(mcpinterface.Deps{
+		Instances:  instanceModule.QueryService,
+		Challenges: challengeModule.PublishedQuery,
+		Tokens:     tokenService,
+		LoginURL:   "/login",
+		TokenURL:   "/api/v1/auth/mcp-token",
+	})
+	engine.POST("/mcp", mcpHandler.ServeHTTP)
 
 	registerTeacherAuthoringRoutes(authoring, adminRouteDeps{
 		identityHandler: identityModule.AdminHandler,

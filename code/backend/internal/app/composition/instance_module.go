@@ -23,7 +23,8 @@ import (
 )
 
 type InstanceModule struct {
-	Handler *instancehttp.Handler
+	Handler      *instancehttp.Handler
+	QueryService instancecontracts.InstanceQueryService
 
 	PracticeInstanceRepository interface {
 		FindByID(ctx context.Context, id int64) (*instancecontracts.Instance, error)
@@ -140,6 +141,7 @@ func BuildInstanceModule(root *Root, runtime *ContainerRuntimeModule) *InstanceM
 	))
 
 	return &InstanceModule{
+		QueryService:               queryService,
 		PracticeInstanceRepository: newPracticeInstanceRepository(root.DB(), instanceRepo, allocationRepo, awdRepo),
 		PracticeRuntimeService:     practiceRuntimeService,
 		PracticeRuntimeNodeSelector: newPracticeRuntimeNodeSelectorAdapter(

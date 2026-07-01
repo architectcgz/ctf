@@ -106,6 +106,21 @@
         description: OK
         content:
           application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeWsTicketData'}}
+/auth/mcp-token:
+  post:
+    tags: [Auth]
+    summary: 获取外部 agent 调用 MCP 的 Bearer token
+    security:
+    - {sessionCookieAuth: []}
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMCPTokenData'}}
+      '401':
+        description: Unauthorized
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
 /auth/cas/status:
   get:
     tags: [Auth]

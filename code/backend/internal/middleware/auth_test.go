@@ -47,6 +47,14 @@ func (s *stubTokenService) ConsumeWSTicket(context.Context, string) (*authctx.Cu
 	panic("unexpected call to ConsumeWSTicket")
 }
 
+func (s *stubTokenService) IssueMCPToken(context.Context, authctx.CurrentUser) (*authcontracts.MCPToken, error) {
+	panic("unexpected call to IssueMCPToken")
+}
+
+func (s *stubTokenService) ResolveMCPToken(context.Context, string) (*authctx.CurrentUser, error) {
+	panic("unexpected call to ResolveMCPToken")
+}
+
 type stubUserRepository struct {
 	user *identitycontracts.User
 }

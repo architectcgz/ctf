@@ -116,6 +116,14 @@ func (m *mockTokenService) ConsumeWSTicket(context.Context, string) (*authctx.Cu
 	return nil, nil
 }
 
+func (m *mockTokenService) IssueMCPToken(context.Context, authctx.CurrentUser) (*authcontracts.MCPToken, error) {
+	return nil, nil
+}
+
+func (m *mockTokenService) ResolveMCPToken(context.Context, string) (*authctx.CurrentUser, error) {
+	return nil, nil
+}
+
 func (m *mockTokenService) RevokeAllUserSessions(context.Context, int64) error {
 	return nil
 }

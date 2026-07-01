@@ -258,6 +258,20 @@ func (h *Handler) IssueWSTicket(c *gin.Context) {
 	})
 }
 
+func (h *Handler) IssueMCPToken(c *gin.Context) {
+	authUser := authctx.MustCurrentUser(c)
+	token, err := h.tokenService.IssueMCPToken(c.Request.Context(), authUser)
+	if err != nil {
+		response.FromError(c, err)
+		return
+	}
+
+	response.Success(c, &MCPTokenResp{
+		Token:     token.Token,
+		ExpiresAt: token.ExpiresAt.UTC().Format(time.RFC3339),
+	})
+}
+
 func (h *Handler) CASStatus(c *gin.Context) {
 	response.Success(c, toCASStatusResp(h.casQueries.Status()))
 }
