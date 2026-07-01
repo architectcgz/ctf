@@ -64,6 +64,11 @@ func normalizeLoadedConfig(cfg *Config, env string) {
 	}
 	cfg.SharedStorage.Type = strings.TrimSpace(cfg.SharedStorage.Type)
 	cfg.SharedStorage.SharedFS.Root = strings.TrimSpace(cfg.SharedStorage.SharedFS.Root)
+	cfg.Auth.OAuth.IssuerURL = strings.TrimSpace(cfg.Auth.OAuth.IssuerURL)
+	cfg.Auth.OAuth.RedisKeyPrefix = strings.TrimSpace(cfg.Auth.OAuth.RedisKeyPrefix)
+	for i, prefix := range cfg.Auth.OAuth.AllowedRedirectURIPrefixes {
+		cfg.Auth.OAuth.AllowedRedirectURIPrefixes[i] = strings.TrimSpace(prefix)
+	}
 
 	cfg.Container.FlagGlobalSecret = strings.TrimSpace(cfg.Container.FlagGlobalSecret)
 	cfg.Container.FlagGlobalSecretFile = strings.TrimSpace(cfg.Container.FlagGlobalSecretFile)

@@ -324,14 +324,14 @@ func TestTokenServiceIssueAndResolveMCPToken(t *testing.T) {
 	}
 }
 
-func TestTokenServiceIssueMCPTokenUsesMCPTokenTTL(t *testing.T) {
+func TestTokenServiceIssueMCPTokenUsesConfiguredShortTTL(t *testing.T) {
 	mini := miniredis.RunT(t)
 	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
 	t.Cleanup(func() { _ = redisClient.Close() })
 
 	cfg := newTestAuthConfig()
 	cfg.SessionTTL = 24 * time.Hour
-	cfg.MCPTokenTTL = 30 * time.Minute
+	cfg.OAuth.AccessTokenTTL = 30 * time.Minute
 	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
 
 	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
@@ -397,6 +397,8 @@ func newTestAuthConfig() config.AuthConfig {
 		SessionCookieHTTPOnly: true,
 		SessionCookieSameSite: "lax",
 		SessionKeyPrefix:      "test:session",
-		MCPTokenTTL:           time.Hour,
+		OAuth: config.AuthOAuthConfig{
+			AccessTokenTTL: time.Hour,
+		},
 	}
 }

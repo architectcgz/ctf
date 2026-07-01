@@ -897,7 +897,9 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 		SessionCookieHTTPOnly: true,
 		SessionCookieSameSite: "lax",
 		SessionKeyPrefix:      "test:session",
-		MCPTokenTTL:           time.Hour,
+		OAuth: config.AuthOAuthConfig{
+			AccessTokenTTL: time.Hour,
+		},
 	}
 }
 
@@ -1017,7 +1019,7 @@ func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string)
 
 func (s *memoryTokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUser) (*authcontracts.MCPToken, error) {
 	token := fmt.Sprintf("mcp_%s", randomHex(16))
-	expiresAt := time.Now().Add(s.config.MCPTokenTTL).UTC()
+	expiresAt := time.Now().Add(s.config.OAuth.AccessTokenTTL).UTC()
 
 	s.mu.Lock()
 	defer s.mu.Unlock()

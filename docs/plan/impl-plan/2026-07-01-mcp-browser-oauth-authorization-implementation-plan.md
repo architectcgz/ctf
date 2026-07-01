@@ -372,13 +372,13 @@ cd code/backend && go test ./internal/module/auth/api/http ./internal/module/aut
 - 修改：`code/backend/configs/config.dev.yaml`
 - 修改：`code/backend/configs/config.prod.yaml`
 
-- [ ] 步骤 1：写 migration 结构测试，要求 `000002_oauth_browser_authorization.up.sql` 创建 `oauth_clients` 和 `oauth_consents`，down 文件反向删除。
-- [ ] 步骤 2：写 config 红测，覆盖默认 TTL、prod issuer 必须 HTTPS、redirect prefix 不能含空字符串、registration disabled 时不允许 DCR。
-- [ ] 步骤 3：写 `oauth_store_test.go` 红测，覆盖 client 注册、redirect URI 精确匹配、consent upsert/revoke、authorization code `GETDEL` 单次消费、access token 解析、refresh token 旋转。
-- [ ] 步骤 4：实现 `AuthOAuthConfig`、默认值和校验。
-- [ ] 步骤 5：实现 `OAuthStore`，Redis 中只存 hash key，不存 token 明文。
-- [ ] 步骤 6：确保所有 token payload 使用 `time.Now().UTC()`，输出 RFC3339 UTC。
-- [ ] 步骤 7：运行数据层验证。
+- [x] 步骤 1：写 migration 结构测试，要求 `000002_oauth_browser_authorization.up.sql` 创建 `oauth_clients` 和 `oauth_consents`，down 文件反向删除。
+- [x] 步骤 2：写 config 红测，覆盖默认 TTL、prod issuer 必须 HTTPS、redirect prefix 不能含空字符串、registration disabled 时不允许 DCR。
+- [x] 步骤 3：写 `oauth_store_test.go` 红测，覆盖 client 注册、redirect URI 精确匹配、consent upsert/revoke、authorization code `GETDEL` 单次消费、access token 解析、refresh token 旋转。
+- [x] 步骤 4：实现 `AuthOAuthConfig`、默认值和校验。
+- [x] 步骤 5：实现 `OAuthStore`，Redis 中只存 hash key，不存 token 明文。
+- [x] 步骤 6：确保所有 token payload 使用 `time.Now().UTC()`，输出 RFC3339 UTC。
+- [x] 步骤 7：运行数据层验证。
 
 运行：
 
@@ -388,7 +388,7 @@ cd code/backend && go test ./internal/config ./internal/module/auth/infrastructu
 
 预期：PASS。
 
-- [ ] 步骤 8：运行 migration 文件验证。
+- [x] 步骤 8：运行 migration 文件验证。
 
 运行：
 
@@ -398,7 +398,7 @@ cd code/backend && go test ./internal/app -run 'Migration|TestMigrationFiles' -c
 
 预期：PASS 或只出现既有 fixture 问题；若失败涉及新增 migration，先修复。
 
-- [ ] 步骤 9：提交本切片。
+- [x] 步骤 9：提交本切片。
 
 ### 任务 3：实现 OAuth service、metadata 和动态客户端注册
 

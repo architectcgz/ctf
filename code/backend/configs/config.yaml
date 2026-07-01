@@ -76,13 +76,20 @@ cors:
 
 auth:
   session_ttl: 168h
-  mcp_token_ttl: 6h
   session_cookie_name: ctf_session
   session_cookie_path: /api/v1
   session_cookie_secure: false
   session_cookie_http_only: true
   session_cookie_same_site: lax
   session_key_prefix: ctf:auth:session
+  oauth:
+    issuer_url: ""
+    authorization_code_ttl: 5m
+    access_token_ttl: 15m
+    refresh_token_ttl: 720h
+    client_registration_enabled: true
+    allowed_redirect_uri_prefixes: []
+    redis_key_prefix: ctf:auth:oauth
   cas:
     enabled: false
     base_url: ""

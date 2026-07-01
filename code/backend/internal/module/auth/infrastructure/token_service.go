@@ -358,7 +358,8 @@ func (s *tokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUs
 	}
 
 	now := time.Now().UTC()
-	expiresAt := now.Add(s.config.MCPTokenTTL).UTC()
+	ttl := s.mcpTokenTTL()
+	expiresAt := now.Add(ttl).UTC()
 	payload, err := json.Marshal(mcpTokenPayload{
 		UserID:         user.UserID,
 		Username:       user.Username,
@@ -370,7 +371,7 @@ func (s *tokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUs
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.cache.Set(ctx, s.mcpTokenKey(token), payload, s.config.MCPTokenTTL).Err(); err != nil {
+	if err := s.cache.Set(ctx, s.mcpTokenKey(token), payload, ttl).Err(); err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 
@@ -461,6 +462,13 @@ func (s *tokenService) wsTicketKey(ticket string) string {
 
 func (s *tokenService) mcpTokenKey(token string) string {
 	return fmt.Sprintf("%s:mcp:%s", s.config.SessionKeyPrefix, token)
+}
+
+func (s *tokenService) mcpTokenTTL() time.Duration {
+	if s.config.OAuth.AccessTokenTTL > 0 {
+		return s.config.OAuth.AccessTokenTTL
+	}
+	return s.config.SessionTTL
 }
 
 func generateOpaqueToken(size int) (string, error) {

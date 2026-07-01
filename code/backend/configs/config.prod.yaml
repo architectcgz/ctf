@@ -43,6 +43,9 @@ cors:
 
 auth:
   session_cookie_secure: true
+  oauth:
+    # 生产环境必须显式配置 OAuth issuer origin，并与外部浏览器访问的 HTTPS 域名一致。
+    issuer_url: https://ctf.example.com
 
 container:
   # 多 API 实例必须使用同一把动态 Flag 密钥；生产环境不会在文件缺失时自动生成。

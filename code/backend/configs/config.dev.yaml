@@ -12,6 +12,8 @@ redis:
 
 auth:
   session_cookie_secure: false
+  oauth:
+    issuer_url: ""
 
 container:
   max_concurrent_per_user: 5

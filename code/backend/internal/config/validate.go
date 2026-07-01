@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -41,8 +42,8 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("cors.allow_origins must not contain empty origin")
 		}
 	}
-	if c.Auth.MCPTokenTTL <= 0 {
-		return fmt.Errorf("auth.mcp_token_ttl must be greater than 0")
+	if err := validateAuthOAuthConfig(c.App.Env, c.Auth.OAuth); err != nil {
+		return err
 	}
 	if c.RateLimit.MCP.Enabled {
 		if c.RateLimit.MCP.Limit <= 0 {
@@ -501,6 +502,44 @@ func isLocalRegistryServer(server string) bool {
 		host = normalized[:colon]
 	}
 	return host == "127.0.0.1" || host == "localhost"
+}
+
+func validateAuthOAuthConfig(env string, cfg AuthOAuthConfig) error {
+	if cfg.AuthorizationCodeTTL <= 0 {
+		return fmt.Errorf("auth.oauth.authorization_code_ttl must be greater than 0")
+	}
+	if cfg.AccessTokenTTL <= 0 {
+		return fmt.Errorf("auth.oauth.access_token_ttl must be greater than 0")
+	}
+	if cfg.RefreshTokenTTL <= 0 {
+		return fmt.Errorf("auth.oauth.refresh_token_ttl must be greater than 0")
+	}
+	if strings.TrimSpace(cfg.RedisKeyPrefix) == "" {
+		return fmt.Errorf("auth.oauth.redis_key_prefix must not be empty")
+	}
+	for _, prefix := range cfg.AllowedRedirectURIPrefixes {
+		if strings.TrimSpace(prefix) == "" {
+			return fmt.Errorf("auth.oauth.allowed_redirect_uri_prefixes must not contain empty prefix")
+		}
+	}
+	if isProductionEnv(env) {
+		if !isHTTPSOrigin(cfg.IssuerURL) {
+			return fmt.Errorf("auth.oauth.issuer_url must be an https origin in prod")
+		}
+	}
+	return nil
+}
+
+func isHTTPSOrigin(raw string) bool {
+	parsed, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return false
+	}
+	return parsed.Scheme == "https" &&
+		parsed.Host != "" &&
+		(parsed.Path == "" || parsed.Path == "/") &&
+		parsed.RawQuery == "" &&
+		parsed.Fragment == ""
 }
 
 func isProductionEnv(env string) bool {

@@ -92,3 +92,42 @@ func TestEventOutboxContractsInBaseline(t *testing.T) {
 		}
 	}
 }
+
+func TestOAuthBrowserAuthorizationMigrationFiles(t *testing.T) {
+	t.Parallel()
+
+	up, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000002_oauth_browser_authorization.up.sql"))
+	if err != nil {
+		t.Fatalf("read oauth migration: %v", err)
+	}
+	down, err := os.ReadFile(filepath.Join("..", "..", "migrations", "000002_oauth_browser_authorization.down.sql"))
+	if err != nil {
+		t.Fatalf("read oauth down migration: %v", err)
+	}
+
+	upSQL := string(up)
+	for _, required := range []string{
+		"CREATE TABLE public.oauth_clients",
+		"client_id text NOT NULL",
+		"redirect_uris jsonb NOT NULL",
+		"token_endpoint_auth_method text DEFAULT 'none'::text NOT NULL",
+		"CREATE TABLE public.oauth_consents",
+		"user_id bigint NOT NULL",
+		"client_id text NOT NULL",
+		"scope text NOT NULL",
+		"UNIQUE (user_id, client_id, scope)",
+		"CREATE INDEX idx_oauth_consents_user_client",
+		"REFERENCES public.users(id) ON DELETE CASCADE",
+		"REFERENCES public.oauth_clients(client_id) ON DELETE CASCADE",
+	} {
+		if !strings.Contains(upSQL, required) {
+			t.Fatalf("oauth migration should contain %q, got:\n%s", required, upSQL)
+		}
+	}
+
+	downSQL := string(down)
+	if !strings.Contains(downSQL, "DROP TABLE IF EXISTS public.oauth_consents") ||
+		!strings.Contains(downSQL, "DROP TABLE IF EXISTS public.oauth_clients") {
+		t.Fatalf("oauth down migration should drop consent and client tables, got:\n%s", downSQL)
+	}
+}

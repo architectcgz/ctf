@@ -105,15 +105,25 @@ type CORSConfig struct {
 }
 
 type AuthConfig struct {
-	SessionTTL            time.Duration `mapstructure:"session_ttl"`
-	MCPTokenTTL           time.Duration `mapstructure:"mcp_token_ttl"`
-	SessionCookieName     string        `mapstructure:"session_cookie_name"`
-	SessionCookiePath     string        `mapstructure:"session_cookie_path"`
-	SessionCookieSecure   bool          `mapstructure:"session_cookie_secure"`
-	SessionCookieHTTPOnly bool          `mapstructure:"session_cookie_http_only"`
-	SessionCookieSameSite string        `mapstructure:"session_cookie_same_site"`
-	SessionKeyPrefix      string        `mapstructure:"session_key_prefix"`
-	CAS                   CASConfig     `mapstructure:"cas"`
+	SessionTTL            time.Duration   `mapstructure:"session_ttl"`
+	SessionCookieName     string          `mapstructure:"session_cookie_name"`
+	SessionCookiePath     string          `mapstructure:"session_cookie_path"`
+	SessionCookieSecure   bool            `mapstructure:"session_cookie_secure"`
+	SessionCookieHTTPOnly bool            `mapstructure:"session_cookie_http_only"`
+	SessionCookieSameSite string          `mapstructure:"session_cookie_same_site"`
+	SessionKeyPrefix      string          `mapstructure:"session_key_prefix"`
+	OAuth                 AuthOAuthConfig `mapstructure:"oauth"`
+	CAS                   CASConfig       `mapstructure:"cas"`
+}
+
+type AuthOAuthConfig struct {
+	IssuerURL                  string        `mapstructure:"issuer_url"`
+	AuthorizationCodeTTL       time.Duration `mapstructure:"authorization_code_ttl"`
+	AccessTokenTTL             time.Duration `mapstructure:"access_token_ttl"`
+	RefreshTokenTTL            time.Duration `mapstructure:"refresh_token_ttl"`
+	ClientRegistrationEnabled  bool          `mapstructure:"client_registration_enabled"`
+	AllowedRedirectURIPrefixes []string      `mapstructure:"allowed_redirect_uri_prefixes"`
+	RedisKeyPrefix             string        `mapstructure:"redis_key_prefix"`
 }
 
 type CASConfig struct {

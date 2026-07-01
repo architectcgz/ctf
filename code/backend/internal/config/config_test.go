@@ -846,6 +846,57 @@ func TestAuthConfigDoesNotExposeLegacyMCPTokenTTL(t *testing.T) {
 	}
 }
 
+func TestLoadAppliesOAuthDefaults(t *testing.T) {
+	chdirToBackendRoot(t)
+
+	cfg, err := Load("dev")
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Auth.OAuth.AuthorizationCodeTTL != 5*time.Minute {
+		t.Fatalf("authorization code ttl = %s, want 5m", cfg.Auth.OAuth.AuthorizationCodeTTL)
+	}
+	if cfg.Auth.OAuth.AccessTokenTTL != 15*time.Minute {
+		t.Fatalf("access token ttl = %s, want 15m", cfg.Auth.OAuth.AccessTokenTTL)
+	}
+	if cfg.Auth.OAuth.RefreshTokenTTL != 30*24*time.Hour {
+		t.Fatalf("refresh token ttl = %s, want 720h", cfg.Auth.OAuth.RefreshTokenTTL)
+	}
+	if !cfg.Auth.OAuth.ClientRegistrationEnabled {
+		t.Fatal("client registration should be enabled by default")
+	}
+	if cfg.Auth.OAuth.RedisKeyPrefix != "ctf:auth:oauth" {
+		t.Fatalf("oauth redis key prefix = %q", cfg.Auth.OAuth.RedisKeyPrefix)
+	}
+}
+
+func TestValidateOAuthRejectsInvalidProductionIssuer(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.App.Env = "prod"
+	cfg.Auth.OAuth.IssuerURL = "http://ctf.example.edu"
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject non-HTTPS oauth issuer in production, got nil")
+	}
+	if !strings.Contains(err.Error(), "auth.oauth.issuer_url must be an https origin in prod") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateOAuthRejectsEmptyRedirectPrefix(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Auth.OAuth.AllowedRedirectURIPrefixes = []string{"https://agent.example.edu/callback", " "}
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject empty oauth redirect prefix, got nil")
+	}
+	if !strings.Contains(err.Error(), "auth.oauth.allowed_redirect_uri_prefixes must not contain empty prefix") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestValidateRejectsInvalidEnabledMCPRateLimit(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -1106,7 +1157,13 @@ func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
 func validConfigForValidationTests() *Config {
 	return &Config{
 		Auth: AuthConfig{
-			MCPTokenTTL: time.Hour,
+			OAuth: AuthOAuthConfig{
+				AuthorizationCodeTTL:      5 * time.Minute,
+				AccessTokenTTL:            15 * time.Minute,
+				RefreshTokenTTL:           30 * 24 * time.Hour,
+				ClientRegistrationEnabled: true,
+				RedisKeyPrefix:            "ctf:auth:oauth",
+			},
 		},
 		Redis: RedisConfig{
 			Addr: "127.0.0.1:6379",
