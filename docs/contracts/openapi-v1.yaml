@@ -18,6 +18,7 @@ info:
 servers:
 - {url: /api/v1}
 tags:
+- {name: OAuth}
 - {name: Auth}
 - {name: Challenges}
 - {name: Instances}
@@ -61,6 +62,91 @@ components:
         page: {type: integer, minimum: 1}
         page_size: {type: integer, minimum: 1}
     UserRole: {type: string, enum: [student, teacher, admin]}
+    OAuthProtectedResourceMetadata:
+      type: object
+      required: [resource, authorization_servers]
+      properties:
+        resource: {type: string, format: uri}
+        authorization_servers: {type: array, items: {type: string, format: uri}}
+    OAuthAuthorizationServerMetadata:
+      type: object
+      required:
+      - issuer
+      - authorization_endpoint
+      - token_endpoint
+      - registration_endpoint
+      - response_types_supported
+      - grant_types_supported
+      - code_challenge_methods_supported
+      - token_endpoint_auth_methods_supported
+      - scopes_supported
+      properties:
+        issuer: {type: string, format: uri}
+        authorization_endpoint: {type: string, format: uri}
+        token_endpoint: {type: string, format: uri}
+        registration_endpoint: {type: string, format: uri}
+        response_types_supported:
+          type: array
+          items: {type: string, enum: [code]}
+        grant_types_supported:
+          type: array
+          items: {type: string, enum: [authorization_code, refresh_token]}
+        code_challenge_methods_supported:
+          type: array
+          items: {type: string, enum: [S256]}
+        token_endpoint_auth_methods_supported:
+          type: array
+          items: {type: string, enum: [none]}
+        scopes_supported:
+          type: array
+          items: {type: string, enum: ['mcp:challenge:read']}
+    OAuthClientRegistrationRequest:
+      type: object
+      required: [client_name, redirect_uris]
+      properties:
+        client_name: {type: string, maxLength: 128}
+        client_uri: {type: string, maxLength: 512}
+        redirect_uris: {type: array, minItems: 1, items: {type: string, maxLength: 512}}
+        grant_types:
+          type: array
+          items: {type: string, enum: [authorization_code, refresh_token]}
+        response_types:
+          type: array
+          items: {type: string, enum: [code]}
+        scope: {type: string, enum: ['mcp:challenge:read']}
+        token_endpoint_auth_method: {type: string, enum: [none]}
+    OAuthClientRegistrationResponse:
+      type: object
+      required:
+      - client_id
+      - client_name
+      - redirect_uris
+      - grant_types
+      - response_types
+      - scope
+      - token_endpoint_auth_method
+      properties:
+        client_id: {type: string}
+        client_name: {type: string}
+        client_uri: {type: string}
+        redirect_uris: {type: array, items: {type: string}}
+        grant_types: {type: array, items: {type: string}}
+        response_types: {type: array, items: {type: string}}
+        scope: {type: string}
+        token_endpoint_auth_method: {type: string, enum: [none]}
+    OAuthTokenResponse:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in, scope]
+      properties:
+        access_token: {type: string}
+        refresh_token: {type: string}
+        token_type: {type: string, enum: [Bearer]}
+        expires_in: {type: integer, format: int64}
+        scope: {type: string, enum: ['mcp:challenge:read']}
+    OAuthErrorResponse:
+      type: object
+      required: [error]
+      properties: {error: {type: string}, error_description: {type: string}}
     AuthUser:
       type: object
       required: [id, username, role]
@@ -95,16 +181,6 @@ components:
       - type: object
         required: [data]
         properties: {data: {$ref: '#/components/schemas/WsTicketData'}}
-    MCPTokenData:
-      type: object
-      required: [token, expires_at]
-      properties: {token: {type: string}, expires_at: {$ref: '#/components/schemas/ISODateTime'}}
-    ApiEnvelopeMCPTokenData:
-      allOf:
-      - {$ref: '#/components/schemas/ApiEnvelopeBase'}
-      - type: object
-        required: [data]
-        properties: {data: {$ref: '#/components/schemas/MCPTokenData'}}
     CASStatusData:
       type: object
       required: [provider, enabled, configured, auto_provision, login_path, callback_path]
@@ -2288,6 +2364,174 @@ components:
         required: [data]
         properties: {data: {$ref: '#/components/schemas/AWDChallengePageData'}}
 paths:
+  /.well-known/oauth-protected-resource:
+    servers:
+    - {url: /}
+    get:
+      tags: [OAuth]
+      summary: 获取 MCP protected resource metadata
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthProtectedResourceMetadata'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+  /.well-known/oauth-authorization-server:
+    servers:
+    - {url: /}
+    get:
+      tags: [OAuth]
+      summary: 获取 OAuth authorization server metadata
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthAuthorizationServerMetadata'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+  /oauth/register:
+    post:
+      tags: [OAuth]
+      summary: 动态注册 public OAuth client
+      requestBody:
+        required: true
+        content:
+          application/json: {schema: {$ref: '#/components/schemas/OAuthClientRegistrationRequest'}}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthClientRegistrationResponse'}}
+        '400':
+          description: Bad Request
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+  /oauth/authorize:
+    get:
+      tags: [OAuth]
+      summary: OAuth authorization endpoint
+      parameters:
+      - in: query
+        name: response_type
+        required: true
+        schema: {type: string, enum: [code]}
+      - in: query
+        name: client_id
+        required: true
+        schema: {type: string}
+      - in: query
+        name: redirect_uri
+        required: true
+        schema: {type: string}
+      - in: query
+        name: scope
+        required: true
+        schema: {type: string, enum: ['mcp:challenge:read']}
+      - in: query
+        name: state
+        required: false
+        schema: {type: string}
+      - in: query
+        name: code_challenge
+        required: true
+        schema: {type: string}
+      - in: query
+        name: code_challenge_method
+        required: true
+        schema: {type: string, enum: [S256]}
+      responses:
+        '200':
+          description: Consent HTML
+          content:
+            text/html: {schema: {type: string}}
+        '302': {description: Redirect to login or redirect_uri with code/state}
+        '400':
+          description: Bad Request
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+    post:
+      tags: [OAuth]
+      summary: OAuth consent decision endpoint
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+              - response_type
+              - client_id
+              - redirect_uri
+              - scope
+              - code_challenge
+              - code_challenge_method
+              - csrf_nonce
+              - approve
+              properties:
+                response_type: {type: string, enum: [code]}
+                client_id: {type: string}
+                redirect_uri: {type: string}
+                scope: {type: string, enum: ['mcp:challenge:read']}
+                state: {type: string}
+                code_challenge: {type: string}
+                code_challenge_method: {type: string, enum: [S256]}
+                csrf_nonce: {type: string}
+                approve: {type: string, enum: ['true', 'false']}
+      responses:
+        '302': {description: Redirect to redirect_uri with code/state or access_denied}
+        '400':
+          description: Bad Request
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+  /oauth/token:
+    post:
+      tags: [OAuth]
+      summary: OAuth token endpoint
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [grant_type, client_id]
+              properties:
+                grant_type: {type: string, enum: [authorization_code, refresh_token]}
+                client_id: {type: string}
+                code: {type: string}
+                redirect_uri: {type: string}
+                code_verifier: {type: string}
+                refresh_token: {type: string}
+                scope: {type: string, enum: ['mcp:challenge:read']}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthTokenResponse'}}
+        '400':
+          description: Bad Request
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
+        '503':
+          description: Service Unavailable
+          content:
+            application/json: {schema: {$ref: '#/components/schemas/OAuthErrorResponse'}}
   /auth/login:
     post:
       tags: [Auth]
@@ -2396,21 +2640,6 @@ paths:
           description: OK
           content:
             application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeWsTicketData'}}
-  /auth/mcp-token:
-    post:
-      tags: [Auth]
-      summary: 获取外部 agent 调用 MCP 的 Bearer token
-      security:
-      - {sessionCookieAuth: []}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeMCPTokenData'}}
-        '401':
-          description: Unauthorized
-          content:
-            application/json: {schema: {$ref: '#/components/schemas/ApiEnvelopeNull'}}
   /auth/cas/status:
     get:
       tags: [Auth]

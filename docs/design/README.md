@@ -36,6 +36,8 @@
 
 ## 当前中间方案
 
+- `ctf-tutor-agent-and-mcp.md`
+  - 说明：`Draft`。CTF 平台 MCP、内部 Python 伴学 Agent、RAG / 向量化知识库和本地工具 MCP 的职责边界、目录位置与部署端口设计；其中外部 MCP 认证部分已由 OAuth browser authorization 契约替代，后续以 `docs/contracts/api-contract-v1.md` 和 `docs/operations/mcp-oauth-login.md` 为准。
 - `backend-module-boundary-target.md`
   - 说明：`Draft`。后端模块边界目标设计稿，区分当前事实、目标 owner、依赖方向、对外暴露规则和迁移债务；迁移完成后应回收到 `docs/architecture/backend/07-modular-monolith-refactor.md`，再同步论文。
 - `AWD题目配置面板方案.md`

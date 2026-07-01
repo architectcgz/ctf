@@ -1,0 +1,91 @@
+OAuthProtectedResourceMetadata:
+  type: object
+  required: [resource, authorization_servers]
+  properties:
+    resource: {type: string, format: uri}
+    authorization_servers:
+      type: array
+      items: {type: string, format: uri}
+OAuthAuthorizationServerMetadata:
+  type: object
+  required:
+  - issuer
+  - authorization_endpoint
+  - token_endpoint
+  - registration_endpoint
+  - response_types_supported
+  - grant_types_supported
+  - code_challenge_methods_supported
+  - token_endpoint_auth_methods_supported
+  - scopes_supported
+  properties:
+    issuer: {type: string, format: uri}
+    authorization_endpoint: {type: string, format: uri}
+    token_endpoint: {type: string, format: uri}
+    registration_endpoint: {type: string, format: uri}
+    response_types_supported:
+      type: array
+      items: {type: string, enum: [code]}
+    grant_types_supported:
+      type: array
+      items: {type: string, enum: [authorization_code, refresh_token]}
+    code_challenge_methods_supported:
+      type: array
+      items: {type: string, enum: [S256]}
+    token_endpoint_auth_methods_supported:
+      type: array
+      items: {type: string, enum: [none]}
+    scopes_supported:
+      type: array
+      items: {type: string, enum: ['mcp:challenge:read']}
+OAuthClientRegistrationRequest:
+  type: object
+  required: [client_name, redirect_uris]
+  properties:
+    client_name: {type: string, maxLength: 128}
+    client_uri: {type: string, maxLength: 512}
+    redirect_uris:
+      type: array
+      minItems: 1
+      items: {type: string, maxLength: 512}
+    grant_types:
+      type: array
+      items: {type: string, enum: [authorization_code, refresh_token]}
+    response_types:
+      type: array
+      items: {type: string, enum: [code]}
+    scope: {type: string, enum: ['mcp:challenge:read']}
+    token_endpoint_auth_method: {type: string, enum: [none]}
+OAuthClientRegistrationResponse:
+  type: object
+  required: [client_id, client_name, redirect_uris, grant_types, response_types, scope, token_endpoint_auth_method]
+  properties:
+    client_id: {type: string}
+    client_name: {type: string}
+    client_uri: {type: string}
+    redirect_uris:
+      type: array
+      items: {type: string}
+    grant_types:
+      type: array
+      items: {type: string}
+    response_types:
+      type: array
+      items: {type: string}
+    scope: {type: string}
+    token_endpoint_auth_method: {type: string, enum: [none]}
+OAuthTokenResponse:
+  type: object
+  required: [access_token, refresh_token, token_type, expires_in, scope]
+  properties:
+    access_token: {type: string}
+    refresh_token: {type: string}
+    token_type: {type: string, enum: [Bearer]}
+    expires_in: {type: integer, format: int64}
+    scope: {type: string, enum: ['mcp:challenge:read']}
+OAuthErrorResponse:
+  type: object
+  required: [error]
+  properties:
+    error: {type: string}
+    error_description: {type: string}

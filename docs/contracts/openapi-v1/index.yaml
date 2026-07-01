@@ -14,6 +14,7 @@ servers:
   - url: /api/v1
 
 tags:
+  - name: OAuth
   - name: Auth
   - name: Challenges
   - name: Instances
@@ -34,6 +35,7 @@ components:
   schemas:
     $merge:
       - components/schemas/core.yaml
+      - components/schemas/oauth.yaml
       - components/schemas/auth.yaml
       - components/schemas/challenges.yaml
       - components/schemas/instances.yaml
@@ -47,6 +49,7 @@ components:
 
 paths:
   $merge:
+    - paths/oauth.yaml
     - paths/auth.yaml
     - paths/challenges.yaml
     - paths/instances.yaml

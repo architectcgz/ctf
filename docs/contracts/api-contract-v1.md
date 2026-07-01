@@ -6,7 +6,7 @@
 >
 > 拆分源：`ctf/docs/contracts/openapi-v1/`；修改 OpenAPI 时先改拆分源，再运行 `python3 tools/sync_openapi_from_contract.py`。
 >
-> 最后更新：2026-05-29
+> 最后更新：2026-07-01
 
 ---
 
@@ -136,20 +136,7 @@ export interface WsTicketData {
 }
 ```
 
-### 2.7 POST `/api/v1/auth/mcp-token`
-
-`data`：
-
-```ts
-export interface MCPTokenData {
-  token: string
-  expires_at: ISODateTime
-}
-```
-
-> 说明：该接口需要当前登录态，用于给外部 agent 签发调用 `POST /mcp` 的 `Authorization: Bearer <token>`。MCP token TTL 由 `auth.mcp_token_ttl` 控制，默认 6h；token 跟随用户 session version，改密或撤销用户会话后会在解析主链路失效。签发会记录 `mcp_token/create` 审计；`/mcp` 成功工具调用会记录 `mcp_tool/read` 审计，并按 `rate_limit.mcp` 做用户级限流。
-
-### 2.8 GET `/api/v1/auth/cas/status`
+### 2.7 GET `/api/v1/auth/cas/status`
 
 `data`：
 
@@ -166,7 +153,7 @@ export interface CasStatusData {
 
 > 说明：一期仅预留 CAS 接口层，默认 `enabled=false`；仅用于前端发现平台是否启用了 CAS 登录能力。
 
-### 2.9 GET `/api/v1/auth/cas/login`
+### 2.8 GET `/api/v1/auth/cas/login`
 
 `data`：
 
@@ -180,12 +167,161 @@ export interface CasLoginData {
 
 > 说明：当 CAS 配置完整且已启用时，后端返回 CAS 登录跳转地址；前端可据此跳转到学校统一认证入口。
 
-### 2.10 GET `/api/v1/auth/cas/callback`
+### 2.9 GET `/api/v1/auth/cas/callback`
 
 `data`：预期为 `LoginData`
 
 > 说明：后端会使用 `ticket + auth.cas.service_url` 调用 CAS `serviceValidate` 完成票据校验；校验成功后按 CAS 用户名映射平台 `username`。
 > 若用户已存在，则自动回填 `name/email/class_name/student_no/teacher_no` 等资料，并清理已过期的登录锁定状态；若用户不存在，则按 `auth.cas.auto_provision` 决定自动创建 `student` 角色账号或返回 `403`。
+
+### 2.10 OAuth 浏览器授权（MCP）
+
+OAuth 端点不使用 `ApiEnvelope<T>`；成功和失败响应按 OAuth / metadata JSON 直接返回。第一版只支持 public client、Authorization Code + PKCE S256、refresh token rotation 和 `mcp:challenge:read` scope，不支持 `client_secret`、`password` grant、`client_credentials` grant 或 OIDC `id_token`。
+
+#### GET `/.well-known/oauth-protected-resource`
+
+```ts
+export interface OAuthProtectedResourceMetadata {
+  resource: string
+  authorization_servers: string[]
+}
+```
+
+> 说明：`resource` 指向当前 origin 的 `/mcp`，`authorization_servers` 指向当前 CTF OAuth issuer。
+
+#### GET `/.well-known/oauth-authorization-server`
+
+```ts
+export interface OAuthAuthorizationServerMetadata {
+  issuer: string
+  authorization_endpoint: string
+  token_endpoint: string
+  registration_endpoint: string
+  response_types_supported: ['code']
+  grant_types_supported: Array<'authorization_code' | 'refresh_token'>
+  code_challenge_methods_supported: ['S256']
+  token_endpoint_auth_methods_supported: ['none']
+  scopes_supported: ['mcp:challenge:read']
+}
+```
+
+#### POST `/api/v1/oauth/register`
+
+请求：
+
+```ts
+export interface OAuthClientRegistrationRequest {
+  client_name: string
+  client_uri?: string
+  redirect_uris: string[]
+  grant_types?: Array<'authorization_code' | 'refresh_token'>
+  response_types?: ['code']
+  scope?: 'mcp:challenge:read'
+  token_endpoint_auth_method?: 'none'
+}
+```
+
+响应 `201`：
+
+```ts
+export interface OAuthClientRegistrationResponse {
+  client_id: string
+  client_name: string
+  client_uri?: string
+  redirect_uris: string[]
+  grant_types: Array<'authorization_code' | 'refresh_token'>
+  response_types: ['code']
+  scope: 'mcp:challenge:read'
+  token_endpoint_auth_method: 'none'
+}
+```
+
+> 说明：默认只允许 loopback redirect URI。非 loopback HTTPS callback 必须通过 `auth.oauth.allowed_redirect_uri_prefixes` 显式配置。
+
+#### GET `/api/v1/oauth/authorize`
+
+查询参数：
+
+```ts
+export interface OAuthAuthorizeQuery {
+  response_type: 'code'
+  client_id: string
+  redirect_uri: string
+  scope: 'mcp:challenge:read'
+  state?: string
+  code_challenge: string
+  code_challenge_method: 'S256'
+}
+```
+
+> 说明：未登录时 `302` 到 `/login?redirect=<authorize path>`；已登录但未同意时返回 consent HTML；已有有效同意时 `302` 回 `redirect_uri?code=...&state=...`。
+
+#### POST `/api/v1/oauth/authorize`
+
+表单字段：同 `OAuthAuthorizeQuery`，另含 `csrf_nonce` 与 `approve=true|false`。同意后创建 consent 并 `302` 回 `redirect_uri?code=...&state=...`；拒绝后 `302` 回 `redirect_uri?error=access_denied&state=...`。
+
+#### POST `/api/v1/oauth/token`
+
+`application/x-www-form-urlencoded` 请求：
+
+```ts
+export type OAuthGrantType = 'authorization_code' | 'refresh_token'
+
+export interface OAuthTokenRequest {
+  grant_type: OAuthGrantType
+  client_id: string
+  code?: string
+  redirect_uri?: string
+  code_verifier?: string
+  refresh_token?: string
+  scope?: 'mcp:challenge:read'
+}
+```
+
+响应：
+
+```ts
+export interface OAuthTokenResponse {
+  access_token: string
+  refresh_token: string
+  token_type: 'Bearer'
+  expires_in: number
+  scope: 'mcp:challenge:read'
+}
+
+export interface OAuthErrorResponse {
+  error: string
+  error_description?: string
+}
+```
+
+> 说明：authorization code 默认 5 分钟有效且单次使用；access token 默认 15 分钟有效；refresh token 默认 30 天有效并在刷新时旋转。token claims 绑定 user、client、scope 和 session version，改密、禁用或撤销会话后在 OAuth token 解析主链路失效。
+
+#### POST `/mcp`
+
+`/mcp` 是 MCP JSON-RPC 入口，不使用 `ApiEnvelope<T>`。`initialize`、`notifications/initialized` 和 `tools/list` 可无 token 调用；`tools/call` 必须携带 OAuth access token：
+
+```http
+Authorization: Bearer <oauth_access_token>
+```
+
+未授权或 scope 不足时返回 HTTP `401`，并设置：
+
+```http
+WWW-Authenticate: Bearer realm="ctf-mcp", resource_metadata="https://ctf.example.edu/.well-known/oauth-protected-resource"
+```
+
+JSON-RPC error `data` 固定为：
+
+```json
+{
+  "auth_method": "oauth",
+  "resource_metadata": "/.well-known/oauth-protected-resource",
+  "required_scope": "mcp:challenge:read"
+}
+```
+
+`get_current_challenge` 要求 `mcp:challenge:read`，成功时 `structuredContent` 返回 `has_current_challenge`、`instance` 和 `challenge`；无活动实例时返回 `has_current_challenge=false`。成功工具调用记录 `mcp_tool/read` 审计，detail 包含 `client_id` 和 `scope`，不记录 token。
 
 ---
 

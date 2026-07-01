@@ -28,6 +28,7 @@ docs/design/*
 !docs/design/AWD能力画像回流方案.md
 !docs/design/教学复盘建议优化方案.md
 !docs/design/backend-module-boundary-target.md
+!docs/design/ctf-tutor-agent-and-mcp.md
 !docs/operations/
 !docs/plan/
 !docs/plan/impl-plan/

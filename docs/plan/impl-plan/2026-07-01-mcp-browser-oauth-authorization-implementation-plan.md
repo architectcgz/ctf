@@ -659,13 +659,13 @@ cd code/backend && go test ./internal/module/auth/... ./internal/interfaces/mcp 
 - 修改：`docs/design/ctf-tutor-agent-and-mcp.md`
 - 新增：`docs/operations/mcp-oauth-login.md`
 
-- [ ] 步骤 1：删除 API contract 中 `POST /api/v1/auth/mcp-token`。
-- [ ] 步骤 2：新增 OAuth endpoint 契约，至少覆盖 metadata、register、authorize、token 的 request/response/error。
-- [ ] 步骤 3：更新 `/mcp` 契约，说明 OAuth Bearer token、`WWW-Authenticate`、`mcp:challenge:read` scope。
-- [ ] 步骤 4：更新后端 API 架构文档：`/mcp` 不依赖 Cookie、不依赖 MCP token；`auth` 模块是 OAuth AS owner。
-- [ ] 步骤 5：更新 auth 模块文档：新增 OAuth client/code/token/consent owner，删除 MCP token owner。
-- [ ] 步骤 6：更新设计稿：把旧 token 方式标记为 `Superseded by OAuth browser authorization`。
-- [ ] 步骤 7：新增操作文档，写明外部 agent 使用方式：
+- [x] 步骤 1：删除 API contract 中 `POST /api/v1/auth/mcp-token`。
+- [x] 步骤 2：新增 OAuth endpoint 契约，至少覆盖 metadata、register、authorize、token 的 request/response/error。
+- [x] 步骤 3：更新 `/mcp` 契约，说明 OAuth Bearer token、`WWW-Authenticate`、`mcp:challenge:read` scope。
+- [x] 步骤 4：更新后端 API 架构文档：`/mcp` 不依赖 Cookie、不依赖 MCP token；`auth` 模块是 OAuth AS owner。
+- [x] 步骤 5：更新 auth 模块文档：新增 OAuth client/code/token/consent owner，删除 MCP token owner。
+- [x] 步骤 6：更新设计稿：把旧 token 方式标记为 `Superseded by OAuth browser authorization`。
+- [x] 步骤 7：新增操作文档，写明外部 agent 使用方式：
 
 ```bash
 codex mcp login ctf
@@ -678,7 +678,7 @@ claude mcp login ctf
 bearer_token_env_var = "CTF_MCP_TOKEN"
 ```
 
-- [ ] 步骤 8：同步 OpenAPI bundle。
+- [x] 步骤 8：同步 OpenAPI bundle。
 
 运行：
 
@@ -688,7 +688,7 @@ python3 tools/sync_openapi_from_contract.py
 
 预期：PASS，`docs/contracts/openapi-v1.yaml` 更新。
 
-- [ ] 步骤 9：运行文档一致性检查。
+- [x] 步骤 9：运行文档一致性检查。
 
 运行：
 
@@ -698,7 +698,9 @@ python3 scripts/check-docs-consistency.py
 
 预期：PASS；若命中既有无关缺失引用，记录具体路径并继续跑 workflow gate。
 
-- [ ] 步骤 10：提交本切片。
+执行记录：2026-07-01 已运行，失败在既有无关引用 `harness/prompts/AGENTS.md:13` -> `/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md` 缺失；本切片另运行 `python3 tools/sync_openapi_from_contract.py --check`、`git diff --check`、`bash scripts/check-architecture.sh --full`，结果均 PASS。
+
+- [x] 步骤 10：提交本切片。
 
 ### 任务 9：端到端本地验证
 
