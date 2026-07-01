@@ -128,11 +128,28 @@
 - Review focus: MCP token 是否在主解析链路随用户撤销失效；未认证返回是否是 MCP JSON-RPC 而不是 REST envelope；外部 agent 是否不再依赖 Cookie。
 - Done criteria: 外部 agent 可用 Bearer token 调用 `/mcp`；无 token 或无效 token 能收到可提示用户登录的 MCP 错误；相关契约文档同步。
 
+### Slice 3: MCP 防爬增强
+
+- Goal: 降低 MCP token 泄露或自动化轮询时的爬取风险。
+- Dependencies: `config.AuthConfig`、`config.RateLimitConfig`、Redis rate checker、`auditlog.Recorder`。
+- Files:
+  - Modify: `config`、`interfaces/mcp`、`auth/api/http`、`auth/infrastructure/token_service.go`、`internal/app/router.go`
+  - Test: MCP handler 限流/审计测试、auth HTTP 签发审计测试、token service 独立 TTL 测试、config validation 测试
+- 步骤：
+  - [x] 步骤 1：补 MCP token 独立 TTL 红测。
+  - [x] 步骤 2：补 `/mcp` 用户级限流和成功工具调用审计红测。
+  - [x] 步骤 3：补 `POST /api/v1/auth/mcp-token` 签发审计红测。
+  - [x] 步骤 4：新增 `auth.mcp_token_ttl` 和 `rate_limit.mcp` 配置，并接入 Redis token TTL / MCP rate checker。
+  - [x] 步骤 5：更新架构和 API 契约说明。
+- Validation: `go test ./internal/interfaces/mcp -count=1`、`go test ./internal/module/auth/... ./internal/config ./internal/middleware -count=1`、`go test ./internal/app -run '^$' -count=1`
+- Review focus: 超限是否仍返回 MCP JSON-RPC；审计是否避免记录 token 明文；独立 TTL 是否不会继续复用网页登录 session TTL。
+- Done criteria: MCP token 默认 6h 过期；`/mcp` 默认每用户 120/min；签发和成功工具调用均可审计。
+
 ## Impact And Compatibility
 
 - API / DTO: 新增 `/mcp` JSON-RPC endpoint；新增 `POST /api/v1/auth/mcp-token`，返回 `{token, expires_at}`，用于外部 agent 的 `Authorization: Bearer <token>`。
 - Data / migration: `none`
-- State / cache / queue / event: Redis 新增 `auth.SessionKeyPrefix + ":mcp:" + token` 临时键，TTL 复用 `auth.SessionTTL`；解析时校验用户 session version。
+- State / cache / queue / event: Redis 新增 `auth.SessionKeyPrefix + ":mcp:" + token` 临时键，TTL 使用 `auth.mcp_token_ttl`，默认 6h；解析时校验用户 session version。`/mcp` 工具调用新增 `rate_limit.mcp` 用户级限流，默认 120/min。审计日志新增 `mcp_token/create` 和 `mcp_tool/read` 记录。
 - Runtime / config: `none`
 - Frontend route / state / UX: `none`
 - Docs / contracts: 更新 `docs/contracts/api-contract-v1.md`、OpenAPI v1 auth path/schema、`docs/architecture/backend/04-api-design.md` 和 auth 模块文档。
@@ -215,6 +232,27 @@
 - Command: `bash scripts/run-workflow-stage.sh completion-full`
   - Result: PASS
   - Notes: API surface contract、后端架构、前端架构和测试架构完成门禁通过。
+- Command: `cd code/backend && go test ./internal/interfaces/mcp -count=1`
+  - Result: PASS
+  - Notes: MCP auth-required、Bearer token 工具调用、用户级限流和成功工具调用审计通过。
+- Command: `cd code/backend && go test ./internal/module/auth/... ./internal/config ./internal/middleware -count=1`
+  - Result: PASS
+  - Notes: MCP token 独立 TTL、签发审计、配置默认/校验和既有 auth/middleware 测试通过。
+- Command: `cd code/backend && go test ./internal/app -run '^$' -count=1 && go test ./internal/module/challenge/runtime -count=1`
+  - Result: PASS
+  - Notes: 防爬增强后的 router 接线和 challenge runtime 编译验证通过。
+- Command: `python3 scripts/check-docs-consistency.py`
+  - Result: FAIL
+  - Notes: 仍失败在既有 `harness/prompts/AGENTS.md:13` 引用缺失 `/home/azhi/.agents/skills/code-reviewer/frontend/architecture-review.md`，与本轮 MCP 防爬文档改动无关。
+- Command: `bash scripts/run-workflow-stage.sh pre-commit-quick`
+  - Result: PASS
+  - Notes: 通过 startup gate、后端 module/shared architecture、前端架构和测试架构轻量门禁。
+- Command: `bash scripts/run-workflow-stage.sh completion-full`
+  - Result: PASS
+  - Notes: API surface contract、后端架构、前端架构和测试架构完成门禁通过。
+- Command: `git diff --check`
+  - Result: PASS
+  - Notes: 未发现空白或格式差异问题。
 
 ## Independent Review Handoff
 

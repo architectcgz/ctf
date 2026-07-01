@@ -76,6 +76,7 @@ cors:
 
 auth:
   session_ttl: 168h
+  mcp_token_ttl: 6h
   session_cookie_name: ctf_session
   session_cookie_path: /api/v1
   session_cookie_secure: false
@@ -112,6 +113,10 @@ rate_limit:
   flag_submit:
     enabled: true
     limit: 5
+    window: 1m
+  mcp:
+    enabled: true
+    limit: 120
     window: 1m
 
 container:

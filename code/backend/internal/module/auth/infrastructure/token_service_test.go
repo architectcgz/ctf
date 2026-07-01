@@ -303,6 +303,34 @@ func TestTokenServiceIssueAndResolveMCPToken(t *testing.T) {
 	}
 }
 
+func TestTokenServiceIssueMCPTokenUsesMCPTokenTTL(t *testing.T) {
+	mini := miniredis.RunT(t)
+	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
+	t.Cleanup(func() { _ = redisClient.Close() })
+
+	cfg := newTestAuthConfig()
+	cfg.SessionTTL = 24 * time.Hour
+	cfg.MCPTokenTTL = 30 * time.Minute
+	service := authinfra.NewTokenService(cfg, testWebSocketConfig(), redisClient)
+
+	token, err := service.IssueMCPToken(context.Background(), authctx.CurrentUser{
+		UserID:   42,
+		Username: "alice",
+		Role:     "student",
+	})
+	if err != nil {
+		t.Fatalf("IssueMCPToken() error = %v", err)
+	}
+	if remaining := time.Until(token.ExpiresAt); remaining > time.Hour {
+		t.Fatalf("MCP token should use dedicated short TTL, remaining=%s", remaining)
+	}
+
+	mini.FastForward(31 * time.Minute)
+	if _, err := service.ResolveMCPToken(context.Background(), token.Token); !errors.Is(err, authcontracts.ErrMCPTokenInvalid) {
+		t.Fatalf("expected MCP token to expire after dedicated TTL, got %v", err)
+	}
+}
+
 func TestTokenServiceResolveMCPTokenRejectsMissingAndExpired(t *testing.T) {
 	mini := miniredis.RunT(t)
 	redisClient := redislib.NewClient(&redislib.Options{Addr: mini.Addr()})
@@ -348,5 +376,6 @@ func newTestAuthConfig() config.AuthConfig {
 		SessionCookieHTTPOnly: true,
 		SessionCookieSameSite: "lax",
 		SessionKeyPrefix:      "test:session",
+		MCPTokenTTL:           time.Hour,
 	}
 }

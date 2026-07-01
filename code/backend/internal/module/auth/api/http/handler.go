@@ -266,6 +266,18 @@ func (h *Handler) IssueMCPToken(c *gin.Context) {
 		return
 	}
 
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       &authUser.UserID,
+		Action:       auditlog.ActionCreate,
+		ResourceType: "mcp_token",
+		Detail: map[string]any{
+			"username":   authUser.Username,
+			"expires_at": token.ExpiresAt.UTC().Format(time.RFC3339),
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
+	})
 	response.Success(c, &MCPTokenResp{
 		Token:     token.Token,
 		ExpiresAt: token.ExpiresAt.UTC().Format(time.RFC3339),

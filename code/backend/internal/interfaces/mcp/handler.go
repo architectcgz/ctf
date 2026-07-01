@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
 	"ctf-platform/internal/apperror"
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -28,6 +31,7 @@ const (
 	defaultTokenURL = "/api/v1/auth/mcp-token"
 
 	rpcCodeAuthRequired = -32001
+	rpcCodeRateLimited  = -32002
 )
 
 type instanceQueryService interface {
@@ -42,20 +46,34 @@ type tokenResolver interface {
 	ResolveMCPToken(ctx context.Context, token string) (*authctx.CurrentUser, error)
 }
 
+type RateLimitResult struct {
+	Allowed    bool
+	Limit      int
+	Remaining  int
+	ResetAt    time.Time
+	RetryAfter time.Duration
+}
+
+type RateLimitFunc func(ctx context.Context, user authctx.CurrentUser) (RateLimitResult, error)
+
 type Deps struct {
-	Instances  instanceQueryService
-	Challenges challengeQueryService
-	Tokens     tokenResolver
-	LoginURL   string
-	TokenURL   string
+	Instances     instanceQueryService
+	Challenges    challengeQueryService
+	Tokens        tokenResolver
+	RateLimit     RateLimitFunc
+	AuditRecorder auditlog.Recorder
+	LoginURL      string
+	TokenURL      string
 }
 
 type Handler struct {
-	instances  instanceQueryService
-	challenges challengeQueryService
-	tokens     tokenResolver
-	loginURL   string
-	tokenURL   string
+	instances     instanceQueryService
+	challenges    challengeQueryService
+	tokens        tokenResolver
+	rateLimit     RateLimitFunc
+	auditRecorder auditlog.Recorder
+	loginURL      string
+	tokenURL      string
 }
 
 func NewHandler(deps Deps) *Handler {
@@ -68,11 +86,13 @@ func NewHandler(deps Deps) *Handler {
 		tokenURL = defaultTokenURL
 	}
 	return &Handler{
-		instances:  deps.Instances,
-		challenges: deps.Challenges,
-		tokens:     deps.Tokens,
-		loginURL:   loginURL,
-		tokenURL:   tokenURL,
+		instances:     deps.Instances,
+		challenges:    deps.Challenges,
+		tokens:        deps.Tokens,
+		rateLimit:     deps.RateLimit,
+		auditRecorder: deps.AuditRecorder,
+		loginURL:      loginURL,
+		tokenURL:      tokenURL,
 	}
 }
 
@@ -96,11 +116,21 @@ func (h *Handler) ServeHTTP(c *gin.Context) {
 			c.JSON(http.StatusOK, h.authRequiredResponse(req.ID))
 			return
 		}
+		allowed, err := h.applyRateLimit(c, user)
+		if err != nil {
+			c.JSON(http.StatusOK, rpcErrorFromError(req.ID, err))
+			return
+		}
+		if !allowed {
+			c.JSON(http.StatusOK, h.rateLimitedResponse(req.ID))
+			return
+		}
 		result, err := h.callTool(c.Request.Context(), user, req.Params)
 		if err != nil {
 			c.JSON(http.StatusOK, rpcErrorFromError(req.ID, err))
 			return
 		}
+		h.recordToolAudit(c, user, toolGetCurrentChallenge, "success")
 		c.JSON(http.StatusOK, rpcSuccessResponse(req.ID, result))
 	default:
 		c.JSON(http.StatusOK, rpcErrorResponse(req.ID, -32601, "method not found"))
@@ -130,6 +160,47 @@ func (h *Handler) currentUser(c *gin.Context) (authctx.CurrentUser, error) {
 	}
 	authctx.SetCurrentUser(c, *user)
 	return *user, nil
+}
+
+func (h *Handler) applyRateLimit(c *gin.Context, user authctx.CurrentUser) (bool, error) {
+	if h == nil || h.rateLimit == nil {
+		return true, nil
+	}
+	result, err := h.rateLimit(c.Request.Context(), user)
+	if err != nil {
+		return false, apperror.ErrInternal.WithCause(err)
+	}
+	c.Header("X-RateLimit-Limit", strconv.Itoa(result.Limit))
+	c.Header("X-RateLimit-Remaining", strconv.Itoa(result.Remaining))
+	if !result.ResetAt.IsZero() {
+		c.Header("X-RateLimit-Reset", strconv.FormatInt(result.ResetAt.Unix(), 10))
+	}
+	if result.RetryAfter > 0 {
+		c.Header("Retry-After", strconv.FormatInt(int64(result.RetryAfter.Seconds()), 10))
+	}
+	return result.Allowed, nil
+}
+
+func (h *Handler) recordToolAudit(c *gin.Context, user authctx.CurrentUser, toolName, result string) {
+	if h == nil || h.auditRecorder == nil {
+		return
+	}
+	var userID *int64
+	if user.UserID > 0 {
+		userID = &user.UserID
+	}
+	_ = h.auditRecorder.Record(c.Request.Context(), auditlog.Entry{
+		UserID:       userID,
+		Action:       auditlog.ActionRead,
+		ResourceType: "mcp_tool",
+		Detail: map[string]any{
+			"tool":       toolName,
+			"result":     result,
+			"request_id": c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
+	})
 }
 
 func (h *Handler) callTool(ctx context.Context, user authctx.CurrentUser, raw json.RawMessage) (toolCallResult, error) {
@@ -290,6 +361,12 @@ func (h *Handler) authRequiredResponse(id any) rpcResponse {
 	})
 }
 
+func (h *Handler) rateLimitedResponse(id any) rpcResponse {
+	return rpcErrorResponseWithData(id, rpcCodeRateLimited, "MCP 调用过于频繁，请稍后再试", map[string]any{
+		"retryable": true,
+	})
+}
+
 func rpcErrorFromError(id any, err error) rpcResponse {
 	var appErr *apperror.AppError
 	if errors.As(err, &appErr) {
@@ -323,4 +400,11 @@ type currentChallengeResult struct {
 	HasCurrentChallenge bool                                    `json:"has_current_challenge"`
 	Instance            *instancecontracts.InstanceInfo         `json:"instance,omitempty"`
 	Challenge           *challengecontracts.ChallengeDetailResp `json:"challenge,omitempty"`
+}
+
+func normalizeOptionalString(value string) *string {
+	if strings.TrimSpace(value) == "" {
+		return nil
+	}
+	return &value
 }

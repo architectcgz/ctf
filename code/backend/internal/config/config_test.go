@@ -839,6 +839,61 @@ func TestValidateRejectsNonPositiveContestSubmissionRateLimitTTL(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsNonPositiveMCPTokenTTL(t *testing.T) {
+	cfg := validConfigForValidationTests()
+	cfg.Auth.MCPTokenTTL = 0
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("expected Validate() to reject non-positive MCP token ttl, got nil")
+	}
+	if !strings.Contains(err.Error(), "auth.mcp_token_ttl must be greater than 0") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestValidateRejectsInvalidEnabledMCPRateLimit(t *testing.T) {
+	testCases := []struct {
+		name      string
+		mutate    func(*Config)
+		wantError string
+	}{
+		{
+			name: "limit",
+			mutate: func(cfg *Config) {
+				cfg.RateLimit.MCP.Enabled = true
+				cfg.RateLimit.MCP.Limit = 0
+				cfg.RateLimit.MCP.Window = time.Minute
+			},
+			wantError: "rate_limit.mcp.limit must be greater than 0 when enabled",
+		},
+		{
+			name: "window",
+			mutate: func(cfg *Config) {
+				cfg.RateLimit.MCP.Enabled = true
+				cfg.RateLimit.MCP.Limit = 1
+				cfg.RateLimit.MCP.Window = 0
+			},
+			wantError: "rate_limit.mcp.window must be greater than 0 when enabled",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := validConfigForValidationTests()
+			tc.mutate(cfg)
+
+			err := cfg.Validate()
+			if err == nil {
+				t.Fatal("expected Validate() to reject invalid MCP rate limit, got nil")
+			}
+			if !strings.Contains(err.Error(), tc.wantError) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsIncompleteRuntimeAgentClientConfig(t *testing.T) {
 	testCases := []struct {
 		name      string
@@ -1056,6 +1111,9 @@ func TestValidateRejectsIncompleteRuntimeAgentServerConfig(t *testing.T) {
 
 func validConfigForValidationTests() *Config {
 	return &Config{
+		Auth: AuthConfig{
+			MCPTokenTTL: time.Hour,
+		},
 		Redis: RedisConfig{
 			Addr: "127.0.0.1:6379",
 			Cluster: RedisClusterConfig{

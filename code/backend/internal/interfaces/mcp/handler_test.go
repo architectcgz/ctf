@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
 	challengecontracts "ctf-platform/internal/module/challenge/contracts"
@@ -62,6 +63,15 @@ func (s *stubTokenService) ResolveMCPToken(_ context.Context, token string) (*au
 		return nil, authcontracts.ErrMCPTokenInvalid
 	}
 	return s.mcpUser, nil
+}
+
+type recordingAuditRecorder struct {
+	entries []auditlog.Entry
+}
+
+func (r *recordingAuditRecorder) Record(_ context.Context, entry auditlog.Entry) error {
+	r.entries = append(r.entries, entry)
+	return nil
 }
 
 func TestHandlerListsCurrentChallengeTool(t *testing.T) {
@@ -128,7 +138,8 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 		IsSolved:    false,
 	}}
 	tokens := &stubTokenService{mcpUser: &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"}}
-	handler := NewHandler(Deps{Instances: instances, Challenges: challenges, Tokens: tokens})
+	audit := &recordingAuditRecorder{}
+	handler := NewHandler(Deps{Instances: instances, Challenges: challenges, Tokens: tokens, AuditRecorder: audit})
 
 	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer mcp-token-1"}, map[string]any{
 		"jsonrpc": "2.0",
@@ -165,6 +176,16 @@ func TestHandlerCallsCurrentChallengeToolWithCurrentUser(t *testing.T) {
 	if instance["id"].(float64) != 1001 {
 		t.Fatalf("instance id = %v, want 1001", instance["id"])
 	}
+	if len(audit.entries) != 1 {
+		t.Fatalf("expected one MCP audit entry, got %+v", audit.entries)
+	}
+	entry := audit.entries[0]
+	if entry.UserID == nil || *entry.UserID != 42 || entry.Action != auditlog.ActionRead || entry.ResourceType != "mcp_tool" {
+		t.Fatalf("unexpected MCP audit entry: %+v", entry)
+	}
+	if entry.Detail["tool"] != toolGetCurrentChallenge || entry.Detail["result"] != "success" {
+		t.Fatalf("unexpected MCP audit detail: %+v", entry.Detail)
+	}
 }
 
 func TestHandlerReturnsAuthRequiredErrorWithLoginURLs(t *testing.T) {
@@ -192,6 +213,43 @@ func TestHandlerReturnsAuthRequiredErrorWithLoginURLs(t *testing.T) {
 	data := errPayload["data"].(map[string]any)
 	if data["login_url"] != "/login" || data["token_url"] != "/api/v1/auth/mcp-token" {
 		t.Fatalf("unexpected auth data: %+v", data)
+	}
+}
+
+func TestHandlerRateLimitsAuthenticatedToolCalls(t *testing.T) {
+	instances := &stubInstanceQuery{}
+	handler := NewHandler(Deps{
+		Instances: instances,
+		Tokens:    &stubTokenService{mcpUser: &authctx.CurrentUser{UserID: 42, Username: "student", Role: "student"}},
+		RateLimit: func(ctx context.Context, user authctx.CurrentUser) (RateLimitResult, error) {
+			return RateLimitResult{
+				Allowed:    false,
+				Limit:      1,
+				Remaining:  0,
+				ResetAt:    time.Date(2026, 7, 1, 11, 0, 0, 0, time.UTC),
+				RetryAfter: time.Minute,
+			}, nil
+		},
+	})
+
+	resp := postMCPWithHeaders(t, handler, map[string]string{"Authorization": "Bearer mcp-token-1"}, map[string]any{
+		"jsonrpc": "2.0",
+		"id":      "rate-limited",
+		"method":  "tools/call",
+		"params": map[string]any{
+			"name": toolGetCurrentChallenge,
+		},
+	})
+
+	if resp.Error == nil {
+		t.Fatalf("expected rate limit error, got %+v", resp)
+	}
+	errPayload := resp.Error.(map[string]any)
+	if errPayload["code"].(float64) != -32002 {
+		t.Fatalf("error code = %v, want -32002", errPayload["code"])
+	}
+	if instances.called {
+		t.Fatal("instances query should not be called after MCP rate limit is exceeded")
 	}
 }
 

@@ -106,6 +106,7 @@ type CORSConfig struct {
 
 type AuthConfig struct {
 	SessionTTL            time.Duration `mapstructure:"session_ttl"`
+	MCPTokenTTL           time.Duration `mapstructure:"mcp_token_ttl"`
 	SessionCookieName     string        `mapstructure:"session_cookie_name"`
 	SessionCookiePath     string        `mapstructure:"session_cookie_path"`
 	SessionCookieSecure   bool          `mapstructure:"session_cookie_secure"`
@@ -131,6 +132,7 @@ type RateLimitConfig struct {
 	Login          RateLimitPolicyConfig `mapstructure:"login"`
 	LoginIP        RateLimitPolicyConfig `mapstructure:"login_ip"`
 	FlagSubmit     RateLimitPolicyConfig `mapstructure:"flag_submit"`
+	MCP            RateLimitPolicyConfig `mapstructure:"mcp"`
 }
 
 type RateLimitPolicyConfig struct {

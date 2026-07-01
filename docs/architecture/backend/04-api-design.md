@@ -22,7 +22,7 @@
   - 不负责：在 composition 层实现业务状态机或直接拼装 DTO 字段
 
 - `code/backend/internal/interfaces/mcp/handler.go`、`code/backend/internal/app/router.go`
-  - 负责：装配 `POST /mcp` JSON-RPC / MCP 入口，外部 agent 使用 `Authorization: Bearer <mcp_token>` 鉴权；当前提供 `tools/list` 与 `tools/call`，第一版工具 `get_current_challenge` 只读当前用户最近的活动实例和对应已发布题目详情
+  - 负责：装配 `POST /mcp` JSON-RPC / MCP 入口，外部 agent 使用 `Authorization: Bearer <mcp_token>` 鉴权；当前提供 `tools/list` 与 `tools/call`，第一版工具 `get_current_challenge` 只读当前用户最近的活动实例和对应已发布题目详情；MCP 工具调用按用户走 `rate_limit.mcp`，成功调用写入审计日志
   - 不负责：替代 `/api/v1/*` REST 契约、生成伴学对话、提交 Flag、解锁 Hint、下载附件或绕过 `instance` / `challenge` application query owner 直接访问数据库
 
 - `code/backend/internal/middleware/request_id.go`、`auth.go`、`audit.go`、`recovery.go`
@@ -41,7 +41,7 @@
 ## 接口或数据影响
 
 - 当前统一响应结构以 `ApiEnvelopeBase` 为根，核心字段是 `code`、`message`、`data`、`request_id`；见 `docs/contracts/openapi-v1.yaml`。
-- `POST /mcp` 是 MCP JSON-RPC 入口，不使用 `ApiEnvelopeBase`。外部 agent 必须使用 `Authorization: Bearer <mcp_token>`，token 由已登录用户调用 `POST /api/v1/auth/mcp-token` 签发；未认证的 `tools/call` 返回 JSON-RPC 错误 `-32001`，`data` 包含 `login_url`、`token_url` 与 `auth_method=bearer_token`，便于 agent 提示用户登录并签发 token。当前支持 `initialize`、`tools/list` 与 `tools/call`；`get_current_challenge` 的 `structuredContent` 返回 `has_current_challenge`、`instance` 和 `challenge`，无活动实例时返回 `has_current_challenge=false`。
+- `POST /mcp` 是 MCP JSON-RPC 入口，不使用 `ApiEnvelopeBase`。外部 agent 必须使用 `Authorization: Bearer <mcp_token>`，token 由已登录用户调用 `POST /api/v1/auth/mcp-token` 签发，TTL 由 `auth.mcp_token_ttl` 控制，默认 6h；未认证的 `tools/call` 返回 JSON-RPC 错误 `-32001`，`data` 包含 `login_url`、`token_url` 与 `auth_method=bearer_token`，便于 agent 提示用户登录并签发 token。当前支持 `initialize`、`tools/list` 与 `tools/call`；`get_current_challenge` 的 `structuredContent` 返回 `has_current_challenge`、`instance` 和 `challenge`，无活动实例时返回 `has_current_challenge=false`。MCP 工具调用按 `rate_limit.mcp` 做用户级限流，默认 120/min，超限返回 JSON-RPC 错误 `-32002`；MCP token 签发记录 `mcp_token/create` 审计，成功工具调用记录 `mcp_tool/read` 审计。
 - 当前认证仍以服务端 Session + Cookie 为主，并通过 `GET /api/v1/ws-ticket`、实例访问 proxy ticket、AWD 攻击 / 防守 ticket 承接 WebSocket 与运行时访问。
 - 当前重要 API 面包括 challenge import / commit / self-check、附件下载、实例访问、竞赛状态 / 榜单、AWD service 管理 / preview / readiness / round / attack log，以及教师复盘 / 报告导出链路；如果示例与 `openapi-v1.yaml` 冲突，以契约文档优先。
 - 2026-05-11 的 runtime-instance phase 2 / slice 2 没有新增、删除或重命名外部 HTTP 路径；变化仅在内部装配层：实例访问、教师实例列表、AWD target proxy 与 defense SSH 路由由 `InstanceModule` 承接，`challenge`、`contest`、`ops` 依赖的容器能力由 `ContainerRuntimeModule` 承接。

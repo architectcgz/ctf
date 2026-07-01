@@ -358,7 +358,7 @@ func (s *tokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUs
 	}
 
 	now := time.Now().UTC()
-	expiresAt := now.Add(s.config.SessionTTL).UTC()
+	expiresAt := now.Add(s.config.MCPTokenTTL).UTC()
 	payload, err := json.Marshal(mcpTokenPayload{
 		UserID:         user.UserID,
 		Username:       user.Username,
@@ -370,7 +370,7 @@ func (s *tokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUs
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
-	if err := s.cache.Set(ctx, s.mcpTokenKey(token), payload, s.config.SessionTTL).Err(); err != nil {
+	if err := s.cache.Set(ctx, s.mcpTokenKey(token), payload, s.config.MCPTokenTTL).Err(); err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
 

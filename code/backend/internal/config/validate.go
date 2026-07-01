@@ -41,6 +41,17 @@ func (c *Config) Validate() error {
 			return fmt.Errorf("cors.allow_origins must not contain empty origin")
 		}
 	}
+	if c.Auth.MCPTokenTTL <= 0 {
+		return fmt.Errorf("auth.mcp_token_ttl must be greater than 0")
+	}
+	if c.RateLimit.MCP.Enabled {
+		if c.RateLimit.MCP.Limit <= 0 {
+			return fmt.Errorf("rate_limit.mcp.limit must be greater than 0 when enabled")
+		}
+		if c.RateLimit.MCP.Window <= 0 {
+			return fmt.Errorf("rate_limit.mcp.window must be greater than 0 when enabled")
+		}
+	}
 	if c.Container.DefaultCPUQuota <= 0 || c.Container.DefaultCPUQuota > 16 {
 		return fmt.Errorf("container.default_cpu_quota must be between 0 and 16 cores")
 	}

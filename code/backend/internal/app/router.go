@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	redislib "github.com/redis/go-redis/v9"
@@ -9,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"ctf-platform/internal/app/composition"
+	"ctf-platform/internal/authctx"
 	"ctf-platform/internal/config"
 	healthHandler "ctf-platform/internal/handler/health"
 	ratelimitpkg "ctf-platform/internal/infrastructure/ratelimit"
@@ -175,11 +177,13 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	composition.WireRuntimeNodeFailover(containerRuntimeModule, instanceModule, practiceModule)
 	instanceModule.BuildHandler(root, opsModule)
 	mcpHandler := mcpinterface.NewHandler(mcpinterface.Deps{
-		Instances:  instanceModule.QueryService,
-		Challenges: challengeModule.PublishedQuery,
-		Tokens:     tokenService,
-		LoginURL:   "/login",
-		TokenURL:   "/api/v1/auth/mcp-token",
+		Instances:     instanceModule.QueryService,
+		Challenges:    challengeModule.PublishedQuery,
+		Tokens:        tokenService,
+		RateLimit:     mcpRateLimitFunc(rateChecker, cfg.RateLimit.MCP),
+		AuditRecorder: opsModule.AuditService,
+		LoginURL:      "/login",
+		TokenURL:      "/api/v1/auth/mcp-token",
 	})
 	engine.POST("/mcp", mcpHandler.ServeHTTP)
 
@@ -232,6 +236,25 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 			{name: "runtime_execution_bridge", closer: containerRuntimeModule.LifecycleCloser},
 		},
 	}, nil
+}
+
+func mcpRateLimitFunc(checker *ratelimitpkg.Checker, policy config.RateLimitPolicyConfig) mcpinterface.RateLimitFunc {
+	if checker == nil || !policy.Enabled {
+		return nil
+	}
+	return func(ctx context.Context, user authctx.CurrentUser) (mcpinterface.RateLimitResult, error) {
+		result, err := checker.CheckRate(ctx, "mcp:user:"+strconv.FormatInt(user.UserID, 10), policy.Limit, policy.Window)
+		if err != nil {
+			return mcpinterface.RateLimitResult{}, err
+		}
+		return mcpinterface.RateLimitResult{
+			Allowed:    result.Allowed,
+			Limit:      result.Limit,
+			Remaining:  result.Remaining,
+			ResetAt:    result.ResetAt,
+			RetryAfter: result.RetryAfter,
+		}, nil
+	}
 }
 
 func containerFlagSecretDependencyCheck(cfg *config.Config, db *gorm.DB) []healthService.DependencyCheck {

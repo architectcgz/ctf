@@ -147,7 +147,7 @@ export interface MCPTokenData {
 }
 ```
 
-> 说明：该接口需要当前登录态，用于给外部 agent 签发调用 `POST /mcp` 的 `Authorization: Bearer <token>`。MCP token 跟随用户 session version；改密或撤销用户会话后会在解析主链路失效。
+> 说明：该接口需要当前登录态，用于给外部 agent 签发调用 `POST /mcp` 的 `Authorization: Bearer <token>`。MCP token TTL 由 `auth.mcp_token_ttl` 控制，默认 6h；token 跟随用户 session version，改密或撤销用户会话后会在解析主链路失效。签发会记录 `mcp_token/create` 审计；`/mcp` 成功工具调用会记录 `mcp_tool/read` 审计，并按 `rate_limit.mcp` 做用户级限流。
 
 ### 2.8 GET `/api/v1/auth/cas/status`
 

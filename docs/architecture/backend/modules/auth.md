@@ -56,7 +56,7 @@
 | `GET /api/v1/auth/profile` | `Handler.Profile` | `identitycontracts.ProfileQueryService`，读取当前用户资料 |
 | `PUT /api/v1/auth/password` | `Handler.ChangePassword` | `commands.Service.ChangePassword`，校验旧密码并更新密码 |
 | `POST /api/v1/auth/ws-ticket` | `Handler.IssueWSTicket` | `authcontracts.TokenService`，签发短期 WebSocket ticket |
-| `POST /api/v1/auth/mcp-token` | `Handler.IssueMCPToken` | `authcontracts.TokenService`，为外部 agent 签发 MCP Bearer token |
+| `POST /api/v1/auth/mcp-token` | `Handler.IssueMCPToken` | `authcontracts.TokenService`，为外部 agent 签发 MCP Bearer token，并记录 `mcp_token/create` 审计 |
 
 ## Application / Service 设计
 
@@ -65,7 +65,7 @@
 | 本地认证 command service | `auth/application/commands/service.go` | 注册、登录、登出、改密、session 签发和认证错误映射 | 用户资料真相源、角色管理、审计持久化 |
 | CAS command service | `auth/application/commands/cas_service.go` | CAS callback 编排、ticket 校验、用户同步和 session 签发 | CAS HTTP/XML 细节、用户仓储实现 |
 | CAS query service | `auth/application/queries/cas_service.go` | CAS 状态查询和入口响应 | 登录状态写入 |
-| Token service | `auth/infrastructure/token_service.go` | Redis-backed session、JWT、WebSocket ticket、MCP token 校验与签发 | HTTP 路由权限判断、用户状态事实 |
+| Token service | `auth/infrastructure/token_service.go` | Redis-backed session、JWT、WebSocket ticket、MCP token 校验与签发；MCP token TTL 使用 `auth.mcp_token_ttl`，默认 6h | HTTP 路由权限判断、用户状态事实 |
 | CAS ticket validator | `auth/infrastructure/cas_ticket_validator.go` | validate URL 请求、XML principal 解析、invalid ticket sentinel | 用户同步和 session 签发 |
 
 ## 数据设计

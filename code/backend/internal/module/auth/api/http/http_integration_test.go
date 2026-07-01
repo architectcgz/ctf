@@ -282,6 +282,14 @@ func TestHTTP_IssueMCPTokenRequiresSessionAndReturnsBearerToken(t *testing.T) {
 		t.Fatalf("unexpected MCP token user: %+v", user)
 	}
 
+	var auditEntry opsentity.AuditLog
+	if err := env.db.Where("action = ? AND resource_type = ?", auditlog.ActionCreate, "mcp_token").First(&auditEntry).Error; err != nil {
+		t.Fatalf("expected MCP token issuance audit log: %v", err)
+	}
+	if auditEntry.UserID == nil || *auditEntry.UserID != user.UserID {
+		t.Fatalf("unexpected MCP token audit user: %+v", auditEntry)
+	}
+
 	unauthorizedResp := performJSONRequest(t, env.router, http.MethodPost, "/api/v1/auth/mcp-token", nil, nil, nil)
 	if unauthorizedResp.Code != http.StatusUnauthorized {
 		t.Fatalf("expected unauthenticated MCP token request to return 401, got %d body=%s", unauthorizedResp.Code, unauthorizedResp.Body.String())
@@ -880,6 +888,7 @@ func newTestAuthConfig(t *testing.T) config.AuthConfig {
 		SessionCookieHTTPOnly: true,
 		SessionCookieSameSite: "lax",
 		SessionKeyPrefix:      "test:session",
+		MCPTokenTTL:           time.Hour,
 	}
 }
 
@@ -999,7 +1008,7 @@ func (s *memoryTokenService) ConsumeWSTicket(ctx context.Context, ticket string)
 
 func (s *memoryTokenService) IssueMCPToken(ctx context.Context, user authctx.CurrentUser) (*authcontracts.MCPToken, error) {
 	token := fmt.Sprintf("mcp_%s", randomHex(16))
-	expiresAt := time.Now().Add(s.config.SessionTTL).UTC()
+	expiresAt := time.Now().Add(s.config.MCPTokenTTL).UTC()
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
