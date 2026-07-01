@@ -1,1 +1,0 @@
--- No-op rollback: the removed legacy runtime_config.challenge_id values cannot reconstruct safely.
