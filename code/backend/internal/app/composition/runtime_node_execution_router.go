@@ -416,7 +416,7 @@ func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) 
 	if r == nil {
 		return nil, nil
 	}
-	nodes, err := r.nodeRepo.ListHealthCheckNodes(ctx)
+	nodes, err := r.listInventoryNodes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -445,6 +445,49 @@ func (r *runtimeNodeExecutionRouter) ListManagedContainers(ctx context.Context) 
 		}
 	}
 	return containers, nil
+}
+
+func (r *runtimeNodeExecutionRouter) listInventoryNodes(ctx context.Context) ([]runtimeentity.RuntimeNode, error) {
+	if r == nil || r.nodeRepo == nil {
+		return nil, runtimeports.ErrRuntimeNodeUnavailable
+	}
+	nodes, err := r.nodeRepo.ListHealthCheckNodes(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !runtimeNodeHealthEnabled(r.cfg) {
+		return nodes, nil
+	}
+
+	// Inventory scans are node-bound runtime operations; they should ignore offline
+	// or locally disabled fallback nodes while the health job may still probe them.
+	eligible := make([]runtimeentity.RuntimeNode, 0, len(nodes))
+	for _, node := range nodes {
+		if !runtimeNodeIsInventoryHealthy(node) {
+			continue
+		}
+		if usesLocalRuntimeNode(&node) && !runtimeAllowsLocalFallback(runtimeNodeScopedConfig(r.cfg, &node)) {
+			continue
+		}
+		eligible = append(eligible, node)
+	}
+	if len(eligible) == 0 {
+		return nil, runtimeports.ErrRuntimeNodeUnavailable
+	}
+	return eligible, nil
+}
+
+func runtimeNodeHealthEnabled(cfg *config.Config) bool {
+	return cfg != nil && cfg.Container.RuntimeNodeHealth.Enabled
+}
+
+func runtimeNodeIsInventoryHealthy(node runtimeentity.RuntimeNode) bool {
+	switch node.HealthStatus {
+	case runtimeentity.RuntimeNodeHealthReady, runtimeentity.RuntimeNodeHealthDegraded:
+		return true
+	default:
+		return false
+	}
 }
 
 func (c *nodeRuntimeClient) StartContainer(ctx context.Context, containerID string) error {

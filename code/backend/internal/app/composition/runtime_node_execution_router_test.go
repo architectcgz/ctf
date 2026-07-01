@@ -675,6 +675,81 @@ func TestRuntimeNodeExecutionRouterListsManagedContainersFromUnschedulableNode(t
 	}
 }
 
+func TestRuntimeNodeExecutionRouterListManagedContainersSkipsOfflineLocalFallbackNode(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+
+	if err := db.Model(nodeA).Updates(map[string]any{
+		"health_status": containerruntimeentity.RuntimeNodeHealthOffline,
+	}).Error; err != nil {
+		t.Fatalf("mark node-a offline: %v", err)
+	}
+
+	executorB := &stubRuntimeNodeHostExecutor{
+		listManagedContainersResult: []runtimecontracts.ManagedContainer{{ID: "agent-node-ctr"}},
+	}
+	overrideRuntimeNodeClientBuilder(t, map[int64]runtimeNodeClient{
+		nodeB.ID: newStubNodeRuntimeClient(executorB, nil),
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	containers, err := router.ListManagedContainers(context.Background())
+	if err != nil {
+		t.Fatalf("ListManagedContainers() error = %v", err)
+	}
+	if len(containers) != 1 || containers[0].ID != "agent-node-ctr" {
+		t.Fatalf("expected inventory from ready agent node only, got %+v", containers)
+	}
+}
+
+func TestRuntimeNodeExecutionRouterListManagedContainersRejectsWhenNoHealthyNodes(t *testing.T) {
+	cfg, db, _ := newRootTestDependencies(t)
+	cfg.Container.RuntimeNodeHealth.Enabled = true
+	nodeA, nodeB := seedRuntimeRouterNodes(t, db)
+
+	if err := db.Model(&containerruntimeentity.RuntimeNode{}).
+		Where("id IN ?", []int64{nodeA.ID, nodeB.ID}).
+		Update("health_status", containerruntimeentity.RuntimeNodeHealthOffline).Error; err != nil {
+		t.Fatalf("mark nodes offline: %v", err)
+	}
+
+	builderCalls := 0
+	original := buildRuntimeNodeClient
+	buildRuntimeNodeClient = func(context.Context, *config.Config, *zap.Logger, runtimeNodeAllocationRepository, *containerruntimeentity.RuntimeNode) (runtimeNodeClient, error) {
+		builderCalls++
+		return nil, runtimeports.ErrRuntimeNodeUnavailable
+	}
+	t.Cleanup(func() {
+		buildRuntimeNodeClient = original
+	})
+
+	router := newRuntimeNodeExecutionRouter(
+		cfg,
+		zap.NewNop(),
+		containerruntimeinfra.NewAllocationRepository(db),
+		newRuntimeNodeTestContainerIndex(db),
+		containerruntimeinfra.NewRuntimeNodeRepository(db),
+		"",
+	)
+
+	_, err := router.ListManagedContainers(context.Background())
+	if !errors.Is(err, runtimeports.ErrRuntimeNodeUnavailable) {
+		t.Fatalf("ListManagedContainers() error = %v, want ErrRuntimeNodeUnavailable", err)
+	}
+	if builderCalls != 0 {
+		t.Fatalf("expected no runtime clients to be built for offline nodes, got %d calls", builderCalls)
+	}
+}
+
 func seedRuntimeRouterNodes(t *testing.T, db *gorm.DB) (*containerruntimeentity.RuntimeNode, *containerruntimeentity.RuntimeNode) {
 	t.Helper()
 
