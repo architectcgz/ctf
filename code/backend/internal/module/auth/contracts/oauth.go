@@ -47,6 +47,10 @@ func NewOAuthInvalidClient(description string) *OAuthError {
 	return NewOAuthError("invalid_client", description, http.StatusBadRequest)
 }
 
+func NewOAuthInvalidGrant(description string) *OAuthError {
+	return NewOAuthError("invalid_grant", description, http.StatusBadRequest)
+}
+
 func NewOAuthInvalidScope(description string) *OAuthError {
 	return NewOAuthError("invalid_scope", description, http.StatusBadRequest)
 }

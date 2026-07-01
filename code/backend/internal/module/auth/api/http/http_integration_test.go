@@ -115,25 +115,30 @@ type memoryTokenService struct {
 
 	mu        sync.Mutex
 	sessions  map[string]authcontracts.Session
+	versions  map[int64]int64
 	tickets   map[string]authctx.CurrentUser
 	mcpTokens map[string]authctx.CurrentUser
 	revokeErr error
 }
 
 type memoryOAuthStore struct {
-	mu       sync.Mutex
-	clients  map[string]authcontracts.OAuthClient
-	consents map[string]authcontracts.OAuthConsent
-	codes    map[string]authcontracts.OAuthAuthorizationCode
-	nonces   map[string]bool
+	mu            sync.Mutex
+	clients       map[string]authcontracts.OAuthClient
+	consents      map[string]authcontracts.OAuthConsent
+	codes         map[string]authcontracts.OAuthAuthorizationCode
+	accessTokens  map[string]authcontracts.OAuthTokenClaims
+	refreshTokens map[string]authcontracts.OAuthTokenClaims
+	nonces        map[string]bool
 }
 
 func newMemoryOAuthStore() *memoryOAuthStore {
 	return &memoryOAuthStore{
-		clients:  make(map[string]authcontracts.OAuthClient),
-		consents: make(map[string]authcontracts.OAuthConsent),
-		codes:    make(map[string]authcontracts.OAuthAuthorizationCode),
-		nonces:   make(map[string]bool),
+		clients:       make(map[string]authcontracts.OAuthClient),
+		consents:      make(map[string]authcontracts.OAuthConsent),
+		codes:         make(map[string]authcontracts.OAuthAuthorizationCode),
+		accessTokens:  make(map[string]authcontracts.OAuthTokenClaims),
+		refreshTokens: make(map[string]authcontracts.OAuthTokenClaims),
+		nonces:        make(map[string]bool),
 	}
 }
 
@@ -178,6 +183,17 @@ func (s *memoryOAuthStore) StoreAuthorizationCode(ctx context.Context, code stri
 	return nil
 }
 
+func (s *memoryOAuthStore) ConsumeAuthorizationCode(ctx context.Context, code string) (*authcontracts.OAuthAuthorizationCode, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	claims, ok := s.codes[code]
+	if !ok {
+		return nil, nil
+	}
+	delete(s.codes, code)
+	return &claims, nil
+}
+
 func (s *memoryOAuthStore) StoreConsentNonce(ctx context.Context, nonce string, ttl time.Duration) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -200,19 +216,38 @@ func oauthConsentTestKey(userID int64, clientID, scope string) string {
 }
 
 func (s *memoryOAuthStore) StoreAccessToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.accessTokens[token] = claims
 	return nil
 }
 
 func (s *memoryOAuthStore) ResolveAccessToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error) {
-	return nil, nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	claims, ok := s.accessTokens[token]
+	if !ok {
+		return nil, nil
+	}
+	return &claims, nil
 }
 
 func (s *memoryOAuthStore) StoreRefreshToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.refreshTokens[token] = claims
 	return nil
 }
 
 func (s *memoryOAuthStore) ConsumeRefreshToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error) {
-	return nil, nil
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	claims, ok := s.refreshTokens[token]
+	if !ok {
+		return nil, nil
+	}
+	delete(s.refreshTokens, token)
+	return &claims, nil
 }
 
 func (s *memoryOAuthStore) RevokeConsent(ctx context.Context, userID int64, clientID, scope string) error {
@@ -938,7 +973,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	casCommandService := authcmd.NewCASService(authCfg.CAS, authRepo, tokenService, zap.NewNop(), casValidator)
 	casQueryService := authqry.NewCASService(authCfg.CAS)
 	oauthStore := newMemoryOAuthStore()
-	oauthCommandService := authcmd.NewOAuthService(authCfg.OAuth, oauthStore, zap.NewNop())
+	oauthCommandService := authcmd.NewOAuthService(authCfg.OAuth, oauthStore, tokenService, zap.NewNop())
 	oauthMetadataService := authqry.NewOAuthMetadataService("dev", authCfg.OAuth)
 	auditRepo := opsinfra.NewAuditRepository(db)
 	auditCommandService := opscmd.NewAuditService(auditRepo, zap.NewNop())
@@ -973,6 +1008,7 @@ func newIntegrationTestEnvWithAuthConfig(t *testing.T, mutate func(*config.AuthC
 	oauthGroup.POST("/register", authHandler.RegisterOAuthClient)
 	oauthGroup.GET("/authorize", authHandler.OAuthAuthorize)
 	oauthGroup.POST("/authorize", authHandler.OAuthAuthorizeDecision)
+	oauthGroup.POST("/token", authHandler.OAuthToken)
 
 	protected := apiV1.Group("")
 	protected.Use(testAuthMiddleware(tokenService, authCfg.SessionCookieName))
@@ -1024,6 +1060,7 @@ func newMemoryTokenService(cfg config.AuthConfig, wsCfg config.WebSocketConfig) 
 		config:    cfg,
 		wsConfig:  wsCfg,
 		sessions:  make(map[string]authcontracts.Session),
+		versions:  make(map[int64]int64),
 		tickets:   make(map[string]authctx.CurrentUser),
 		mcpTokens: make(map[string]authctx.CurrentUser),
 	}
@@ -1079,6 +1116,7 @@ func (s *memoryTokenService) RevokeAllUserSessions(_ context.Context, userID int
 	if s.revokeErr != nil {
 		return s.revokeErr
 	}
+	s.versions[userID]++
 	for id, sess := range s.sessions {
 		if sess.UserID == userID {
 			delete(s.sessions, id)
@@ -1097,6 +1135,12 @@ func (s *memoryTokenService) ListUserSessions(_ context.Context, userID int64) (
 		}
 	}
 	return result, nil
+}
+
+func (s *memoryTokenService) CurrentSessionVersion(_ context.Context, userID int64) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.versions[userID], nil
 }
 
 func (s *memoryTokenService) IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*authcontracts.WSTicket, error) {

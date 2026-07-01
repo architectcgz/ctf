@@ -31,6 +31,8 @@ type TokenService interface {
 	DeleteSession(ctx context.Context, sessionID string) error
 	// RevokeAllUserSessions 撤销指定用户的所有会话（密码变更、账号禁用等场景）。
 	RevokeAllUserSessions(ctx context.Context, userID int64) error
+	// CurrentSessionVersion 返回用户当前会话版本，是 OAuth / MCP token 失效的主安全语义。
+	CurrentSessionVersion(ctx context.Context, userID int64) (int64, error)
 	// ListUserSessions 返回指定用户的活跃会话列表（管理员会话管理场景）。
 	ListUserSessions(ctx context.Context, userID int64) ([]Session, error)
 	IssueWSTicket(ctx context.Context, user authctx.CurrentUser) (*WSTicket, error)

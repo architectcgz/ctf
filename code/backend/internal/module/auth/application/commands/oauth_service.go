@@ -3,6 +3,8 @@ package commands
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"net"
 	"net/url"
@@ -23,6 +25,9 @@ type OAuthService interface {
 	PrepareAuthorization(ctx context.Context, input OAuthAuthorizationInput) (*OAuthAuthorizationResult, error)
 	ApproveAuthorization(ctx context.Context, input OAuthAuthorizationDecisionInput) (*OAuthAuthorizationResult, error)
 	DenyAuthorization(ctx context.Context, input OAuthAuthorizationDecisionInput) (*OAuthAuthorizationResult, error)
+	ExchangeAuthorizationCode(ctx context.Context, input OAuthAuthorizationCodeExchangeInput) (*OAuthTokenResult, error)
+	RefreshAccessToken(ctx context.Context, input OAuthRefreshTokenInput) (*OAuthTokenResult, error)
+	ResolveOAuthAccessToken(ctx context.Context, token string, requiredScope string) (*OAuthAccessTokenResolution, error)
 }
 
 type OAuthClientStore interface {
@@ -31,8 +36,17 @@ type OAuthClientStore interface {
 	FindActiveConsent(ctx context.Context, userID int64, clientID, scope string) (*authcontracts.OAuthConsent, error)
 	UpsertConsent(ctx context.Context, consent authcontracts.OAuthConsent) error
 	StoreAuthorizationCode(ctx context.Context, code string, claims authcontracts.OAuthAuthorizationCode, ttl time.Duration) error
+	ConsumeAuthorizationCode(ctx context.Context, code string) (*authcontracts.OAuthAuthorizationCode, error)
+	StoreAccessToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error
+	ResolveAccessToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error)
+	StoreRefreshToken(ctx context.Context, token string, claims authcontracts.OAuthTokenClaims, ttl time.Duration) error
+	ConsumeRefreshToken(ctx context.Context, token string) (*authcontracts.OAuthTokenClaims, error)
 	StoreConsentNonce(ctx context.Context, nonce string, ttl time.Duration) error
 	ConsumeConsentNonce(ctx context.Context, nonce string) (bool, error)
+}
+
+type OAuthSessionVersionReader interface {
+	CurrentSessionVersion(ctx context.Context, userID int64) (int64, error)
 }
 
 type OAuthClientRegistrationInput struct {
@@ -95,20 +109,52 @@ type OAuthAuthorizationResult struct {
 	NeedsConsent bool
 }
 
-type oauthService struct {
-	config config.AuthOAuthConfig
-	store  OAuthClientStore
-	log    *zap.Logger
+type OAuthAuthorizationCodeExchangeInput struct {
+	ClientID     string
+	Code         string
+	RedirectURI  string
+	CodeVerifier string
 }
 
-func NewOAuthService(cfg config.AuthOAuthConfig, store OAuthClientStore, log *zap.Logger) OAuthService {
+type OAuthRefreshTokenInput struct {
+	ClientID       string
+	RefreshToken   string
+	RequestedScope string
+}
+
+type OAuthTokenResult struct {
+	AccessToken  string
+	RefreshToken string
+	TokenType    string
+	ExpiresIn    int64
+	Scope        string
+	UserID       int64
+	ClientID     string
+}
+
+type OAuthAccessTokenResolution struct {
+	User      authctx.CurrentUser
+	ClientID  string
+	Scope     string
+	ExpiresAt time.Time
+}
+
+type oauthService struct {
+	config          config.AuthOAuthConfig
+	store           OAuthClientStore
+	sessionVersions OAuthSessionVersionReader
+	log             *zap.Logger
+}
+
+func NewOAuthService(cfg config.AuthOAuthConfig, store OAuthClientStore, sessionVersions OAuthSessionVersionReader, log *zap.Logger) OAuthService {
 	if log == nil {
 		log = zap.NewNop()
 	}
 	return &oauthService{
-		config: cfg,
-		store:  store,
-		log:    log,
+		config:          cfg,
+		store:           store,
+		sessionVersions: sessionVersions,
+		log:             log,
 	}
 }
 
@@ -238,6 +284,133 @@ func (s *oauthService) DenyAuthorization(ctx context.Context, input OAuthAuthori
 	}, nil
 }
 
+func (s *oauthService) ExchangeAuthorizationCode(ctx context.Context, input OAuthAuthorizationCodeExchangeInput) (*OAuthTokenResult, error) {
+	if s.store == nil {
+		return nil, apperror.ErrServiceUnavailable
+	}
+	clientID := strings.TrimSpace(input.ClientID)
+	code := strings.TrimSpace(input.Code)
+	redirectURI := strings.TrimSpace(input.RedirectURI)
+	codeVerifier := strings.TrimSpace(input.CodeVerifier)
+	if clientID == "" || code == "" || redirectURI == "" {
+		return nil, authcontracts.NewOAuthInvalidRequest("client_id, code and redirect_uri are required")
+	}
+	if codeVerifier == "" {
+		return nil, authcontracts.NewOAuthInvalidRequest("code_verifier is required")
+	}
+	client, err := s.findClientForGrant(ctx, clientID, "authorization_code")
+	if err != nil {
+		return nil, err
+	}
+	claims, err := s.store.ConsumeAuthorizationCode(ctx, code)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if claims == nil {
+		return nil, authcontracts.NewOAuthInvalidGrant("authorization code is invalid or expired")
+	}
+	if !claims.ExpiresAt.After(time.Now().UTC()) ||
+		claims.ClientID != client.ClientID ||
+		claims.RedirectURI != redirectURI ||
+		claims.CodeChallengeMethod != "S256" ||
+		!pkceS256Matches(codeVerifier, claims.CodeChallenge) ||
+		!scopeAllowedByClient(claims.Scope, client.Scope) {
+		return nil, authcontracts.NewOAuthInvalidGrant("authorization code is invalid or expired")
+	}
+	if err := s.ensureCurrentSessionVersion(ctx, claims.UserID, claims.SessionVersion); err != nil {
+		return nil, err
+	}
+	return s.issueTokenPair(ctx, authcontracts.OAuthTokenClaims{
+		UserID:         claims.UserID,
+		Username:       claims.Username,
+		Role:           claims.Role,
+		ClientID:       claims.ClientID,
+		Scope:          claims.Scope,
+		SessionVersion: claims.SessionVersion,
+	})
+}
+
+func (s *oauthService) RefreshAccessToken(ctx context.Context, input OAuthRefreshTokenInput) (*OAuthTokenResult, error) {
+	if s.store == nil {
+		return nil, apperror.ErrServiceUnavailable
+	}
+	clientID := strings.TrimSpace(input.ClientID)
+	refreshToken := strings.TrimSpace(input.RefreshToken)
+	if clientID == "" || refreshToken == "" {
+		return nil, authcontracts.NewOAuthInvalidRequest("client_id and refresh_token are required")
+	}
+	client, err := s.findClientForGrant(ctx, clientID, "refresh_token")
+	if err != nil {
+		return nil, err
+	}
+	claims, err := s.store.ConsumeRefreshToken(ctx, refreshToken)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if claims == nil || !claims.ExpiresAt.After(time.Now().UTC()) || claims.ClientID != client.ClientID {
+		return nil, authcontracts.NewOAuthInvalidGrant("refresh token is invalid or expired")
+	}
+	scope := claims.Scope
+	if strings.TrimSpace(input.RequestedScope) != "" {
+		requested, err := normalizeOAuthScope(input.RequestedScope)
+		if err != nil {
+			return nil, err
+		}
+		if requested != claims.Scope {
+			return nil, authcontracts.NewOAuthInvalidScope("requested scope exceeds refresh token scope")
+		}
+		scope = requested
+	}
+	if !scopeAllowedByClient(scope, client.Scope) {
+		return nil, authcontracts.NewOAuthInvalidGrant("refresh token scope is no longer registered for client")
+	}
+	if err := s.ensureCurrentSessionVersion(ctx, claims.UserID, claims.SessionVersion); err != nil {
+		return nil, err
+	}
+	return s.issueTokenPair(ctx, authcontracts.OAuthTokenClaims{
+		UserID:         claims.UserID,
+		Username:       claims.Username,
+		Role:           claims.Role,
+		ClientID:       claims.ClientID,
+		Scope:          scope,
+		SessionVersion: claims.SessionVersion,
+	})
+}
+
+func (s *oauthService) ResolveOAuthAccessToken(ctx context.Context, token string, requiredScope string) (*OAuthAccessTokenResolution, error) {
+	if s.store == nil {
+		return nil, apperror.ErrServiceUnavailable
+	}
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return nil, authcontracts.NewOAuthInvalidGrant("access token is invalid or expired")
+	}
+	claims, err := s.store.ResolveAccessToken(ctx, token)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if claims == nil || !claims.ExpiresAt.After(time.Now().UTC()) {
+		return nil, authcontracts.NewOAuthInvalidGrant("access token is invalid or expired")
+	}
+	if requiredScope != "" && !scopeAllowedByClient(requiredScope, claims.Scope) {
+		return nil, authcontracts.NewOAuthInvalidScope("access token does not include required scope")
+	}
+	if err := s.ensureCurrentSessionVersion(ctx, claims.UserID, claims.SessionVersion); err != nil {
+		return nil, err
+	}
+	return &OAuthAccessTokenResolution{
+		User: authctx.CurrentUser{
+			UserID:    claims.UserID,
+			Username:  claims.Username,
+			Role:      claims.Role,
+			ExpiresAt: claims.ExpiresAt,
+		},
+		ClientID:  claims.ClientID,
+		Scope:     claims.Scope,
+		ExpiresAt: claims.ExpiresAt,
+	}, nil
+}
+
 func (s *oauthService) normalizeRegistration(req OAuthClientRegistrationInput) (OAuthClientRegistrationInput, error) {
 	req.ClientName = strings.TrimSpace(req.ClientName)
 	req.ClientURI = strings.TrimSpace(req.ClientURI)
@@ -333,6 +506,10 @@ func (s *oauthService) issueAuthorizationCode(ctx context.Context, input OAuthAu
 	if err != nil {
 		return nil, apperror.ErrInternal.WithCause(err)
 	}
+	sessionVersion, err := s.currentSessionVersion(ctx, input.User.UserID)
+	if err != nil {
+		return nil, err
+	}
 	now := time.Now().UTC()
 	claims := authcontracts.OAuthAuthorizationCode{
 		UserID:              input.User.UserID,
@@ -343,6 +520,7 @@ func (s *oauthService) issueAuthorizationCode(ctx context.Context, input OAuthAu
 		Scope:               validation.Scope,
 		CodeChallenge:       input.Request.CodeChallenge,
 		CodeChallengeMethod: input.Request.CodeChallengeMethod,
+		SessionVersion:      sessionVersion,
 		IssuedAt:            now,
 		ExpiresAt:           now.Add(s.config.AuthorizationCodeTTL).UTC(),
 	}
@@ -357,6 +535,94 @@ func (s *oauthService) issueAuthorizationCode(ctx context.Context, input OAuthAu
 		Code:        code,
 		RedirectTo:  appendOAuthQuery(input.Request.RedirectURI, map[string]string{"code": code, "state": input.Request.State}),
 	}, nil
+}
+
+func (s *oauthService) findClientForGrant(ctx context.Context, clientID, grantType string) (*authcontracts.OAuthClient, error) {
+	client, err := s.store.FindClientByID(ctx, clientID)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if client == nil {
+		return nil, authcontracts.NewOAuthInvalidClient("client is not registered")
+	}
+	if client.TokenEndpointAuthMethod != "" && client.TokenEndpointAuthMethod != "none" {
+		return nil, authcontracts.NewOAuthInvalidClient("client authentication method is not supported")
+	}
+	for _, allowed := range client.GrantTypes {
+		if allowed == grantType {
+			return client, nil
+		}
+	}
+	return nil, authcontracts.NewOAuthInvalidGrant("grant type is not registered for client")
+}
+
+func (s *oauthService) issueTokenPair(ctx context.Context, baseClaims authcontracts.OAuthTokenClaims) (*OAuthTokenResult, error) {
+	if baseClaims.UserID <= 0 || baseClaims.ClientID == "" || baseClaims.Scope == "" {
+		return nil, authcontracts.NewOAuthInvalidGrant("token claims are incomplete")
+	}
+	accessToken, err := generateOAuthOpaque("access_", 32)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	refreshToken, err := generateOAuthOpaque("refresh_", 32)
+	if err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	now := time.Now().UTC()
+	accessClaims := baseClaims
+	accessClaims.IssuedAt = now
+	accessClaims.ExpiresAt = now.Add(s.config.AccessTokenTTL).UTC()
+	refreshClaims := baseClaims
+	refreshClaims.IssuedAt = now
+	refreshClaims.ExpiresAt = now.Add(s.config.RefreshTokenTTL).UTC()
+
+	// access/refresh token 明文只返回给 OAuth client；Redis 侧只以 hash key 保存 claims。
+	if err := s.store.StoreAccessToken(ctx, accessToken, accessClaims, s.config.AccessTokenTTL); err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+	if err := s.store.StoreRefreshToken(ctx, refreshToken, refreshClaims, s.config.RefreshTokenTTL); err != nil {
+		return nil, apperror.ErrInternal.WithCause(err)
+	}
+
+	return &OAuthTokenResult{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		TokenType:    "Bearer",
+		ExpiresIn:    int64(accessClaims.ExpiresAt.Sub(now).Seconds()),
+		Scope:        baseClaims.Scope,
+		UserID:       baseClaims.UserID,
+		ClientID:     baseClaims.ClientID,
+	}, nil
+}
+
+func (s *oauthService) currentSessionVersion(ctx context.Context, userID int64) (int64, error) {
+	if s.sessionVersions == nil {
+		return 0, apperror.ErrServiceUnavailable
+	}
+	version, err := s.sessionVersions.CurrentSessionVersion(ctx, userID)
+	if err != nil {
+		return 0, apperror.ErrInternal.WithCause(err)
+	}
+	return version, nil
+}
+
+func (s *oauthService) ensureCurrentSessionVersion(ctx context.Context, userID int64, tokenVersion int64) error {
+	current, err := s.currentSessionVersion(ctx, userID)
+	if err != nil {
+		return err
+	}
+	// session version 是改密/禁用/撤销会话后的主安全失效语义，不能只依赖 token TTL。
+	if current != tokenVersion {
+		return authcontracts.NewOAuthInvalidGrant("token session is no longer valid")
+	}
+	return nil
+}
+
+func pkceS256Matches(verifier, expectedChallenge string) bool {
+	sum := sha256.Sum256([]byte(verifier))
+	actual := base64.RawURLEncoding.EncodeToString(sum[:])
+	return subtle.ConstantTimeCompare([]byte(actual), []byte(expectedChallenge)) == 1
 }
 
 func scopeAllowedByClient(requestedScope, clientScope string) bool {

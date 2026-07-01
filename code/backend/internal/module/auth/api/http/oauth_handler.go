@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"ctf-platform/internal/auditlog"
 	"ctf-platform/internal/authctx"
 	authcmd "ctf-platform/internal/module/auth/application/commands"
 	authcontracts "ctf-platform/internal/module/auth/contracts"
@@ -138,7 +139,8 @@ func (h *Handler) OAuthAuthorizeDecision(c *gin.Context) {
 		CSRFNonce: c.PostForm("csrf_nonce"),
 	}
 	var result *authcmd.OAuthAuthorizationResult
-	if isApprovedConsent(c.PostForm("approve")) {
+	approved := isApprovedConsent(c.PostForm("approve"))
+	if approved {
 		result, err = h.oauthCommands.ApproveAuthorization(c.Request.Context(), input)
 	} else {
 		result, err = h.oauthCommands.DenyAuthorization(c.Request.Context(), input)
@@ -147,7 +149,77 @@ func (h *Handler) OAuthAuthorizeDecision(c *gin.Context) {
 		writeOAuthError(c, err)
 		return
 	}
+	if approved {
+		userID := user.UserID
+		h.recordAudit(c, auditlog.Entry{
+			UserID:       &userID,
+			Action:       auditlog.ActionCreate,
+			ResourceType: "oauth_consent",
+			Detail: map[string]any{
+				"event":      "oauth_consent/grant",
+				"client_id":  result.Client.ClientID,
+				"scope":      result.Scope,
+				"result":     "success",
+				"request_id": c.GetString("request_id"),
+			},
+			IPAddress: c.ClientIP(),
+			UserAgent: normalizeOptionalString(c.Request.UserAgent()),
+		})
+	}
 	c.Redirect(stdhttp.StatusFound, result.RedirectTo)
+}
+
+func (h *Handler) OAuthToken(c *gin.Context) {
+	if h.oauthCommands == nil {
+		c.JSON(stdhttp.StatusServiceUnavailable, OAuthErrorResp{Error: "server_error", ErrorDescription: "oauth token service is unavailable"})
+		return
+	}
+
+	grantType := strings.TrimSpace(c.PostForm("grant_type"))
+	clientID := strings.TrimSpace(c.PostForm("client_id"))
+	var (
+		result *authcmd.OAuthTokenResult
+		err    error
+		event  string
+		action string
+	)
+	switch grantType {
+	case "authorization_code":
+		event = "oauth_token/exchange"
+		action = auditlog.ActionCreate
+		result, err = h.oauthCommands.ExchangeAuthorizationCode(c.Request.Context(), authcmd.OAuthAuthorizationCodeExchangeInput{
+			ClientID:     clientID,
+			Code:         c.PostForm("code"),
+			RedirectURI:  c.PostForm("redirect_uri"),
+			CodeVerifier: c.PostForm("code_verifier"),
+		})
+	case "refresh_token":
+		event = "oauth_token/refresh"
+		action = auditlog.ActionUpdate
+		result, err = h.oauthCommands.RefreshAccessToken(c.Request.Context(), authcmd.OAuthRefreshTokenInput{
+			ClientID:       clientID,
+			RefreshToken:   c.PostForm("refresh_token"),
+			RequestedScope: c.PostForm("scope"),
+		})
+	default:
+		event = "oauth_token/unsupported_grant"
+		action = auditlog.ActionCreate
+		err = authcontracts.NewOAuthInvalidGrant("unsupported grant_type")
+	}
+	if err != nil {
+		h.recordOAuthTokenAudit(c, action, event, clientID, nil, "", err)
+		writeOAuthError(c, err)
+		return
+	}
+	userID := result.UserID
+	h.recordOAuthTokenAudit(c, action, event, result.ClientID, &userID, result.Scope, nil)
+	c.JSON(stdhttp.StatusOK, OAuthTokenResp{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		TokenType:    result.TokenType,
+		ExpiresIn:    result.ExpiresIn,
+		Scope:        result.Scope,
+	})
 }
 
 func (h *Handler) RegisterOAuthClient(c *gin.Context) {
@@ -174,6 +246,20 @@ func (h *Handler) RegisterOAuthClient(c *gin.Context) {
 		writeOAuthError(c, err)
 		return
 	}
+	h.recordAudit(c, auditlog.Entry{
+		Action:       auditlog.ActionCreate,
+		ResourceType: "oauth_client",
+		Detail: map[string]any{
+			"event":       "oauth_client/register",
+			"client_id":   resp.ClientID,
+			"client_name": resp.ClientName,
+			"scope":       resp.Scope,
+			"result":      "success",
+			"request_id":  c.GetString("request_id"),
+		},
+		IPAddress: c.ClientIP(),
+		UserAgent: normalizeOptionalString(c.Request.UserAgent()),
+	})
 
 	c.JSON(stdhttp.StatusCreated, OAuthClientRegistrationResp{
 		ClientID:                resp.ClientID,
@@ -205,6 +291,39 @@ func (h *Handler) renderOAuthConsent(c *gin.Context, req authcmd.OAuthAuthorizat
 		return
 	}
 	c.Data(stdhttp.StatusOK, "text/html; charset=utf-8", page.Bytes())
+}
+
+func (h *Handler) recordOAuthTokenAudit(c *gin.Context, action, event, clientID string, userID *int64, scope string, cause error) {
+	detail := map[string]any{
+		"event":      event,
+		"client_id":  clientID,
+		"request_id": c.GetString("request_id"),
+	}
+	if scope != "" {
+		detail["scope"] = scope
+	}
+	if cause != nil {
+		detail["result"] = "failed"
+		detail["error"] = oauthAuditErrorCode(cause)
+	} else {
+		detail["result"] = "success"
+	}
+	h.recordAudit(c, auditlog.Entry{
+		UserID:       userID,
+		Action:       action,
+		ResourceType: "oauth_token",
+		Detail:       detail,
+		IPAddress:    c.ClientIP(),
+		UserAgent:    normalizeOptionalString(c.Request.UserAgent()),
+	})
+}
+
+func oauthAuditErrorCode(err error) string {
+	var oauthErr *authcontracts.OAuthError
+	if errors.As(err, &oauthErr) {
+		return oauthErr.Code
+	}
+	return "server_error"
 }
 
 func (h *Handler) currentOAuthUser(c *gin.Context) (authctx.CurrentUser, bool, error) {

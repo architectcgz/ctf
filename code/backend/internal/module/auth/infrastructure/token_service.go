@@ -215,6 +215,13 @@ func (s *tokenService) RevokeAllUserSessions(ctx context.Context, userID int64) 
 	return nil
 }
 
+func (s *tokenService) CurrentSessionVersion(ctx context.Context, userID int64) (int64, error) {
+	if err := requireContext(ctx); err != nil {
+		return 0, err
+	}
+	return s.getUserSessionVersion(ctx, userID)
+}
+
 func (s *tokenService) ListUserSessions(ctx context.Context, userID int64) ([]authcontracts.Session, error) {
 	if err := requireContext(ctx); err != nil {
 		return nil, err

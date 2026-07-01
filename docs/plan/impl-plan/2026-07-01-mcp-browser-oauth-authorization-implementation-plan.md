@@ -507,14 +507,14 @@ cd code/frontend && pnpm test:run src/features/auth/model/useLoginPage.test.ts
 - 修改：`code/backend/internal/module/auth/api/http/oauth_handler_test.go`
 - 修改：`code/backend/internal/module/auth/runtime/module.go`
 
-- [ ] 步骤 1：写 token exchange 红测：合法 code + `code_verifier` 返回 `access_token`、`refresh_token`、`token_type=Bearer`、`expires_in`、`scope`。
-- [ ] 步骤 2：写 PKCE 失败红测：错误 verifier、plain method、缺 verifier、重复 code 消费均返回 OAuth error JSON。
-- [ ] 步骤 3：写 redirect URI 绑定红测：token request 的 `redirect_uri` 必须和 authorize 时完全一致。
-- [ ] 步骤 4：写 refresh 红测：旧 refresh token 只能使用一次，新 refresh token 可用，旧 token 复用返回 `invalid_grant` 并记录审计。
-- [ ] 步骤 5：写 session version 红测：用户 session version 变化后，refresh token 和 access token 解析失败。
-- [ ] 步骤 6：实现 `ExchangeAuthorizationCode`。
-- [ ] 步骤 7：实现 `RefreshAccessToken` 和 refresh rotation。
-- [ ] 步骤 8：实现 OAuth error response：
+- [x] 步骤 1：写 token exchange 红测：合法 code + `code_verifier` 返回 `access_token`、`refresh_token`、`token_type=Bearer`、`expires_in`、`scope`。
+- [x] 步骤 2：写 PKCE 失败红测：错误 verifier、plain method、缺 verifier、重复 code 消费均返回 OAuth error JSON。
+- [x] 步骤 3：写 redirect URI 绑定红测：token request 的 `redirect_uri` 必须和 authorize 时完全一致。
+- [x] 步骤 4：写 refresh 红测：旧 refresh token 只能使用一次，新 refresh token 可用，旧 token 复用返回 `invalid_grant` 并记录审计。
+- [x] 步骤 5：写 session version 红测：用户 session version 变化后，refresh token 和 access token 解析失败。
+- [x] 步骤 6：实现 `ExchangeAuthorizationCode`。
+- [x] 步骤 7：实现 `RefreshAccessToken` 和 refresh rotation。
+- [x] 步骤 8：实现 OAuth error response：
 
 ```json
 {
@@ -523,23 +523,24 @@ cd code/frontend && pnpm test:run src/features/auth/model/useLoginPage.test.ts
 }
 ```
 
-- [ ] 步骤 9：记录审计：
+- [x] 步骤 9：记录审计：
   - `oauth_client/register`
   - `oauth_consent/grant`
   - `oauth_token/exchange`
   - `oauth_token/refresh`
   - token 失败只记录 client id、user id、错误类型，不记录 token/code 明文。
-- [ ] 步骤 10：运行验证。
+- [x] 步骤 10：运行验证。
 
 运行：
 
 ```bash
-cd code/backend && go test ./internal/module/auth/application/commands ./internal/module/auth/api/http ./internal/module/auth/infrastructure -run 'OAuth|Token|Refresh|PKCE' -count=1
+cd code/backend && go test ./internal/module/auth/application/commands ./internal/module/auth/api/http ./internal/module/auth/infrastructure -run 'OAuth|Refresh|PKCE' -count=1
+cd code/backend && go test ./internal/app -run '^TestNewRouterRegistersStudentChallengeRoutes$' -count=1
 ```
 
 预期：PASS。
 
-- [ ] 步骤 11：提交本切片。
+- [x] 步骤 11：提交本切片。
 
 ### 任务 6：将 `/mcp` 切到 OAuth access token + scope
 

@@ -83,6 +83,12 @@ func (s *sessionTestTokenService) RevokeAllUserSessions(_ context.Context, userI
 	return nil
 }
 
+func (s *sessionTestTokenService) CurrentSessionVersion(_ context.Context, userID int64) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.version[userID], nil
+}
+
 func (s *sessionTestTokenService) ListUserSessions(_ context.Context, userID int64) ([]authcontracts.Session, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -35,6 +35,10 @@ func (s *stubTokenService) RevokeAllUserSessions(context.Context, int64) error {
 	panic("unexpected call to RevokeAllUserSessions")
 }
 
+func (s *stubTokenService) CurrentSessionVersion(context.Context, int64) (int64, error) {
+	panic("unexpected call to CurrentSessionVersion")
+}
+
 func (s *stubTokenService) ListUserSessions(context.Context, int64) ([]authcontracts.Session, error) {
 	panic("unexpected call to ListUserSessions")
 }

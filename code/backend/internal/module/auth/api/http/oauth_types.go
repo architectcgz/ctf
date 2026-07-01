@@ -21,6 +21,14 @@ type OAuthClientRegistrationResp struct {
 	TokenEndpointAuthMethod string   `json:"token_endpoint_auth_method"`
 }
 
+type OAuthTokenResp struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+	Scope        string `json:"scope"`
+}
+
 type OAuthErrorResp struct {
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description,omitempty"`

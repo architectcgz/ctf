@@ -128,6 +128,10 @@ func (m *mockTokenService) RevokeAllUserSessions(context.Context, int64) error {
 	return nil
 }
 
+func (m *mockTokenService) CurrentSessionVersion(context.Context, int64) (int64, error) {
+	return 0, nil
+}
+
 func (m *mockTokenService) ListUserSessions(context.Context, int64) ([]authcontracts.Session, error) {
 	return nil, nil
 }

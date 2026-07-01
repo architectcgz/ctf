@@ -115,6 +115,7 @@ func TestOAuthStoreAuthorizationCodeIsSingleUseAndHashed(t *testing.T) {
 func TestOAuthStoreAccessAndRefreshTokensUseTTLAndRotation(t *testing.T) {
 	ctx := context.Background()
 	store, mini := newOAuthStoreTestEnv(t)
+	now := time.Now().UTC()
 	claims := authcontracts.OAuthTokenClaims{
 		UserID:         42,
 		Username:       "alice",
@@ -122,8 +123,8 @@ func TestOAuthStoreAccessAndRefreshTokensUseTTLAndRotation(t *testing.T) {
 		ClientID:       "client_123",
 		Scope:          authcontracts.OAuthScopeMCPChallengeRead,
 		SessionVersion: 7,
-		IssuedAt:       time.Date(2026, 7, 1, 8, 0, 0, 0, time.UTC),
-		ExpiresAt:      time.Date(2026, 7, 1, 8, 15, 0, 0, time.UTC),
+		IssuedAt:       now,
+		ExpiresAt:      now.Add(15 * time.Minute),
 	}
 
 	if err := store.StoreAccessToken(ctx, "access-token", claims, 15*time.Minute); err != nil {

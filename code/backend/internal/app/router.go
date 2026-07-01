@@ -144,6 +144,7 @@ func buildRouterRuntime(root *composition.Root) (*routerRuntime, error) {
 	oauthGroup.POST("/register", authModule.Handler.RegisterOAuthClient)
 	oauthGroup.GET("/authorize", authModule.Handler.OAuthAuthorize)
 	oauthGroup.POST("/authorize", authModule.Handler.OAuthAuthorizeDecision)
+	oauthGroup.POST("/token", authModule.Handler.OAuthToken)
 
 	protected := apiV1.Group("")
 	protected.Use(middleware.Auth(tokenService, cfg.Auth.SessionCookieName, identityModule.Users))

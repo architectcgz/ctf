@@ -49,6 +49,7 @@ func TestNewRouterRegistersStudentChallengeRoutes(t *testing.T) {
 	assertHasRoute(t, router, "POST", "/api/v1/oauth/register")
 	assertHasRoute(t, router, "GET", "/api/v1/oauth/authorize")
 	assertHasRoute(t, router, "POST", "/api/v1/oauth/authorize")
+	assertHasRoute(t, router, "POST", "/api/v1/oauth/token")
 	assertRouteMissing(t, router, "POST", "/api/v1/auth/mcp-token")
 	assertHasRoute(t, router, "POST", "/api/v1/contests/:id/challenges/:cid/instances")
 	assertHasRoute(t, router, "POST", "/api/v1/contests/:id/awd/services/:sid/instances")

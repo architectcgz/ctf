@@ -1,6 +1,8 @@
 package http_test
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -43,6 +45,14 @@ type testOAuthClientRegistrationResponse struct {
 type testOAuthErrorResponse struct {
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
+}
+
+type testOAuthTokenResponse struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	TokenType    string `json:"token_type"`
+	ExpiresIn    int64  `json:"expires_in"`
+	Scope        string `json:"scope"`
 }
 
 func TestHTTP_OAuthWellKnownMetadata(t *testing.T) {
@@ -262,6 +272,134 @@ func TestHTTP_OAuthAuthorizeApproveAndDenyRedirect(t *testing.T) {
 	}
 }
 
+func TestHTTP_OAuthTokenAuthorizationCodeGrantIssuesTokens(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+	registerOAuthTestClient(t, env)
+	sessionCookie := loginOAuthTestUser(t, env)
+	code := approveOAuthTestAuthorizationCode(t, env, sessionCookie, "state-token")
+
+	resp := postOAuthTokenForm(t, env, url.Values{
+		"grant_type":    {"authorization_code"},
+		"client_id":     {"client_test"},
+		"code":          {code},
+		"redirect_uri":  {"http://127.0.0.1:14567/callback"},
+		"code_verifier": {oauthHandlerTestPKCEVerifier},
+	})
+	if resp.Code != http.StatusOK {
+		t.Fatalf("expected token response, got %d body=%s", resp.Code, resp.Body.String())
+	}
+	body := decodeJSON[testOAuthTokenResponse](t, resp.Body.Bytes())
+	if body.AccessToken == "" || body.RefreshToken == "" || body.AccessToken == body.RefreshToken {
+		t.Fatalf("expected distinct access and refresh tokens, got %+v", body)
+	}
+	if body.TokenType != "Bearer" || body.ExpiresIn <= 0 || body.Scope != authcontracts.OAuthScopeMCPChallengeRead {
+		t.Fatalf("unexpected token response metadata: %+v", body)
+	}
+}
+
+func TestHTTP_OAuthTokenRejectsPKCEAndRedirectMismatch(t *testing.T) {
+	testCases := []struct {
+		name string
+		form func(code string) url.Values
+	}{
+		{
+			name: "missing verifier",
+			form: func(code string) url.Values {
+				return url.Values{
+					"grant_type":   {"authorization_code"},
+					"client_id":    {"client_test"},
+					"code":         {code},
+					"redirect_uri": {"http://127.0.0.1:14567/callback"},
+				}
+			},
+		},
+		{
+			name: "wrong verifier",
+			form: func(code string) url.Values {
+				return url.Values{
+					"grant_type":    {"authorization_code"},
+					"client_id":     {"client_test"},
+					"code":          {code},
+					"redirect_uri":  {"http://127.0.0.1:14567/callback"},
+					"code_verifier": {"wrong-verifier"},
+				}
+			},
+		},
+		{
+			name: "redirect mismatch",
+			form: func(code string) url.Values {
+				return url.Values{
+					"grant_type":    {"authorization_code"},
+					"client_id":     {"client_test"},
+					"code":          {code},
+					"redirect_uri":  {"http://127.0.0.1:14567/other"},
+					"code_verifier": {oauthHandlerTestPKCEVerifier},
+				}
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newIntegrationTestEnv(t)
+			registerOAuthTestClient(t, env)
+			sessionCookie := loginOAuthTestUser(t, env)
+			code := approveOAuthTestAuthorizationCode(t, env, sessionCookie, "state-"+tc.name)
+
+			resp := postOAuthTokenForm(t, env, tc.form(code))
+			if resp.Code != http.StatusBadRequest {
+				t.Fatalf("expected token error, got %d body=%s", resp.Code, resp.Body.String())
+			}
+			body := decodeJSON[testOAuthErrorResponse](t, resp.Body.Bytes())
+			if body.Error == "" {
+				t.Fatalf("expected oauth error body, got %+v", body)
+			}
+		})
+	}
+}
+
+func TestHTTP_OAuthRefreshTokenRotatesAndRejectsReuse(t *testing.T) {
+	env := newIntegrationTestEnv(t)
+	registerOAuthTestClient(t, env)
+	sessionCookie := loginOAuthTestUser(t, env)
+	code := approveOAuthTestAuthorizationCode(t, env, sessionCookie, "state-refresh")
+
+	tokenResp := postOAuthTokenForm(t, env, url.Values{
+		"grant_type":    {"authorization_code"},
+		"client_id":     {"client_test"},
+		"code":          {code},
+		"redirect_uri":  {"http://127.0.0.1:14567/callback"},
+		"code_verifier": {oauthHandlerTestPKCEVerifier},
+	})
+	first := decodeJSON[testOAuthTokenResponse](t, tokenResp.Body.Bytes())
+
+	refreshResp := postOAuthTokenForm(t, env, url.Values{
+		"grant_type":    {"refresh_token"},
+		"client_id":     {"client_test"},
+		"refresh_token": {first.RefreshToken},
+	})
+	if refreshResp.Code != http.StatusOK {
+		t.Fatalf("expected refresh success, got %d body=%s", refreshResp.Code, refreshResp.Body.String())
+	}
+	second := decodeJSON[testOAuthTokenResponse](t, refreshResp.Body.Bytes())
+	if second.AccessToken == "" || second.RefreshToken == "" || second.RefreshToken == first.RefreshToken {
+		t.Fatalf("expected rotated refresh token, first=%+v second=%+v", first, second)
+	}
+
+	reuseResp := postOAuthTokenForm(t, env, url.Values{
+		"grant_type":    {"refresh_token"},
+		"client_id":     {"client_test"},
+		"refresh_token": {first.RefreshToken},
+	})
+	if reuseResp.Code != http.StatusBadRequest {
+		t.Fatalf("expected refresh reuse failure, got %d body=%s", reuseResp.Code, reuseResp.Body.String())
+	}
+	reuseErr := decodeJSON[testOAuthErrorResponse](t, reuseResp.Body.Bytes())
+	if reuseErr.Error != "invalid_grant" {
+		t.Fatalf("expected invalid_grant for reused refresh token, got %+v", reuseErr)
+	}
+}
+
 func containsString(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {
@@ -297,7 +435,7 @@ func loginOAuthTestUser(t *testing.T, env *integrationTestEnv) *http.Cookie {
 }
 
 func validAuthorizeTarget(state string) string {
-	return "/api/v1/oauth/authorize?response_type=code&client_id=client_test&redirect_uri=http%3A%2F%2F127.0.0.1%3A14567%2Fcallback&scope=mcp%3Achallenge%3Aread&state=" + state + "&code_challenge=challenge&code_challenge_method=S256"
+	return "/api/v1/oauth/authorize?response_type=code&client_id=client_test&redirect_uri=http%3A%2F%2F127.0.0.1%3A14567%2Fcallback&scope=mcp%3Achallenge%3Aread&state=" + url.QueryEscape(state) + "&code_challenge=" + oauthHandlerTestPKCEChallenge() + "&code_challenge_method=S256"
 }
 
 func extractConsentNonce(t *testing.T, body string) string {
@@ -317,7 +455,7 @@ func postOAuthAuthorizeForm(t *testing.T, env *integrationTestEnv, sessionCookie
 	form.Set("redirect_uri", "http://127.0.0.1:14567/callback")
 	form.Set("scope", authcontracts.OAuthScopeMCPChallengeRead)
 	form.Set("state", state)
-	form.Set("code_challenge", "challenge")
+	form.Set("code_challenge", oauthHandlerTestPKCEChallenge())
 	form.Set("code_challenge_method", "S256")
 	form.Set("csrf_nonce", nonce)
 	form.Set("approve", approve)
@@ -325,6 +463,45 @@ func postOAuthAuthorizeForm(t *testing.T, env *integrationTestEnv, sessionCookie
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/authorize", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(sessionCookie)
+	rec := httptest.NewRecorder()
+	env.router.ServeHTTP(rec, req)
+	return rec
+}
+
+const oauthHandlerTestPKCEVerifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk"
+
+func oauthHandlerTestPKCEChallenge() string {
+	sum := sha256.Sum256([]byte(oauthHandlerTestPKCEVerifier))
+	return base64.RawURLEncoding.EncodeToString(sum[:])
+}
+
+func approveOAuthTestAuthorizationCode(t *testing.T, env *integrationTestEnv, sessionCookie *http.Cookie, state string) string {
+	t.Helper()
+	consentResp := performJSONRequest(t, env.router, http.MethodGet, validAuthorizeTarget(state), nil, nil, []*http.Cookie{sessionCookie})
+	if consentResp.Code != http.StatusOK {
+		t.Fatalf("expected consent page, got %d body=%s", consentResp.Code, consentResp.Body.String())
+	}
+	nonce := extractConsentNonce(t, consentResp.Body.String())
+	approveResp := postOAuthAuthorizeForm(t, env, sessionCookie, nonce, "true", state)
+	if approveResp.Code != http.StatusFound {
+		t.Fatalf("expected approve redirect, got %d body=%s", approveResp.Code, approveResp.Body.String())
+	}
+	location := approveResp.Header().Get("Location")
+	parsed, err := url.Parse(location)
+	if err != nil {
+		t.Fatalf("parse approve redirect %q: %v", location, err)
+	}
+	code := parsed.Query().Get("code")
+	if code == "" {
+		t.Fatalf("approve redirect missing code: %q", location)
+	}
+	return code
+}
+
+func postOAuthTokenForm(t *testing.T, env *integrationTestEnv, form url.Values) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/oauth/token", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rec := httptest.NewRecorder()
 	env.router.ServeHTTP(rec, req)
 	return rec

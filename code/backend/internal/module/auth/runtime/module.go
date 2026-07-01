@@ -61,7 +61,7 @@ func buildHandler(deps moduleDeps) *http.Handler {
 	cfg := deps.input.Config
 	log := deps.input.Logger
 	authService := authcmd.NewService(deps.users, deps.tokenService, cfg.RateLimit.Login, log.Named("auth_service"))
-	oauthService := authcmd.NewOAuthService(cfg.Auth.OAuth, deps.oauthStore, log.Named("oauth_service"))
+	oauthService := authcmd.NewOAuthService(cfg.Auth.OAuth, deps.oauthStore, deps.tokenService, log.Named("oauth_service"))
 	oauthMetadataService := authqry.NewOAuthMetadataService(cfg.App.Env, cfg.Auth.OAuth)
 	casValidator := authinfra.NewCASTicketValidator(log.Named("cas_ticket_validator"), nil)
 	casCommandService := authcmd.NewCASService(cfg.Auth.CAS, deps.users, deps.tokenService, log.Named("cas_command_service"), casValidator)

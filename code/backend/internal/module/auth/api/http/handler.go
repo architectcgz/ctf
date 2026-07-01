@@ -47,6 +47,9 @@ type oauthCommandService interface {
 	PrepareAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationInput) (*authcmd.OAuthAuthorizationResult, error)
 	ApproveAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationDecisionInput) (*authcmd.OAuthAuthorizationResult, error)
 	DenyAuthorization(ctx context.Context, input authcmd.OAuthAuthorizationDecisionInput) (*authcmd.OAuthAuthorizationResult, error)
+	ExchangeAuthorizationCode(ctx context.Context, input authcmd.OAuthAuthorizationCodeExchangeInput) (*authcmd.OAuthTokenResult, error)
+	RefreshAccessToken(ctx context.Context, input authcmd.OAuthRefreshTokenInput) (*authcmd.OAuthTokenResult, error)
+	ResolveOAuthAccessToken(ctx context.Context, token string, requiredScope string) (*authcmd.OAuthAccessTokenResolution, error)
 }
 
 type oauthMetadataQueryService interface {
